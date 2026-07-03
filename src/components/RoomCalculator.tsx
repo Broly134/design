@@ -4,6 +4,10 @@ import { Container } from "./ui/Container";
 import { SectionHeading } from "./ui/SectionHeading";
 import { Reveal } from "./ui/Reveal";
 import { PRODUCT } from "../lib/constants";
+import chambreImg from "../assets/climatiseur-chambre.webp";
+import bureauImg from "../assets/climatiseur-bureau.webp";
+import salonImg from "../assets/climatiseur-salon.webp";
+import studioAptImg from "../assets/climatiseur-studio-apt.webp";
 
 // Estimations indicatives : ajustez selon la puissance réelle du produit.
 const ROOM_OPTIONS = [
@@ -15,6 +19,8 @@ const ROOM_OPTIONS = [
     verdict: "Parfaitement adapté",
     detail:
       "Pour une chambre, le climatiseur mobile atteint rapidement une température confortable. Le mode nuit maintient la fraîcheur en toute discrétion pendant votre sommeil.",
+    image: chambreImg,
+    alt: "Climatiseur mobile en fonctionnement le soir dans une chambre à la literie en lin",
   },
   {
     id: "bureau",
@@ -24,6 +30,8 @@ const ROOM_OPTIONS = [
     verdict: "Parfaitement adapté",
     detail:
       "Idéal en télétravail : la pièce reste fraîche pendant vos heures de travail, et le minuteur permet de programmer l'arrêt automatique en fin de journée.",
+    image: bureauImg,
+    alt: "Climatiseur mobile à côté d'un bureau en bois clair avec ordinateur portable",
   },
   {
     id: "salon",
@@ -33,6 +41,8 @@ const ROOM_OPTIONS = [
     verdict: "Bien adapté",
     detail:
       `Pour un salon, l'appareil est efficace jusqu'à environ ${PRODUCT.surfaceM2} m². Fermez les portes des pièces adjacentes pour concentrer la fraîcheur là où vous êtes.`,
+    image: salonImg,
+    alt: "Climatiseur mobile dans un salon d'appartement lumineux avec canapé en lin",
   },
   {
     id: "studio",
@@ -42,6 +52,8 @@ const ROOM_OPTIONS = [
     verdict: "Bien adapté",
     detail:
       "En studio, un seul appareil suffit pour l'ensemble de l'espace de vie. Sa mobilité permet de l'orienter vers le coin nuit le soir venu.",
+    image: studioAptImg,
+    alt: "Climatiseur mobile dans un studio compact avec lit mezzanine et kitchenette",
   },
 ];
 
@@ -58,7 +70,7 @@ export function RoomCalculator() {
           description="Sélectionnez votre type de pièce pour vérifier en quelques secondes si le climatiseur mobile est adapté."
         />
 
-        <Reveal className="w-full max-w-3xl">
+        <Reveal className="w-full max-w-4xl">
           <div className="glass rounded-[2rem] border border-white/70 p-6 shadow-[0_24px_60px_-24px_rgba(37,99,235,0.2)] sm:p-8">
             <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4" role="tablist" aria-label="Type de pièce">
               {ROOM_OPTIONS.map((option) => {
@@ -83,17 +95,28 @@ export function RoomCalculator() {
               })}
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-ink-900/5">
-              <div className="mb-3 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-700">
-                  <Ruler className="h-3.5 w-3.5" />
-                  {selected.size}
-                </span>
-                <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  {selected.verdict}
-                </span>
+            <div className="grid overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-ink-900/5 sm:grid-cols-2">
+              <img
+                key={selected.id}
+                src={selected.image}
+                alt={selected.alt}
+                width={1000}
+                height={745}
+                loading="lazy"
+                className="h-48 w-full object-cover animate-fade-up sm:h-full sm:min-h-56"
+              />
+              <div className="p-6">
+                <div className="mb-3 flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-700">
+                    <Ruler className="h-3.5 w-3.5" />
+                    {selected.size}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    {selected.verdict}
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed text-ink-500">{selected.detail}</p>
               </div>
-              <p className="text-sm leading-relaxed text-ink-500">{selected.detail}</p>
             </div>
           </div>
         </Reveal>
