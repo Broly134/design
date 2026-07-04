@@ -1,37 +1,39 @@
 /* ==========================================================================
-   METRO DASH — endless runner urbain 2.5D (Canvas, vanilla JS)
-   Architecture : Game / Player / Obstacle / Coin / PowerUp / World / Spawner
-   / CollisionManager / ScoreManager / UIManager / InputManager / AudioManager
+   METRO DASH — endless runner urbain, moteur 3D WebGL (Three.js)
+   Logique : Game / Player / Obstacle / Coin / PowerUp / Spawner /
+   CollisionManager / ScoreManager / UIManager / InputManager / AudioManager
+   Rendu : World3D (décor), PlayerRig (personnage articulé), pools de meshes,
+   particules sprites, overlay 2D pour les lignes de vitesse et flashs.
    ========================================================================== */
 
 "use strict";
+
+import * as THREE from "./vendor/three.module.min.js";
 
 /* --------------------------------------------------------------------------
    Configuration globale
    -------------------------------------------------------------------------- */
 const CONFIG = {
   LANE_X: [-2.4, 0, 2.4],      // position X (mètres) des trois voies
-  CAM_H: 3.1,                  // hauteur caméra (m)
   PLAYER_Z: 6,                 // distance du joueur devant la caméra (m)
   SPAWN_Z: 95,                 // distance d'apparition des entités (m)
   KILL_Z: 2.2,                 // distance de recyclage derrière le joueur
   BASE_SPEED: 15,              // vitesse de départ (m/s)
   MAX_SPEED: 33,               // vitesse max hors boost
-  SPEED_STEP: 0.95,            // gain de vitesse toutes les 15 s
   JUMP_V: 9.4,                 // vitesse verticale du saut (m/s)
   GRAVITY: 24,                 // gravité (m/s²)
   SLIDE_TIME: 0.62,            // durée d'une glissade (s)
   PLAYER_H: 1.75,              // hauteur du joueur debout (m)
   SLIDE_H: 0.82,               // hauteur du joueur en glissade (m)
-  LANE_SNAP: 11,               // vitesse de changement de voie (plus haut = plus vif)
+  LANE_SNAP: 11,               // vitesse de changement de voie
   COIN_SCORE: 25,
   POWERUP_DUR: { magnet: 8, shield: 10, x2: 10, boost: 4 },
 };
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
+const damp = (a, b, k, dt) => lerp(a, b, 1 - Math.exp(-k * dt));
 const rand = (a, b) => a + Math.random() * (b - a);
-const randInt = (a, b) => Math.floor(rand(a, b + 1));
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 /* --------------------------------------------------------------------------
@@ -45,7 +47,6 @@ class AudioManager {
     this.musicStep = 0;
   }
 
-  // Le contexte audio doit être créé après une interaction utilisateur.
   ensure() {
     if (!this.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -104,18 +105,17 @@ class AudioManager {
   crash()   { this.noise({ dur: 0.4, vol: 0.5, freq: 350 }); this.tone({ type: "sawtooth", from: 220, to: 50, dur: 0.4, vol: 0.3 }); }
   powerup() { [523, 659, 784, 1046].forEach((f, i) => this.tone({ type: "triangle", from: f, dur: 0.12, vol: 0.2, delay: i * 0.07 })); }
   shieldHit(){ this.tone({ type: "triangle", from: 880, to: 220, dur: 0.3, vol: 0.3 }); }
+  smash()   { this.noise({ dur: 0.15, vol: 0.25, freq: 700 }); }
   swoosh()  { this.noise({ dur: 0.1, vol: 0.08, freq: 1800 }); }
 
-  // Boucle musicale minimaliste (basse + arpège), légère et coupable à tout moment.
   startMusic() {
     if (this.muted || !this.ensure() || this.musicTimer) return;
     const bass = [110, 110, 131, 98];
     const arp = [440, 523, 659, 523, 440, 659, 784, 659];
-    const stepDur = 0.24;
     const loop = () => {
       if (this.muted) return this.stopMusic();
       const s = this.musicStep++;
-      this.tone({ type: "triangle", from: bass[Math.floor(s / 4) % 4], dur: stepDur * 0.9, vol: 0.1 });
+      this.tone({ type: "triangle", from: bass[Math.floor(s / 4) % 4], dur: 0.22, vol: 0.1 });
       if (s % 2 === 0) this.tone({ type: "square", from: arp[s % 8], dur: 0.1, vol: 0.035 });
     };
     this.musicTimer = setInterval(loop, 240);
@@ -146,7 +146,6 @@ class InputManager {
       }
     });
 
-    // Tactile : swipe directionnel dès 24 px (réactif), tap rapide = saut.
     const opts = { passive: false };
     target.addEventListener("touchstart", (e) => {
       const t = e.changedTouches[0];
@@ -171,58 +170,14 @@ class InputManager {
     target.addEventListener("touchend", (e) => {
       if (!this.touch || this.consumed) { this.touch = null; return; }
       const t = [...e.changedTouches].find((c) => c.identifier === this.touch.id);
-      if (t && performance.now() - this.touch.t < 220) this.h.jump(); // tap = saut
+      if (t && performance.now() - this.touch.t < 220) this.h.jump();
       this.touch = null;
     }, opts);
   }
 }
 
 /* --------------------------------------------------------------------------
-   ParticleSystem — poussière, éclats de pièces, débris, traînée de boost
-   -------------------------------------------------------------------------- */
-class ParticleSystem {
-  constructor() { this.list = []; }
-
-  emit({ x, y, count = 8, color = "#ffc93c", speed = 90, size = 4, life = 0.5, gravity = 160, spread = Math.PI * 2, angle = 0 }) {
-    for (let i = 0; i < count; i++) {
-      const a = angle + (Math.random() - 0.5) * spread;
-      const v = speed * rand(0.4, 1);
-      this.list.push({
-        x, y,
-        vx: Math.cos(a) * v,
-        vy: Math.sin(a) * v,
-        size: size * rand(0.6, 1.3),
-        life, maxLife: life,
-        color, gravity,
-      });
-    }
-  }
-
-  update(dt) {
-    for (let i = this.list.length - 1; i >= 0; i--) {
-      const p = this.list[i];
-      p.life -= dt;
-      if (p.life <= 0) { this.list.splice(i, 1); continue; }
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vy += p.gravity * dt;
-    }
-  }
-
-  draw(ctx) {
-    for (const p of this.list) {
-      const a = clamp(p.life / p.maxLife, 0, 1);
-      ctx.globalAlpha = a;
-      ctx.fillStyle = p.color;
-      const s = p.size * (0.5 + a * 0.5);
-      ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
-    }
-    ctx.globalAlpha = 1;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   Player — course, changement de voie, saut, glissade + dessin du coureur
+   Player — logique de course : voie, saut, glissade (le visuel est PlayerRig)
    -------------------------------------------------------------------------- */
 class Player {
   constructor(game) {
@@ -231,15 +186,15 @@ class Player {
   }
 
   reset() {
-    this.lane = 1;                       // index de voie cible (0..2)
-    this.x = CONFIG.LANE_X[1];           // position X interpolée (m)
-    this.y = 0;                          // hauteur au-dessus du sol (m)
+    this.lane = 1;
+    this.x = CONFIG.LANE_X[1];
+    this.y = 0;
     this.vy = 0;
     this.jumping = false;
     this.sliding = false;
     this.slideT = 0;
-    this.runPhase = 0;                   // phase de l'animation de course
-    this.invincibleT = 0;                // frames d'invulnérabilité post-bouclier
+    this.runPhase = 0;
+    this.invincibleT = 0;
   }
 
   get height() { return this.sliding ? CONFIG.SLIDE_H : CONFIG.PLAYER_H; }
@@ -265,197 +220,33 @@ class Player {
     this.sliding = true;
     this.slideT = CONFIG.SLIDE_TIME;
     this.game.audio.slide();
-    // Glisser en plein saut ⇒ retombée accélérée (feeling arcade)
-    if (this.jumping) this.vy = Math.min(this.vy, -10);
+    if (this.jumping) this.vy = Math.min(this.vy, -10); // retombée accélérée
   }
 
   update(dt) {
-    // Interpolation fluide vers la voie cible
-    this.x = lerp(this.x, CONFIG.LANE_X[this.lane], 1 - Math.exp(-CONFIG.LANE_SNAP * dt));
+    this.x = damp(this.x, CONFIG.LANE_X[this.lane], CONFIG.LANE_SNAP, dt);
 
-    // Saut : montée rapide, gravité naturelle
     if (this.jumping) {
       this.y += this.vy * dt;
       this.vy -= CONFIG.GRAVITY * dt;
       if (this.y <= 0) { this.y = 0; this.vy = 0; this.jumping = false; }
     }
-
-    // Glissade limitée dans le temps
     if (this.sliding) {
       this.slideT -= dt;
       if (this.slideT <= 0) this.sliding = false;
     }
-
     if (this.invincibleT > 0) this.invincibleT -= dt;
 
-    // Animation de course, cadence liée à la vitesse
     this.runPhase += dt * (8 + this.game.speed * 0.35);
-  }
-
-  /* Dessin du coureur : silhouette stylisée orientée dos (veste, sac, casquette) */
-  draw(ctx, proj, fx) {
-    const p = proj(this.x, 0, CONFIG.PLAYER_Z);
-    const s = p.s; // px par mètre à la profondeur du joueur
-    const groundY = p.y;
-    const bodyX = p.x;
-    const yOff = this.y * s;
-
-    const t = this.runPhase;
-    const legSwing = Math.sin(t) * 0.5;
-    const bob = this.jumping ? 0 : Math.abs(Math.sin(t)) * 0.05 * s;
-
-    // Ombre au sol (rétrécit pendant le saut)
-    const shScale = clamp(1 - this.y / 3, 0.35, 1);
-    ctx.fillStyle = "rgba(0,0,0,0.4)";
-    ctx.beginPath();
-    ctx.ellipse(bodyX, groundY, 0.62 * s * shScale, 0.16 * s * shScale, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.save();
-    ctx.translate(bodyX, groundY - yOff - bob);
-
-    // Aura bouclier / boost
-    if (fx.shield) {
-      ctx.strokeStyle = "rgba(0,208,255,0.85)";
-      ctx.lineWidth = 3;
-      ctx.setLineDash([8, 6]);
-      ctx.lineDashOffset = -performance.now() / 30;
-      ctx.beginPath();
-      ctx.ellipse(0, -0.95 * s, 0.85 * s, 1.15 * s, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(0,208,255,0.10)";
-      ctx.fill();
-    }
-    if (fx.boost) {
-      const g = ctx.createRadialGradient(0, -0.9 * s, 0.1 * s, 0, -0.9 * s, 1.3 * s);
-      g.addColorStop(0, "rgba(255,138,42,0.35)");
-      g.addColorStop(1, "rgba(255,138,42,0)");
-      ctx.fillStyle = g;
-      ctx.fillRect(-1.4 * s, -2.3 * s, 2.8 * s, 2.6 * s);
-    }
-
-    // Clignotement pendant l'invulnérabilité temporaire
-    if (this.invincibleT > 0 && Math.floor(performance.now() / 90) % 2 === 0) ctx.globalAlpha = 0.35;
-
-    const skin = "#e8b087";
-    const jacket = "#ff8a2a";
-    const jacketDark = "#e06f14";
-    const pants = "#2c3150";
-    const shoe = "#f4f6ff";
-    const bag = "#8b5cf6";
-    const cap = "#2f7bff";
-
-    if (this.sliding) {
-      /* ---- Pose de glissade : corps allongé vers l'arrière ---- */
-      ctx.save();
-      ctx.rotate(-0.18);
-      // jambe tendue
-      ctx.fillStyle = pants;
-      this.rr(ctx, -0.12 * s, -0.42 * s, 0.72 * s, 0.2 * s, 0.08 * s);
-      ctx.fillStyle = shoe;
-      this.rr(ctx, 0.5 * s, -0.46 * s, 0.26 * s, 0.16 * s, 0.06 * s);
-      // torse penché
-      ctx.fillStyle = jacket;
-      this.rr(ctx, -0.62 * s, -0.78 * s, 0.68 * s, 0.42 * s, 0.14 * s);
-      ctx.fillStyle = bag;
-      this.rr(ctx, -0.68 * s, -0.92 * s, 0.3 * s, 0.34 * s, 0.09 * s);
-      // tête
-      ctx.fillStyle = skin;
-      ctx.beginPath();
-      ctx.arc(-0.66 * s, -1.02 * s, 0.19 * s, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = cap;
-      this.rr(ctx, -0.88 * s, -1.16 * s, 0.42 * s, 0.14 * s, 0.06 * s);
-      ctx.restore();
-    } else {
-      /* ---- Pose de course / saut ---- */
-      const legA = this.jumping ? 0.45 : legSwing;
-      const legB = this.jumping ? -0.25 : -legSwing;
-
-      // jambe arrière
-      ctx.save();
-      ctx.translate(0, -0.78 * s);
-      ctx.rotate(legB * 0.8);
-      ctx.fillStyle = pants;
-      this.rr(ctx, -0.1 * s, 0, 0.2 * s, 0.62 * s, 0.09 * s);
-      ctx.fillStyle = shoe;
-      this.rr(ctx, -0.12 * s, 0.56 * s, 0.26 * s, 0.16 * s, 0.06 * s);
-      ctx.restore();
-
-      // jambe avant
-      ctx.save();
-      ctx.translate(0, -0.78 * s);
-      ctx.rotate(legA * 0.8);
-      ctx.fillStyle = "#3a4066";
-      this.rr(ctx, -0.1 * s, 0, 0.2 * s, 0.62 * s, 0.09 * s);
-      ctx.fillStyle = shoe;
-      this.rr(ctx, -0.12 * s, 0.56 * s, 0.26 * s, 0.16 * s, 0.06 * s);
-      ctx.restore();
-
-      // torse + veste
-      ctx.fillStyle = jacket;
-      this.rr(ctx, -0.26 * s, -1.42 * s, 0.52 * s, 0.7 * s, 0.16 * s);
-      ctx.fillStyle = jacketDark;
-      ctx.fillRect(-0.03 * s, -1.42 * s, 0.06 * s, 0.68 * s);
-
-      // sac à dos (dépasse des épaules)
-      ctx.fillStyle = bag;
-      this.rr(ctx, -0.34 * s, -1.38 * s, 0.2 * s, 0.5 * s, 0.08 * s);
-      this.rr(ctx, 0.14 * s, -1.38 * s, 0.2 * s, 0.5 * s, 0.08 * s);
-
-      // bras balancés
-      const armA = -legSwing;
-      ctx.save();
-      ctx.translate(-0.3 * s, -1.32 * s);
-      ctx.rotate(armA * 0.7 + (this.jumping ? -0.9 : 0));
-      ctx.fillStyle = jacket;
-      this.rr(ctx, -0.08 * s, 0, 0.16 * s, 0.5 * s, 0.08 * s);
-      ctx.restore();
-      ctx.save();
-      ctx.translate(0.3 * s, -1.32 * s);
-      ctx.rotate(-armA * 0.7 + (this.jumping ? 0.9 : 0));
-      ctx.fillStyle = jacket;
-      this.rr(ctx, -0.08 * s, 0, 0.16 * s, 0.5 * s, 0.08 * s);
-      ctx.restore();
-
-      // tête + casquette (vue de dos)
-      ctx.fillStyle = skin;
-      ctx.beginPath();
-      ctx.arc(0, -1.62 * s, 0.2 * s, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#503a28";
-      ctx.beginPath();
-      ctx.arc(0, -1.64 * s, 0.2 * s, Math.PI, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = cap;
-      this.rr(ctx, -0.22 * s, -1.86 * s, 0.44 * s, 0.16 * s, 0.07 * s);
-    }
-
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
-
-  // Rectangle arrondi utilitaire
-  rr(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.roundRect(x, y, w, h, r);
-    ctx.fill();
   }
 }
 
 /* --------------------------------------------------------------------------
-   Entités : Obstacle, Coin, PowerUp
+   Entités logiques : Obstacle, Coin, PowerUp
    -------------------------------------------------------------------------- */
-
-// Types d'obstacles :
-//   barrier : barrière basse (sautable)
-//   sign    : panneau suspendu (glissade obligatoire)
-//   crate   : caisse pleine hauteur (changer de voie)
-//   wagon   : rame à l'arrêt, longue (changer de voie)
 const OBSTACLE_DEFS = {
   barrier: { w: 2.0, h: 1.0, d: 0.5, jumpable: true },
-  sign:    { w: 2.1, h: 1.2, d: 0.4, gapBottom: 1.22 },      // panneau : de 1.22 m au sommet
+  sign:    { w: 2.1, h: 1.2, d: 0.4, gapBottom: 1.22 },
   crate:   { w: 1.8, h: 1.9, d: 1.6 },
   wagon:   { w: 2.3, h: 3.0, d: 13 },
 };
@@ -467,8 +258,8 @@ class Obstacle {
     this.z = z;
     this.def = OBSTACLE_DEFS[type];
     this.dead = false;
-    // Variante graphique stable par instance
     this.tint = Math.random();
+    this.mesh = null;
   }
   get x() { return CONFIG.LANE_X[this.lane]; }
 }
@@ -485,10 +276,10 @@ class Coin {
 }
 
 const POWERUP_DEFS = {
-  magnet: { color: "#00d0ff", label: "U" },
-  shield: { color: "#7fd4ff", label: "◈" },
-  x2:     { color: "#8b5cf6", label: "x2" },
-  boost:  { color: "#ff8a2a", label: "≫" },
+  magnet: { color: 0x00d0ff, css: "#00d0ff", label: "U" },
+  shield: { color: 0x7fd4ff, css: "#7fd4ff", label: "◈" },
+  x2:     { color: 0x8b5cf6, css: "#8b5cf6", label: "x2" },
+  boost:  { color: 0xff8a2a, css: "#ff8a2a", label: "≫" },
 };
 
 class PowerUp {
@@ -498,366 +289,13 @@ class PowerUp {
     this.z = z;
     this.dead = false;
     this.bob = Math.random() * Math.PI * 2;
+    this.mesh = null;
   }
   get x() { return CONFIG.LANE_X[this.lane]; }
 }
 
 /* --------------------------------------------------------------------------
-   World — décor urbain infini : ciel, skyline, immeubles, rails, tunnels
-   -------------------------------------------------------------------------- */
-class World {
-  constructor(game) {
-    this.game = game;
-    this.reset();
-    // Skyline lointaine générée une fois (silhouettes)
-    this.skyline = [];
-    let x = 0;
-    while (x < 3) {
-      this.skyline.push({ x, w: rand(0.04, 0.1), h: rand(0.08, 0.26) });
-      x += rand(0.05, 0.11);
-    }
-  }
-
-  reset() {
-    this.dist = 0;
-    this.buildings = [];       // segments d'immeubles latéraux {side, z, d, h, hue, sign}
-    this.lamps = [];           // lampadaires {side, z}
-    this.gantries = [];        // portiques publicitaires {z, text}
-    this.tunnels = [];         // tunnels {z, len}
-    this.nextBuildingZ = 8;
-    this.nextLampZ = 18;
-    this.nextGantryZ = 120;
-    this.nextTunnelZ = 320;
-    this.seedAhead();
-  }
-
-  seedAhead() {
-    while (this.nextBuildingZ < CONFIG.SPAWN_Z + 40) this.spawnBuilding();
-    while (this.nextLampZ < CONFIG.SPAWN_Z + 40) this.spawnLamp();
-  }
-
-  spawnBuilding() {
-    const names = ["NOVA", "VOLT CAFÉ", "RAPID+", "PIXEL BAR", "ORBIT", "KUMO", "LUMA", "DASH 24"];
-    const side = this.buildings.length % 2 === 0 ? -1 : 1;
-    const d = rand(14, 22);
-    this.buildings.push({
-      side,
-      z: this.nextBuildingZ,
-      d,
-      h: rand(7, 15),
-      hue: pick(["#232842", "#1e2338", "#2a2440", "#20304a", "#252031"]),
-      sign: Math.random() < 0.45 ? { text: pick(names), color: pick(["#00d0ff", "#ff8a2a", "#8b5cf6", "#ff5c8a"]) } : null,
-      graffiti: Math.random() < 0.5 ? pick(["#ff5c8a", "#00e08a", "#ffc93c", "#00d0ff"]) : null,
-    });
-    this.nextBuildingZ += d + rand(0, 4);
-  }
-
-  spawnLamp() {
-    this.lamps.push({ side: this.lamps.length % 2 === 0 ? 1 : -1, z: this.nextLampZ });
-    this.nextLampZ += 26;
-  }
-
-  update(dt, speed) {
-    const dz = speed * dt;
-    this.dist += dz;
-
-    const advance = (arr) => {
-      for (const o of arr) o.z -= dz;
-    };
-    advance(this.buildings);
-    advance(this.lamps);
-    advance(this.gantries);
-    advance(this.tunnels);
-
-    this.buildings = this.buildings.filter((b) => b.z + b.d > -4);
-    this.lamps = this.lamps.filter((l) => l.z > -4);
-    this.gantries = this.gantries.filter((g) => g.z > -4);
-    this.tunnels = this.tunnels.filter((t) => t.z + t.len > -4);
-
-    this.nextBuildingZ -= dz;
-    this.nextLampZ -= dz;
-    this.nextGantryZ -= dz;
-    this.nextTunnelZ -= dz;
-
-    this.seedAhead();
-    if (this.nextGantryZ < CONFIG.SPAWN_Z) {
-      this.gantries.push({ z: CONFIG.SPAWN_Z + 10, text: pick(["NOVA COLA", "VOLT ⚡ ENERGY", "FLY KICKS", "METRO DASH", "SODA POP"]) });
-      this.nextGantryZ = CONFIG.SPAWN_Z + rand(90, 150);
-    }
-    if (this.nextTunnelZ < CONFIG.SPAWN_Z) {
-      this.tunnels.push({ z: CONFIG.SPAWN_Z + 20, len: rand(45, 70) });
-      this.nextTunnelZ = CONFIG.SPAWN_Z + rand(320, 460);
-    }
-  }
-
-  // Le joueur est-il dans un tunnel ? (assombrit l'ambiance)
-  inTunnel() {
-    return this.tunnels.some((t) => t.z < CONFIG.PLAYER_Z && t.z + t.len > CONFIG.PLAYER_Z);
-  }
-
-  /* Gradients coûteux mis en cache (reconstruits au redimensionnement) */
-  ensureGradients(ctx, w, h, horizon) {
-    const key = `${w}x${h}x${horizon | 0}`;
-    if (this._gradKey === key) return;
-    this._gradKey = key;
-
-    const mk = (stops, y0, y1) => {
-      const g = ctx.createLinearGradient(0, y0, 0, y1);
-      for (const [o, c] of stops) g.addColorStop(o, c);
-      return g;
-    };
-    this.gradSky = mk([[0, "#1a1440"], [0.65, "#3c2560"], [1, "#b04a3a"]], 0, horizon + h * 0.1);
-    this.gradSkyTunnel = mk([[0, "#0a0c14"], [0.65, "#0c0e18"], [1, "#10121c"]], 0, horizon + h * 0.1);
-    this.gradGround = mk([[0, "#262a39"], [1, "#31354a"]], horizon, h);
-    this.gradGroundTunnel = mk([[0, "#151722"], [1, "#1a1c28"]], horizon, h);
-    this.gradFog = mk([[0, "rgba(30,26,58,0)"], [0.5, "rgba(60,42,80,0.55)"], [1, "rgba(30,26,58,0)"]],
-      horizon - h * 0.05, horizon + h * 0.15);
-    this.gradFogTunnel = mk([[0, "rgba(10,12,20,0)"], [0.5, "rgba(10,12,20,0.7)"], [1, "rgba(10,12,20,0)"]],
-      horizon - h * 0.05, horizon + h * 0.15);
-  }
-
-  /* ------------------------- rendu du décor ------------------------- */
-  draw(ctx, proj, w, h, horizon) {
-    const tunnelAmb = this.inTunnel() ? 1 : 0;
-    this.ensureGradients(ctx, w, h, horizon);
-
-    // Ciel crépusculaire
-    ctx.fillStyle = tunnelAmb ? this.gradSkyTunnel : this.gradSky;
-    ctx.fillRect(0, 0, w, horizon + h * 0.1);
-
-    if (!tunnelAmb) {
-      // Soleil couchant + skyline
-      const g = ctx.createRadialGradient(w * 0.5, horizon, 4, w * 0.5, horizon, w * 0.24);
-      g.addColorStop(0, "rgba(255,170,80,0.75)");
-      g.addColorStop(1, "rgba(255,170,80,0)");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, w, horizon + 4);
-
-      ctx.fillStyle = "#171331";
-      for (const b of this.skyline) {
-        const bw = b.w * w;
-        const bh = b.h * h * 0.6;
-        ctx.fillRect((b.x % 1.2 - 0.1) * w, horizon - bh, bw, bh + 2);
-      }
-    }
-
-    // Sol : ballast sombre pleine largeur
-    ctx.fillStyle = tunnelAmb ? this.gradGroundTunnel : this.gradGround;
-    ctx.fillRect(0, horizon, w, h - horizon);
-
-    // Plateforme de la voie (dalle centrale) — trapèze convergent
-    const half = 4.3;
-    const near = 2.5, far = 80;
-    const nl = proj(-half, 0, near), nr = proj(half, 0, near);
-    const fl = proj(-half, 0, far), fr = proj(half, 0, far);
-    ctx.fillStyle = tunnelAmb ? "#20232e" : "#363a52";
-    ctx.beginPath();
-    ctx.moveTo(nl.x, nl.y); ctx.lineTo(nr.x, nr.y); ctx.lineTo(fr.x, fr.y); ctx.lineTo(fl.x, fl.y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Traverses (défilement = sensation de vitesse)
-    const spacing = 2.4;
-    const offset = this.dist % spacing;
-    ctx.fillStyle = tunnelAmb ? "#12141c" : "#1c1e2c";
-    for (let z = near + spacing - offset; z < far; z += spacing) {
-      const a = proj(-half + 0.2, 0, z);
-      const b = proj(half - 0.2, 0, z);
-      const th = Math.max(1, 5.2 * (proj(0, 0, z).s / proj(0, 0, CONFIG.PLAYER_Z).s) * (h / 500));
-      ctx.fillRect(a.x, a.y - th / 2, b.x - a.x, th);
-    }
-
-    // Rails : 2 par voie, lignes convergentes brillantes
-    ctx.lineWidth = Math.max(1, h / 380);
-    for (const lx of CONFIG.LANE_X) {
-      for (const off of [-0.72, 0.72]) {
-        const a = proj(lx + off, 0.02, near);
-        const b = proj(lx + off, 0.02, far);
-        const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-        grad.addColorStop(0, "rgba(190,205,235,0.85)");
-        grad.addColorStop(1, "rgba(190,205,235,0.05)");
-        ctx.strokeStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
-      }
-    }
-
-    // Bordures lumineuses de la plateforme
-    for (const side of [-1, 1]) {
-      const a = proj(side * half, 0.05, near);
-      const b = proj(side * half, 0.05, far);
-      ctx.strokeStyle = "rgba(255,201,60,0.5)";
-      ctx.lineWidth = Math.max(1, h / 320);
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-    }
-
-    // Immeubles latéraux (du plus loin au plus proche).
-    // Les segments trop proches s'estompent pour ne pas envahir l'écran.
-    const sorted = [...this.buildings].sort((a, b) => b.z - a.z);
-    for (const b of sorted) {
-      const zn = Math.max(b.z, 4);
-      const zf = b.z + b.d;
-      if (zf < 4) continue;
-      const xIn = b.side * 6.4;
-      const nearFade = clamp((zn - 4) / 5, 0, 1);
-      const fogA = clamp(1 - zn / 95, 0.12, 1) * nearFade;
-      if (fogA < 0.04) continue;
-
-      const pInNear = proj(xIn, 0, zn);
-      const pInFar = proj(xIn, 0, zf);
-      const pTopNear = proj(xIn, b.h, zn);
-      const pTopFar = proj(xIn, b.h, zf);
-
-      ctx.globalAlpha = fogA;
-      // face intérieure (visible)
-      ctx.fillStyle = b.hue;
-      ctx.beginPath();
-      ctx.moveTo(pInNear.x, pInNear.y);
-      ctx.lineTo(pInFar.x, pInFar.y);
-      ctx.lineTo(pTopFar.x, pTopFar.y);
-      ctx.lineTo(pTopNear.x, pTopNear.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // fenêtres éclairées (grille simple, seulement à distance raisonnable)
-      if (zn > 7) {
-        ctx.fillStyle = "rgba(255,205,120,0.55)";
-        const rows = 4, cols = Math.max(2, Math.floor(b.d / 4));
-        for (let r = 0; r < rows; r++) {
-          for (let c = 0; c < cols; c++) {
-            if ((r * 7 + c * 3 + Math.floor(b.z * 0.1)) % 3 === 0) continue; // fenêtres éteintes stables
-            const zz = zn + ((c + 0.5) / cols) * (zf - zn);
-            const yy = b.h * (0.25 + (r / rows) * 0.62);
-            const pw = proj(xIn, yy, zz);
-            const ws = Math.max(1.5, pw.s * 0.26);
-            ctx.fillRect(pw.x - ws / 2, pw.y - ws / 2, ws, ws * 1.2);
-          }
-        }
-      }
-
-      // enseigne néon
-      if (b.sign && zn > 9 && zn < 60) {
-        const zz = (zn + zf) / 2;
-        const pn = proj(xIn, b.h * 0.55, zz);
-        ctx.fillStyle = b.sign.color;
-        ctx.font = `700 ${Math.max(8, pn.s * 0.42)}px system-ui, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.fillText(b.sign.text, pn.x, pn.y);
-        // léger halo (deux passes, moins coûteux qu'un shadowBlur)
-        ctx.globalAlpha = fogA * 0.3;
-        ctx.font = `700 ${Math.max(9, pn.s * 0.46)}px system-ui, sans-serif`;
-        ctx.fillText(b.sign.text, pn.x, pn.y);
-        ctx.globalAlpha = fogA;
-      }
-
-      // graffiti en pied de mur (tache colorée + trait)
-      if (b.graffiti && zn > 9 && zn < 45) {
-        const zz = zn + (zf - zn) * 0.35;
-        const pg = proj(xIn, 0.55, zz);
-        ctx.globalAlpha = fogA * 0.6;
-        ctx.fillStyle = b.graffiti;
-        ctx.beginPath();
-        ctx.ellipse(pg.x, pg.y, pg.s * 0.65, pg.s * 0.26, -0.12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        ctx.lineWidth = Math.max(1, pg.s * 0.05);
-        ctx.beginPath();
-        ctx.moveTo(pg.x - pg.s * 0.4, pg.y + pg.s * 0.05);
-        ctx.quadraticCurveTo(pg.x, pg.y - pg.s * 0.18, pg.x + pg.s * 0.4, pg.y);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // Lampadaires
-    for (const l of this.lamps) {
-      if (l.z < 3 || l.z > 90) continue;
-      const x = l.side * 4.9;
-      const base = proj(x, 0, l.z);
-      const top = proj(x, 4.6, l.z);
-      const fogA = clamp(1 - l.z / 95, 0.15, 1);
-      ctx.globalAlpha = fogA;
-      ctx.strokeStyle = "#3a3f58";
-      ctx.lineWidth = Math.max(1, base.s * 0.07);
-      ctx.beginPath();
-      ctx.moveTo(base.x, base.y);
-      ctx.lineTo(top.x, top.y);
-      ctx.stroke();
-      // halo
-      const r = Math.max(2, top.s * 0.3);
-      const gl = ctx.createRadialGradient(top.x, top.y, 1, top.x, top.y, r * 3);
-      gl.addColorStop(0, "rgba(255,220,150,0.9)");
-      gl.addColorStop(1, "rgba(255,220,150,0)");
-      ctx.fillStyle = gl;
-      ctx.fillRect(top.x - r * 3, top.y - r * 3, r * 6, r * 6);
-      ctx.globalAlpha = 1;
-    }
-
-    // Portiques publicitaires
-    for (const g of this.gantries) {
-      if (g.z < 3 || g.z > 90) continue;
-      const fogA = clamp(1 - g.z / 95, 0.15, 1);
-      const l = proj(-4.6, 0, g.z), r = proj(4.6, 0, g.z);
-      const lt = proj(-4.6, 4.4, g.z), rt = proj(4.6, 4.4, g.z);
-      ctx.globalAlpha = fogA;
-      ctx.strokeStyle = "#454b68";
-      ctx.lineWidth = Math.max(1.5, l.s * 0.09);
-      ctx.beginPath();
-      ctx.moveTo(l.x, l.y); ctx.lineTo(lt.x, lt.y);
-      ctx.moveTo(r.x, r.y); ctx.lineTo(rt.x, rt.y);
-      ctx.stroke();
-      // panneau
-      const pl = proj(-3.4, 3.2, g.z), pr = proj(3.4, 4.35, g.z);
-      ctx.fillStyle = "#141724";
-      ctx.fillRect(pl.x, pr.y, pr.x - pl.x, pl.y - pr.y);
-      ctx.strokeStyle = "#00d0ff";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(pl.x, pr.y, pr.x - pl.x, pl.y - pr.y);
-      ctx.fillStyle = "#00d0ff";
-      ctx.font = `800 ${Math.max(7, pl.s * 0.5)}px system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.fillText(g.text, (pl.x + pr.x) / 2, (pl.y + pr.y) / 2 + pl.s * 0.16);
-      ctx.globalAlpha = 1;
-    }
-
-    // Tunnels : anneaux néon + voûte
-    for (const t of this.tunnels) {
-      const step = 7;
-      for (let z = Math.max(t.z, 3.2); z < Math.min(t.z + t.len, 92); z += step) {
-        const fogA = clamp(1 - z / 95, 0.1, 1);
-        const c = proj(0, 0, z);
-        const rw = 5.4 * c.s;
-        const rh = 5.2 * c.s;
-        ctx.globalAlpha = fogA;
-        // voûte sombre
-        ctx.strokeStyle = "rgba(16,18,28,0.9)";
-        ctx.lineWidth = Math.max(4, c.s * 1.3);
-        ctx.beginPath();
-        ctx.ellipse(c.x, c.y, rw, rh, 0, Math.PI, Math.PI * 2);
-        ctx.stroke();
-        // liseré néon
-        ctx.strokeStyle = ((z / step) | 0) % 2 ? "rgba(139,92,246,0.8)" : "rgba(0,208,255,0.8)";
-        ctx.lineWidth = Math.max(1.2, c.s * 0.09);
-        ctx.beginPath();
-        ctx.ellipse(c.x, c.y, rw * 0.94, rh * 0.94, 0, Math.PI, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-    }
-
-    // Brouillard près de l'horizon (profondeur)
-    ctx.fillStyle = tunnelAmb ? this.gradFogTunnel : this.gradFog;
-    ctx.fillRect(0, horizon - h * 0.05, w, h * 0.2);
-  }
-}
-
-/* --------------------------------------------------------------------------
-   Spawner — patterns équitables : au moins une issue possible à chaque rangée
+   Spawner — patterns équitables : toujours au moins une issue possible
    -------------------------------------------------------------------------- */
 class Spawner {
   constructor(game) {
@@ -866,7 +304,7 @@ class Spawner {
   }
 
   reset() {
-    this.zAhead = 40;          // prochaine position libre pour poser un pattern
+    this.zAhead = 40;
     this.powerupClock = rand(12, 18);
   }
 
@@ -875,28 +313,25 @@ class Spawner {
     this.powerupClock -= dt;
 
     while (this.zAhead < CONFIG.SPAWN_Z) {
-      const gap = clamp(speed * 0.62, 10, 21); // distance de réaction équitable
+      const gap = clamp(speed * 0.62, 10, 21);
       const tier = elapsed > 90 ? 3 : elapsed > 60 ? 2 : elapsed > 30 ? 1 : 0;
       const used = this.spawnPattern(this.zAhead + gap, tier);
       this.zAhead += gap + used;
     }
   }
 
-  /* Pose un pattern à partir de z, renvoie la profondeur occupée. */
   spawnPattern(z, tier) {
     const G = this.game;
     const lanes = [0, 1, 2];
-    const free = pick(lanes); // voie garantie libre pour ce pattern
+    const free = pick(lanes);
     const others = lanes.filter((l) => l !== free);
 
-    // Insertion éventuelle d'un power-up sur la voie libre, avant le pattern
     if (this.powerupClock <= 0) {
       G.powerups.push(new PowerUp(pick(Object.keys(POWERUP_DEFS)), free, z - 5));
       this.powerupClock = rand(16, 26);
     }
 
-    const patterns = this.patternsForTier(tier);
-    const fn = pick(patterns);
+    const fn = pick(this.patternsForTier(tier));
     return fn(z, free, others);
   }
 
@@ -908,21 +343,17 @@ class Spawner {
     return [P.doubleBlock, P.wagonSide, P.triplet, P.wagonCorridor, P.gauntlet, P.zigzag];
   }
 
-  /* Chaque pattern renvoie sa profondeur totale. Règle d'or :
-     jamais les 3 voies bloquées à la même profondeur par un obstacle infranchissable. */
   patterns() {
     const G = this.game;
     const coinRow = (lane, z, n, dz = 2.3, y = 1.05) => {
       for (let i = 0; i < n; i++) G.coins.push(new Coin(lane, z + i * dz, y));
     };
-    // Arc de pièces épousant un saut
     const coinJumpArc = (lane, z) => {
       const ys = [1.0, 1.7, 2.15, 2.3, 2.15, 1.7, 1.0];
       ys.forEach((y, i) => G.coins.push(new Coin(lane, z + i * 1.5, y)));
     };
 
     return {
-      // Barrière basse sur 1-2 voies, pièces en arc sur l'une d'elles
       singleJump: (z, free, others) => {
         const lane = pick(others);
         G.obstacles.push(new Obstacle("barrier", lane, z + 4));
@@ -930,60 +361,45 @@ class Spawner {
         coinRow(free, z + 1, 4);
         return 14;
       },
-
-      // Panneau suspendu : glissade
       singleSlide: (z, free, others) => {
         const lane = pick(others);
         G.obstacles.push(new Obstacle("sign", lane, z + 4));
-        coinRow(lane, z + 1, 5, 2.2, 0.75); // pièces basses sous le panneau
+        coinRow(lane, z + 1, 5, 2.2, 0.75);
         return 13;
       },
-
-      // Caisse pleine : forcer un changement de voie
       singleCrate: (z, free, others) => {
         G.obstacles.push(new Obstacle("crate", pick(others), z + 3));
         coinRow(free, z, 5);
         return 12;
       },
-
-      // Ligne de pièces simple
       coinLine: (z, free) => {
         coinRow(free, z, 7);
         return 16;
       },
-
-      // Arc de pièces sur voie libre (récompense un saut stylé)
       coinArc: (z, free) => {
         coinJumpArc(free, z);
         return 12;
       },
-
-      // Deux voies bloquées (caisse + barrière), une libre avec pièces
       doubleBlock: (z, free, others) => {
         G.obstacles.push(new Obstacle("crate", others[0], z + 3));
         G.obstacles.push(new Obstacle(pick(["barrier", "sign"]), others[1], z + 3));
         coinRow(free, z + 1, 5);
         return 14;
       },
-
-      // Wagon long sur une voie, pièces à côté
       wagonSide: (z, free, others) => {
         const lane = pick(others);
         G.obstacles.push(new Obstacle("wagon", lane, z + 2));
         coinRow(free, z + 2, 6);
         return 20;
       },
-
-      // Enchaînement : saute puis glisse (voies différentes ou même voie espacée)
       jumpThenSlide: (z, free, others) => {
         const lane = pick(others);
+        const step = clamp(G.speed * 0.7, 11, 18);
         G.obstacles.push(new Obstacle("barrier", lane, z + 3));
-        G.obstacles.push(new Obstacle("sign", lane, z + 3 + clamp(G.speed * 0.7, 11, 18)));
+        G.obstacles.push(new Obstacle("sign", lane, z + 3 + step));
         coinRow(free, z + 2, 6);
-        return 6 + clamp(G.speed * 0.7, 11, 18) + 6;
+        return 6 + step + 6;
       },
-
-      // Trois rangées successives, chacune évitable
       triplet: (z, free, others) => {
         const step = clamp(G.speed * 0.62, 10, 17);
         const l1 = pick(others);
@@ -995,36 +411,25 @@ class Spawner {
         coinRow(free2, z + step, 4);
         return 2 + step * 2 + 6;
       },
-
-      // Couloir : deux wagons laissant la voie du centre ou un côté libre
       wagonCorridor: (z, free, others) => {
         G.obstacles.push(new Obstacle("wagon", others[0], z + 2));
         G.obstacles.push(new Obstacle("wagon", others[1], z + 5));
         coinRow(free, z + 3, 8, 2.2);
         return 24;
       },
-
-      // Zigzag de pièces entre deux obstacles décalés
       zigzag: (z, free, others) => {
         const step = clamp(G.speed * 0.66, 11, 18);
         G.obstacles.push(new Obstacle("crate", others[0], z + 2));
         G.obstacles.push(new Obstacle("crate", others[1], z + 2 + step));
         coinRow(free, z, 3);
-        coinRow(others[1], z + 2, 3);   // libre au moment de la 1re caisse
-        coinRow(others[0], z + 2 + step, 3); // libre au moment de la 2e
+        coinRow(others[1], z + 2, 3);
+        coinRow(others[0], z + 2 + step, 3);
         return 4 + step + 8;
       },
-
-      // Rafale finale : alternance rapide mais réactive
       gauntlet: (z, free, others) => {
         const step = clamp(G.speed * 0.58, 10, 16);
-        const seq = [
-          { type: "barrier", lane: pick(others) },
-          { type: "sign", lane: pick(others) },
-          { type: "crate", lane: pick(others) },
-          { type: "barrier", lane: pick(others) },
-        ];
-        seq.forEach((s, i) => G.obstacles.push(new Obstacle(s.type, s.lane, z + 2 + i * step)));
+        const seq = ["barrier", "sign", "crate", "barrier"];
+        seq.forEach((type, i) => G.obstacles.push(new Obstacle(type, pick(others), z + 2 + i * step)));
         coinRow(free, z + 2, 4);
         coinJumpArc(free, z + 2 + step * 2);
         return 2 + step * 4 + 4;
@@ -1037,28 +442,24 @@ class Spawner {
    CollisionManager — hitboxes logiques par voie / hauteur / profondeur
    -------------------------------------------------------------------------- */
 class CollisionManager {
-  /* Renvoie l'obstacle percuté, ou null. Hitbox volontairement indulgente. */
   static check(player, obstacles) {
     const px = player.x;
     for (const o of obstacles) {
       if (o.dead) continue;
-      const halfD = o.def.d / 2 + 0.45;             // fenêtre de profondeur
+      const halfD = o.def.d / 2 + 0.45;
       const center = o.z + o.def.d / 2;
       if (Math.abs(center - CONFIG.PLAYER_Z) > halfD) continue;
-      if (Math.abs(px - o.x) > 1.35) continue;      // pas sur la même voie
+      if (Math.abs(px - o.x) > 1.35) continue;
 
       if (o.type === "barrier") {
-        // Sautable : les pieds doivent dépasser ~70 % de la barrière
         if (player.y > o.def.h * 0.7) continue;
         return o;
       }
       if (o.type === "sign") {
-        // Glissade : la tête doit passer sous le panneau
         const top = player.y + player.height;
         if (top < o.def.gapBottom) continue;
         return o;
       }
-      // crate / wagon : infranchissable
       return o;
     }
     return null;
@@ -1114,7 +515,6 @@ class UIManager {
       el.setAttribute("aria-hidden", s === name ? "false" : "true");
     }
   }
-  hideAll() { this.show("__none__"); }
 
   setHud(on) { this.hud.classList.toggle("active", on); }
 
@@ -1125,23 +525,20 @@ class UIManager {
   }
 
   updatePowerups(active) {
-    // active : { kind: {t, dur} }
     for (const kind of Object.keys(POWERUP_DEFS)) {
       const a = active[kind];
       let el = this.puBars[kind];
       if (a && !el) {
         el = document.createElement("div");
         el.className = "pu-badge";
-        el.innerHTML = `<span class="pu pu-${kind}">${POWERUP_DEFS[kind].label}</span><div class="pu-bar"><div class="pu-fill" style="background:${POWERUP_DEFS[kind].color}"></div></div>`;
+        el.innerHTML = `<span class="pu pu-${kind}">${POWERUP_DEFS[kind].label}</span><div class="pu-bar"><div class="pu-fill" style="background:${POWERUP_DEFS[kind].css}"></div></div>`;
         this.puContainer.appendChild(el);
         this.puBars[kind] = el;
       } else if (!a && el) {
         el.remove();
         delete this.puBars[kind];
       }
-      if (a && el) {
-        el.querySelector(".pu-fill").style.width = `${(a.t / a.dur) * 100}%`;
-      }
+      if (a && el) el.querySelector(".pu-fill").style.width = `${(a.t / a.dur) * 100}%`;
     }
   }
 
@@ -1155,28 +552,867 @@ class UIManager {
   }
 }
 
-/* --------------------------------------------------------------------------
-   Game — boucle principale, états, rendu des entités et effets
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   TEXTURES PROCÉDURALES — tout est dessiné en canvas, aucun asset externe
+   ========================================================================== */
+function makeTexture(w, h, draw, { repeat, anis = 4 } = {}) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  draw(c.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = anis;
+  if (repeat) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(repeat[0], repeat[1]);
+  }
+  return t;
+}
+
+const Tex = {
+  /* Ciel : dégradé crépuscule + soleil + étoiles + skyline en silhouette */
+  sky() {
+    return makeTexture(1024, 512, (g, w, h) => {
+      const HOR = h * 0.72; // ligne d'horizon dans la texture
+      const grad = g.createLinearGradient(0, 0, 0, HOR);
+      grad.addColorStop(0, "#12102e");
+      grad.addColorStop(0.5, "#3c2560");
+      grad.addColorStop(0.85, "#8a4550");
+      grad.addColorStop(1, "#d97a45");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, HOR + 2);
+      g.fillStyle = "#1a1330";
+      g.fillRect(0, HOR, w, h - HOR);
+      // soleil bas
+      const sun = g.createRadialGradient(w / 2, HOR, 5, w / 2, HOR, 190);
+      sun.addColorStop(0, "rgba(255,196,110,0.95)");
+      sun.addColorStop(0.35, "rgba(255,150,70,0.4)");
+      sun.addColorStop(1, "rgba(255,150,70,0)");
+      g.fillStyle = sun;
+      g.fillRect(0, 0, w, h);
+      // étoiles
+      g.fillStyle = "rgba(255,255,255,0.7)";
+      for (let i = 0; i < 90; i++) {
+        const x = Math.random() * w, y = Math.random() * HOR * 0.55;
+        const r = Math.random() * 1.3 + 0.3;
+        g.globalAlpha = Math.random() * 0.7 + 0.2;
+        g.fillRect(x, y, r, r);
+      }
+      g.globalAlpha = 1;
+      // skyline lointaine
+      g.fillStyle = "#191338";
+      let x = 0;
+      while (x < w) {
+        const bw = rand(28, 90), bh = rand(28, 120);
+        g.fillRect(x, HOR - bh, bw, bh + 4);
+        // quelques fenêtres
+        g.fillStyle = "rgba(255,205,130,0.5)";
+        for (let i = 0; i < bw * bh * 0.002; i++) {
+          g.fillRect(x + rand(3, bw - 5), HOR - bh + rand(4, bh - 6), 2, 3);
+        }
+        g.fillStyle = "#191338";
+        x += bw + rand(4, 26);
+      }
+    });
+  },
+
+  /* Sol : ballast + dalle centrale + traverses + lisérés jaunes (tuile 48×12 m) */
+  ground() {
+    return makeTexture(1024, 256, (g, w, h) => {
+      const mPerPx = 48 / w;
+      const xOf = (m) => (m + 24) / 48 * w;
+      // ballast latéral
+      g.fillStyle = "#20232f";
+      g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 900; i++) {
+        g.fillStyle = `rgba(${120 + rand(-30, 30)},${125 + rand(-30, 30)},${150 + rand(-30, 30)},0.12)`;
+        g.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+      }
+      // dalle centrale (zone des 3 voies)
+      const slabL = xOf(-4.3), slabR = xOf(4.3);
+      const slab = g.createLinearGradient(slabL, 0, slabR, 0);
+      slab.addColorStop(0, "#343850");
+      slab.addColorStop(0.5, "#3b3f5a");
+      slab.addColorStop(1, "#343850");
+      g.fillStyle = slab;
+      g.fillRect(slabL, 0, slabR - slabL, h);
+      // traverses : 5 par tuile de 12 m
+      g.fillStyle = "#23263a";
+      for (let i = 0; i < 5; i++) {
+        const y = (i + 0.5) / 5 * h;
+        g.fillRect(slabL + 6, y - 5, slabR - slabL - 12, 10);
+        g.fillStyle = "rgba(0,0,0,0.25)";
+        g.fillRect(slabL + 6, y + 4, slabR - slabL - 12, 2);
+        g.fillStyle = "#23263a";
+      }
+      // lits de rails (bandes sombres sous chaque rail)
+      g.fillStyle = "rgba(0,0,0,0.3)";
+      for (const lane of CONFIG.LANE_X) {
+        for (const off of [-0.72, 0.72]) {
+          g.fillRect(xOf(lane + off) - 3, 0, 6, h);
+        }
+      }
+      // lisérés jaunes de bord de quai
+      g.fillStyle = "#d9a92e";
+      g.fillRect(slabL - 3, 0, 5, h);
+      g.fillRect(slabR - 2, 0, 5, h);
+      // marquage pointillé central léger
+      g.fillStyle = "rgba(255,255,255,0.06)";
+      for (const lane of [-1.2, 1.2]) g.fillRect(xOf(lane) - 1, 0, 2, h);
+    }, { repeat: [1, 1] });
+  },
+
+  /* Mur de quai avec graffitis originaux (répété le long de la voie) */
+  wall() {
+    return makeTexture(1024, 128, (g, w, h) => {
+      g.fillStyle = "#3a3f58";
+      g.fillRect(0, 0, w, h);
+      // joints de béton
+      g.strokeStyle = "rgba(0,0,0,0.35)";
+      g.lineWidth = 2;
+      for (let x = 0; x < w; x += 128) {
+        g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke();
+      }
+      // salissures
+      for (let i = 0; i < 40; i++) {
+        g.fillStyle = `rgba(0,0,0,${rand(0.05, 0.18)})`;
+        g.beginPath();
+        g.ellipse(Math.random() * w, rand(h * 0.5, h), rand(10, 50), rand(4, 14), 0, 0, Math.PI * 2);
+        g.fill();
+      }
+      // graffitis colorés (formes + tags fictifs)
+      const tags = ["DASH", "VLT", "NOVA", "GO!", "ZINC", "K7"];
+      const cols = ["#ff5c8a", "#00e08a", "#ffc93c", "#00d0ff", "#c084fc"];
+      for (let i = 0; i < 7; i++) {
+        const x = rand(30, w - 90), y = rand(h * 0.25, h * 0.7);
+        const col = pick(cols);
+        g.fillStyle = col + "55";
+        g.beginPath();
+        g.ellipse(x + 34, y + 8, rand(34, 58), rand(14, 22), rand(-0.2, 0.2), 0, Math.PI * 2);
+        g.fill();
+        g.font = `900 ${rand(20, 30)}px system-ui, sans-serif`;
+        g.strokeStyle = "rgba(10,10,20,0.8)";
+        g.lineWidth = 5;
+        g.strokeText(pick(tags), x, y + 16);
+        g.fillStyle = col;
+        g.fillText(pick(tags), x, y + 16);
+      }
+    }, { repeat: [10, 1] });
+  },
+
+  /* Façades d'immeubles : 4 variantes, fenêtres allumées (servent d'emissiveMap) */
+  facade(base) {
+    return makeTexture(256, 512, (g, w, h) => {
+      g.fillStyle = base;
+      g.fillRect(0, 0, w, h);
+      // fenêtres
+      const cols = 6, rows = 14;
+      for (let r = 1; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const lit = Math.random() < 0.42;
+          const x = (c + 0.22) / cols * w;
+          const y = (r + 0.15) / rows * h;
+          const ww = w / cols * 0.56, wh = h / rows * 0.55;
+          if (lit) {
+            g.fillStyle = pick(["#ffcf8a", "#ffe9b8", "#9fd8ff"]);
+            g.fillRect(x, y, ww, wh);
+            g.fillStyle = "rgba(255,255,255,0.35)";
+            g.fillRect(x, y, ww, wh * 0.4);
+          } else {
+            g.fillStyle = "rgba(10,12,22,0.85)";
+            g.fillRect(x, y, ww, wh);
+          }
+        }
+      }
+      // corniche
+      g.fillStyle = "rgba(0,0,0,0.4)";
+      g.fillRect(0, 0, w, h * 0.03);
+    });
+  },
+
+  /* Enseigne néon (texte au choix) */
+  neon(text, color) {
+    return makeTexture(256, 64, (g, w, h) => {
+      g.clearRect(0, 0, w, h);
+      g.font = "900 34px system-ui, sans-serif";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.shadowColor = color;
+      g.shadowBlur = 16;
+      g.fillStyle = color;
+      g.fillText(text, w / 2, h / 2);
+      g.shadowBlur = 0;
+      g.fillStyle = "#ffffff";
+      g.globalAlpha = 0.8;
+      g.font = "900 32px system-ui, sans-serif";
+      g.fillText(text, w / 2, h / 2);
+    });
+  },
+
+  /* Panneau publicitaire */
+  billboard(text) {
+    return makeTexture(512, 160, (g, w, h) => {
+      g.fillStyle = "#10131f";
+      g.fillRect(0, 0, w, h);
+      g.strokeStyle = "#00d0ff";
+      g.lineWidth = 6;
+      g.strokeRect(6, 6, w - 12, h - 12);
+      g.font = "900 52px system-ui, sans-serif";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.shadowColor = "#00d0ff";
+      g.shadowBlur = 18;
+      g.fillStyle = "#7ae4ff";
+      g.fillText(text, w / 2, h / 2);
+    });
+  },
+
+  /* Barrière rayée */
+  barrier() {
+    return makeTexture(256, 96, (g, w, h) => {
+      g.fillStyle = "#ff8a2a";
+      g.fillRect(0, 0, w, h);
+      g.fillStyle = "#f4f6ff";
+      for (let x = -h; x < w + h; x += 64) {
+        g.beginPath();
+        g.moveTo(x, h); g.lineTo(x + 32, h); g.lineTo(x + 32 + h * 0.6, 0); g.lineTo(x + h * 0.6, 0);
+        g.closePath(); g.fill();
+      }
+      g.fillStyle = "rgba(0,0,0,0.22)";
+      g.fillRect(0, h - 10, w, 10);
+    });
+  },
+
+  /* Caisse taguée */
+  crate(base, tag) {
+    return makeTexture(256, 256, (g, w, h) => {
+      g.fillStyle = base;
+      g.fillRect(0, 0, w, h);
+      g.strokeStyle = "rgba(0,0,0,0.35)";
+      g.lineWidth = 10;
+      g.strokeRect(5, 5, w - 10, h - 10);
+      g.strokeStyle = "rgba(255,255,255,0.12)";
+      g.lineWidth = 4;
+      g.strokeRect(18, 18, w - 36, h - 36);
+      g.font = "900 72px system-ui, sans-serif";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.strokeStyle = "rgba(0,0,0,0.7)";
+      g.lineWidth = 10;
+      g.strokeText(tag, w / 2, h / 2);
+      g.fillStyle = "#f4f6ff";
+      g.fillText(tag, w / 2, h / 2);
+    });
+  },
+
+  /* Panneau "baisse-toi" */
+  signPanel() {
+    return makeTexture(512, 128, (g, w, h) => {
+      g.fillStyle = "#0e1220";
+      g.fillRect(0, 0, w, h);
+      g.strokeStyle = "#00d0ff";
+      g.lineWidth = 8;
+      g.strokeRect(4, 4, w - 8, h - 8);
+      g.font = "900 56px system-ui, sans-serif";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.shadowColor = "#00d0ff";
+      g.shadowBlur = 16;
+      g.fillStyle = "#7ae4ff";
+      g.fillText("⬇ BAISSE-TOI ⬇", w / 2, h / 2);
+    });
+  },
+
+  /* Flanc de wagon : fenêtres + portes */
+  wagonSide(base) {
+    return makeTexture(1024, 256, (g, w, h) => {
+      const grad = g.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, base[0]);
+      grad.addColorStop(0.55, base[1]);
+      grad.addColorStop(1, base[2]);
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, h);
+      // bande fenêtres
+      for (let i = 0; i < 8; i++) {
+        const x = 20 + i * 124;
+        g.fillStyle = "#0d1626";
+        g.beginPath();
+        g.roundRect(x, 42, 96, 66, 10);
+        g.fill();
+        g.fillStyle = "rgba(160,210,255,0.75)";
+        g.beginPath();
+        g.roundRect(x + 5, 47, 86, 56, 7);
+        g.fill();
+        g.fillStyle = "rgba(255,255,255,0.35)";
+        g.fillRect(x + 8, 50, 80, 16);
+      }
+      // portes
+      g.fillStyle = "rgba(0,0,0,0.3)";
+      for (const x of [250, 640]) g.fillRect(x, 36, 6, h - 60);
+      // bas de caisse
+      g.fillStyle = "rgba(0,0,0,0.4)";
+      g.fillRect(0, h - 34, w, 34);
+      g.fillStyle = "#ffc93c";
+      g.fillRect(0, h - 40, w, 5);
+    });
+  },
+
+  /* Avant de wagon */
+  wagonFront(base) {
+    return makeTexture(256, 256, (g, w, h) => {
+      const grad = g.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, base[0]);
+      grad.addColorStop(0.6, base[1]);
+      grad.addColorStop(1, base[2]);
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, h);
+      // pare-brise
+      g.fillStyle = "#0d1626";
+      g.beginPath();
+      g.roundRect(30, 34, w - 60, 76, 14);
+      g.fill();
+      g.fillStyle = "rgba(150,200,255,0.5)";
+      g.beginPath();
+      g.roundRect(38, 40, w - 76, 62, 10);
+      g.fill();
+      // phares
+      for (const x of [46, w - 46]) {
+        g.fillStyle = "#ffe9a8";
+        g.beginPath();
+        g.arc(x, 168, 14, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.fillStyle = "rgba(0,0,0,0.4)";
+      g.fillRect(0, h - 40, w, 40);
+    });
+  },
+
+  /* Halo radial (sprites additifs : lampes, glows, particules) */
+  glow() {
+    return makeTexture(128, 128, (g, w, h) => {
+      const grad = g.createRadialGradient(w / 2, h / 2, 2, w / 2, h / 2, w / 2);
+      grad.addColorStop(0, "rgba(255,255,255,1)");
+      grad.addColorStop(0.35, "rgba(255,255,255,0.45)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, h);
+    });
+  },
+
+  /* Ombre portée circulaire */
+  blob() {
+    return makeTexture(128, 128, (g, w, h) => {
+      const grad = g.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
+      grad.addColorStop(0, "rgba(0,0,0,0.55)");
+      grad.addColorStop(0.7, "rgba(0,0,0,0.3)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, h);
+    });
+  },
+
+  /* Icône de power-up */
+  puIcon(label, css) {
+    return makeTexture(128, 128, (g, w, h) => {
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = "rgba(13,15,25,0.92)";
+      g.strokeStyle = css;
+      g.lineWidth = 10;
+      g.beginPath();
+      g.roundRect(10, 10, w - 20, h - 20, 30);
+      g.fill();
+      g.stroke();
+      g.font = "900 58px system-ui, sans-serif";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.shadowColor = css;
+      g.shadowBlur = 14;
+      g.fillStyle = css;
+      g.fillText(label, w / 2, h / 2 + 2);
+    });
+  },
+};
+
+/* ==========================================================================
+   PlayerRig — coureur 3D articulé (torse, tête, casquette, sac, bras, jambes)
+   ========================================================================== */
+class PlayerRig {
+  constructor(scene, glowTex, blobTex) {
+    this.group = new THREE.Group();
+    scene.add(this.group);
+
+    const skin = new THREE.MeshLambertMaterial({ color: 0xe8b087 });
+    const jacket = new THREE.MeshLambertMaterial({ color: 0xff8a2a });
+    const jacketD = new THREE.MeshLambertMaterial({ color: 0xd96f14 });
+    const pants = new THREE.MeshLambertMaterial({ color: 0x2c3150 });
+    const shoe = new THREE.MeshLambertMaterial({ color: 0xf4f6ff });
+    const bag = new THREE.MeshLambertMaterial({ color: 0x8b5cf6 });
+    const cap = new THREE.MeshLambertMaterial({ color: 0x2f7bff });
+    const hair = new THREE.MeshLambertMaterial({ color: 0x503a28 });
+    const box = (w, h, d, mat) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+
+    // Corps : pivot au niveau des hanches pour la glissade
+    this.body = new THREE.Group();
+    this.body.position.y = 0.85;
+    this.group.add(this.body);
+
+    // torse + bande de veste
+    const torso = box(0.52, 0.64, 0.3, jacket);
+    torso.position.y = 0.32;
+    this.body.add(torso);
+    const stripe = box(0.08, 0.6, 0.31, jacketD);
+    stripe.position.set(0, 0.32, 0.005);
+    this.body.add(stripe);
+
+    // sac à dos (face caméra : +z)
+    const pack = box(0.42, 0.5, 0.2, bag);
+    pack.position.set(0, 0.36, 0.25);
+    this.body.add(pack);
+    const strapL = box(0.07, 0.5, 0.05, bag);
+    strapL.position.set(-0.18, 0.36, 0.16);
+    this.body.add(strapL);
+    const strapR = strapL.clone();
+    strapR.position.x = 0.18;
+    this.body.add(strapR);
+
+    // tête + cheveux + casquette (visière vers -z, sens de course)
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 18, 14), skin);
+    head.position.y = 0.82;
+    this.body.add(head);
+    const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.195, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hair);
+    hairCap.position.y = 0.83;
+    this.body.add(hairCap);
+    const capTop = box(0.34, 0.11, 0.34, cap);
+    capTop.position.y = 0.97;
+    this.body.add(capTop);
+    const brim = box(0.3, 0.045, 0.18, cap);
+    brim.position.set(0, 0.94, -0.24);
+    this.body.add(brim);
+
+    // bras (pivot épaule)
+    const mkArm = (side) => {
+      const g = new THREE.Group();
+      g.position.set(0.32 * side, 0.56, 0);
+      const arm = box(0.14, 0.46, 0.14, jacket);
+      arm.position.y = -0.22;
+      g.add(arm);
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), skin);
+      hand.position.y = -0.48;
+      g.add(hand);
+      this.body.add(g);
+      return g;
+    };
+    this.armL = mkArm(-1);
+    this.armR = mkArm(1);
+
+    // jambes (pivot hanche, attachées au groupe racine pour rester au sol)
+    const mkLeg = (side, mat) => {
+      const g = new THREE.Group();
+      g.position.set(0.14 * side, 0.85, 0);
+      const leg = box(0.17, 0.58, 0.17, mat);
+      leg.position.y = -0.29;
+      g.add(leg);
+      const foot = box(0.18, 0.1, 0.3, shoe);
+      foot.position.set(0, -0.6, -0.05);
+      g.add(foot);
+      this.group.add(g);
+      return g;
+    };
+    this.legL = mkLeg(-1, pants);
+    this.legR = mkLeg(1, new THREE.MeshLambertMaterial({ color: 0x3a4066 }));
+
+    // ombre portée
+    this.shadowMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.5, 1.1),
+      new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })
+    );
+    this.shadowMesh.rotation.x = -Math.PI / 2;
+    scene.add(this.shadowMesh);
+
+    // aura bouclier
+    this.shieldFx = new THREE.Mesh(
+      new THREE.SphereGeometry(0.95, 20, 14),
+      new THREE.MeshBasicMaterial({ color: 0x00d0ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })
+    );
+    this.shieldFx.visible = false;
+    this.group.add(this.shieldFx);
+    this.shieldFx.position.y = 1.0;
+
+    // halo boost
+    this.boostFx = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTex, color: 0xff8a2a, transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    }));
+    this.boostFx.scale.set(2.6, 2.6, 1);
+    this.boostFx.position.y = 1.0;
+    this.boostFx.visible = false;
+    this.group.add(this.boostFx);
+
+    this.slideW = 0; // poids de la pose de glissade (0..1)
+    this.airW = 0;   // poids de la pose aérienne
+  }
+
+  update(player, dt, fx) {
+    const g = this.group;
+    g.position.x = player.x;
+    g.position.z = -CONFIG.PLAYER_Z;
+
+    // Poids de poses lissés
+    this.slideW = damp(this.slideW, player.sliding ? 1 : 0, 14, dt);
+    this.airW = damp(this.airW, player.jumping ? 1 : 0, 12, dt);
+
+    const t = player.runPhase;
+    const run = Math.sin(t);
+    const bob = Math.abs(Math.cos(t)) * 0.05 * (1 - this.airW) * (1 - this.slideW);
+    g.position.y = player.y + bob - this.slideW * 0.52;
+
+    // inclinaison lors des changements de voie + penché en avant en course
+    const lean = clamp((CONFIG.LANE_X[player.lane] - player.x) * 0.4, -0.35, 0.35);
+    g.rotation.z = damp(g.rotation.z, -lean, 12, dt);
+
+    // pose de course
+    const swing = run * 0.85;
+    const runLegL = swing, runLegR = -swing;
+    const runArmL = -swing * 0.8, runArmR = swing * 0.8;
+
+    // pose aérienne : jambes groupées, bras levés
+    const airLegL = -0.9, airLegR = 0.45, airArm = -2.3;
+
+    // pose de glissade : corps basculé en arrière, jambes tendues devant
+    const slideBody = -1.25, slideLeg = -1.35, slideArm = -0.6;
+
+    const mix = (runV, airV, slideV) =>
+      lerp(lerp(runV, airV, this.airW), slideV, this.slideW);
+
+    this.legL.rotation.x = mix(runLegL, airLegL, slideLeg);
+    this.legR.rotation.x = mix(runLegR, airLegR, slideLeg + 0.25);
+    this.armL.rotation.x = mix(runArmL, airArm, slideArm);
+    this.armR.rotation.x = mix(runArmR, airArm * 0.85, slideArm);
+    this.body.rotation.x = mix(0.12, -0.05, slideBody);
+    this.body.position.z = this.slideW * 0.25;
+
+    // ombre au sol
+    this.shadowMesh.position.set(player.x, 0.02, -CONFIG.PLAYER_Z);
+    const sh = clamp(1 - player.y / 3, 0.3, 1);
+    this.shadowMesh.scale.set(sh, sh * (1 + this.slideW * 0.7), 1);
+    this.shadowMesh.material.opacity = sh;
+
+    // effets
+    this.shieldFx.visible = fx.shield;
+    if (fx.shield) {
+      const p = 1 + Math.sin(performance.now() / 160) * 0.06;
+      this.shieldFx.scale.set(p, p * 1.15, p);
+    }
+    this.boostFx.visible = fx.boost;
+
+    // clignotement d'invulnérabilité
+    g.visible = !(player.invincibleT > 0 && Math.floor(performance.now() / 90) % 2 === 0);
+  }
+}
+
+/* ==========================================================================
+   World3D — décor : ciel, sol défilant, murs, immeubles, lampes, tunnels
+   ========================================================================== */
+class World3D {
+  constructor(scene, glowTex) {
+    this.scene = scene;
+    this.dist = 0;
+
+    /* Ciel (plan lointain, insensible au brouillard) */
+    this.sky = new THREE.Mesh(
+      new THREE.PlaneGeometry(560, 240),
+      new THREE.MeshBasicMaterial({ map: Tex.sky(), fog: false, depthWrite: false })
+    );
+    this.sky.position.set(0, 55, -250);
+    scene.add(this.sky);
+
+    /* Sol + murs : groupe « scroller » décalé de (dist % TILE) pour le défilement */
+    this.TILE = 12;
+    this.scroller = new THREE.Group();
+    scene.add(this.scroller);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(48, 288),
+      new THREE.MeshLambertMaterial({ map: Tex.ground() })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.set(0, 0, -116);
+    ground.material.map.repeat.set(1, 288 / this.TILE);
+    this.scroller.add(ground);
+
+    const wallTex = Tex.wall();
+    for (const side of [-1, 1]) {
+      const wall = new THREE.Mesh(
+        new THREE.BoxGeometry(0.35, 1.1, 288),
+        new THREE.MeshLambertMaterial({ map: wallTex })
+      );
+      wall.position.set(side * 5.1, 0.55, -116);
+      this.scroller.add(wall);
+    }
+
+    /* Rails : boîtes fines métalliques, statiques */
+    const railMat = new THREE.MeshStandardMaterial({ color: 0xaab6d0, metalness: 0.85, roughness: 0.35 });
+    for (const lane of CONFIG.LANE_X) {
+      for (const off of [-0.72, 0.72]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 288), railMat);
+        rail.position.set(lane + off, 0.05, -116);
+        scene.add(rail);
+      }
+    }
+
+    /* Immeubles recyclés (8 par côté) */
+    this.buildings = [];
+    const facades = ["#232842", "#1e2338", "#2a2440", "#20304a"].map((c) => Tex.facade(c));
+    const neonNames = ["NOVA", "VOLT CAFÉ", "RAPID+", "PIXEL BAR", "ORBIT", "KUMO", "LUMA", "DASH 24"];
+    const neonCols = ["#00d0ff", "#ff8a2a", "#c084fc", "#ff5c8a"];
+    this.BSPAN = 8 * 34;
+    for (let side = -1; side <= 1; side += 2) {
+      for (let i = 0; i < 8; i++) {
+        const h = rand(9, 18);
+        const geo = new THREE.BoxGeometry(10, 1, 26);
+        const matIn = new THREE.MeshLambertMaterial({
+          map: pick(facades),
+          emissive: 0xffffff,
+          emissiveMap: null,
+          emissiveIntensity: 0.55,
+        });
+        matIn.emissiveMap = matIn.map;
+        const plain = new THREE.MeshLambertMaterial({ color: 0x191d30 });
+        // face intérieure texturée (index 0 = +x, 1 = -x)
+        const mats = [side < 0 ? matIn : plain, side < 0 ? plain : matIn, plain, plain, plain, plain];
+        const mesh = new THREE.Mesh(geo, mats);
+        mesh.scale.y = h;
+        mesh.position.set(side * (11.5 + rand(0, 2.5)), h / 2, 0);
+
+        const grp = new THREE.Group();
+        grp.add(mesh);
+
+        // enseigne néon éventuelle
+        let sign = null;
+        if (Math.random() < 0.5) {
+          sign = new THREE.Mesh(
+            new THREE.PlaneGeometry(5.5, 1.4),
+            new THREE.MeshBasicMaterial({
+              map: Tex.neon(pick(neonNames), pick(neonCols)),
+              transparent: true, depthWrite: false,
+            })
+          );
+          sign.position.set(side * (11.5 - 5.2), h * 0.55, 0);
+          sign.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+          grp.add(sign);
+        }
+
+        grp.position.z = -i * 34 - rand(0, 8);
+        grp.userData = { mesh, sign, side };
+        this.scene.add(grp);
+        this.buildings.push(grp);
+      }
+    }
+
+    /* Lampadaires recyclés */
+    this.lamps = [];
+    this.LSPAN = 8 * 26;
+    const poleGeo = new THREE.CylinderGeometry(0.06, 0.09, 4.6, 8);
+    const poleMat = new THREE.MeshLambertMaterial({ color: 0x3a3f58 });
+    for (let i = 0; i < 8; i++) {
+      const side = i % 2 === 0 ? 1 : -1;
+      const grp = new THREE.Group();
+      const pole = new THREE.Mesh(poleGeo, poleMat);
+      pole.position.y = 2.3;
+      grp.add(pole);
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.16, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffdc96 })
+      );
+      head.position.y = 4.65;
+      grp.add(head);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTex, color: 0xffc878, transparent: true, opacity: 0.85,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      halo.scale.set(2.4, 2.4, 1);
+      halo.position.y = 4.65;
+      grp.add(halo);
+      grp.position.set(side * 4.85, 0, -i * 26 - 12);
+      scene.add(grp);
+      this.lamps.push(grp);
+    }
+
+    /* Portiques publicitaires recyclés */
+    this.gantries = [];
+    this.GSPAN = 2 * 130;
+    const adTexts = ["NOVA COLA", "VOLT ⚡ ENERGY", "FLY KICKS", "METRO DASH"];
+    for (let i = 0; i < 2; i++) {
+      const grp = new THREE.Group();
+      const legGeo = new THREE.CylinderGeometry(0.09, 0.12, 4.6, 8);
+      for (const side of [-1, 1]) {
+        const leg = new THREE.Mesh(legGeo, poleMat);
+        leg.position.set(side * 4.6, 2.3, 0);
+        grp.add(leg);
+      }
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.22, 0.22), poleMat);
+      bar.position.y = 4.5;
+      grp.add(bar);
+      const panel = new THREE.Mesh(
+        new THREE.PlaneGeometry(6.4, 2),
+        new THREE.MeshBasicMaterial({ map: Tex.billboard(pick(adTexts)), depthWrite: true })
+      );
+      panel.position.y = 3.4;
+      grp.add(panel);
+      grp.position.z = -60 - i * 130;
+      scene.add(grp);
+      this.gantries.push(grp);
+    }
+
+    /* Tunnel néon recyclé (voûte + anneaux) */
+    this.TUNNEL_LEN = 60;
+    this.tunnel = new THREE.Group();
+    const shell = new THREE.Mesh(
+      new THREE.CylinderGeometry(5.8, 5.8, this.TUNNEL_LEN, 24, 1, true, 0, Math.PI),
+      new THREE.MeshLambertMaterial({ color: 0x14161f, side: THREE.DoubleSide })
+    );
+    shell.rotation.z = Math.PI / 2;      // axe le long de X → on veut Z
+    shell.rotation.y = Math.PI / 2;
+    shell.position.y = 0.4;
+    this.tunnel.add(shell);
+    const ringGeo = new THREE.TorusGeometry(5.3, 0.09, 8, 40, Math.PI);
+    for (let i = 0; i < this.TUNNEL_LEN / 6; i++) {
+      const ring = new THREE.Mesh(
+        ringGeo,
+        new THREE.MeshBasicMaterial({ color: i % 2 ? 0x8b5cf6 : 0x00d0ff })
+      );
+      ring.position.set(0, 0.4, this.TUNNEL_LEN / 2 - i * 6);
+      this.tunnel.add(ring);
+    }
+    this.tunnel.position.z = -350;
+    scene.add(this.tunnel);
+    this.tunnelGapMin = 320;
+    this.tunnelGapMax = 480;
+  }
+
+  reset() {
+    this.dist = 0;
+  }
+
+  /* Le joueur (caméra) est-il sous la voûte du tunnel ? */
+  inTunnel() {
+    const z = this.tunnel.position.z;
+    return z + this.TUNNEL_LEN / 2 > -CONFIG.PLAYER_Z - 4 && z - this.TUNNEL_LEN / 2 < 2;
+  }
+
+  update(dt, speed) {
+    const dz = speed * dt;      // le monde avance vers +z (vers la caméra)
+    this.dist += dz;
+
+    this.scroller.position.z = this.dist % this.TILE;
+
+    const recycle = (grp, span, rerand) => {
+      grp.position.z += dz;
+      if (grp.position.z > 20) {
+        grp.position.z -= span;
+        if (rerand) rerand(grp);
+      }
+    };
+
+    for (const b of this.buildings) {
+      recycle(b, this.BSPAN, (g) => {
+        const h = rand(9, 18);
+        g.userData.mesh.scale.y = h;
+        g.userData.mesh.position.y = h / 2;
+        if (g.userData.sign) {
+          g.userData.sign.position.y = h * 0.55;
+          g.userData.sign.visible = Math.random() < 0.75;
+        }
+      });
+    }
+    for (const l of this.lamps) recycle(l, this.LSPAN);
+    for (const g of this.gantries) recycle(g, this.GSPAN);
+
+    // tunnel : réapparaît plus loin après son passage
+    this.tunnel.position.z += dz;
+    if (this.tunnel.position.z - this.TUNNEL_LEN / 2 > 10) {
+      this.tunnel.position.z = -rand(this.tunnelGapMin, this.tunnelGapMax);
+    }
+  }
+}
+
+/* ==========================================================================
+   FXOverlay — canvas 2D : lignes de vitesse + flashs (au-dessus du rendu 3D)
+   ========================================================================== */
+class FXOverlay {
+  constructor() {
+    this.canvas = document.getElementById("fx");
+    this.ctx = this.canvas.getContext("2d");
+    this.flash = null; // {color, t, dur}
+    this.resize();
+  }
+  resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    this.canvas.width = innerWidth * dpr;
+    this.canvas.height = innerHeight * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  doFlash(color, dur = 0.35) {
+    this.flash = { color, t: dur, dur };
+  }
+  render(dt, speedFx, dying, dieT) {
+    const { ctx } = this;
+    const w = innerWidth, h = innerHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    if (speedFx > 0) {
+      ctx.strokeStyle = `rgba(255,255,255,${0.15 * speedFx})`;
+      ctx.lineWidth = 2;
+      const n = Math.floor(10 * speedFx);
+      for (let i = 0; i < n; i++) {
+        const y = Math.random() * h;
+        const edge = Math.random() < 0.5;
+        const x0 = edge ? Math.random() * w * 0.15 : w - Math.random() * w * 0.15;
+        const len = rand(30, 100) * speedFx;
+        ctx.beginPath();
+        ctx.moveTo(x0, y);
+        ctx.lineTo(x0 + (edge ? -len : len), y);
+        ctx.stroke();
+      }
+    }
+
+    if (this.flash) {
+      this.flash.t -= dt;
+      if (this.flash.t <= 0) this.flash = null;
+      else {
+        ctx.fillStyle = this.flash.color;
+        ctx.globalAlpha = 0.3 * (this.flash.t / this.flash.dur);
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    if (dying) {
+      ctx.fillStyle = `rgba(255,60,40,${0.25 * dieT})`;
+      ctx.fillRect(0, 0, w, h);
+    }
+  }
+}
+
+/* ==========================================================================
+   Game — boucle principale, scène 3D, pools de meshes, états
+   ========================================================================== */
 class Game {
   constructor() {
-    this.canvas = document.getElementById("game");
-    this.ctx = this.canvas.getContext("2d");
     this.ui = new UIManager();
     this.audio = new AudioManager();
-    this.particles = new ParticleSystem();
     this.player = new Player(this);
-    this.world = new World(this);
     this.spawner = new Spawner(this);
     this.scoreMgr = new ScoreManager();
+    this.fx = new FXOverlay();
 
-    this.state = "loading"; // loading | menu | playing | paused | dying | gameover
+    this.state = "loading";
     this.fxHigh = localStorage.getItem("metrodash_fx") !== "low";
 
     this.obstacles = [];
     this.coins = [];
     this.powerups = [];
-    this.active = {};        // power-ups actifs { kind: {t, dur} }
+    this.active = {};
 
     this.elapsed = 0;
     this.speed = CONFIG.BASE_SPEED;
@@ -1184,17 +1420,19 @@ class Game {
     this.shakeT = 0;
     this.dieT = 0;
 
+    this.initThree();
+    this.initPools();
+
     this.resize();
     window.addEventListener("resize", () => this.resize());
 
-    this.input = new InputManager(this.canvas, {
+    this.input = new InputManager(document.getElementById("game"), {
       left: () => this.state === "playing" && this.player.moveLane(-1),
       right: () => this.state === "playing" && this.player.moveLane(1),
       jump: () => this.state === "playing" && this.player.jump(),
       slide: () => this.state === "playing" && this.player.slide(),
       pause: () => this.togglePause(),
     });
-
     this.bindUI();
 
     document.addEventListener("visibilitychange", () => {
@@ -1202,10 +1440,265 @@ class Game {
     });
 
     this.last = performance.now();
-    requestAnimationFrame((t) => this.loop(t));
+    this.renderer.setAnimationLoop((t) => this.loop(t));
+    setTimeout(() => this.toMenu(), 500);
+  }
 
-    // Chargement éclair : tout est procédural
-    setTimeout(() => this.toMenu(), 700);
+  /* ------------------------------ scène 3D ------------------------------ */
+  initThree() {
+    const canvas = document.getElementById("game");
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    this.scene = new THREE.Scene();
+    this.fogNormal = new THREE.Color(0x33224e);
+    this.fogTunnel = new THREE.Color(0x0a0c14);
+    this.scene.fog = new THREE.Fog(this.fogNormal.clone(), 35, 130);
+
+    this.camera = new THREE.PerspectiveCamera(63, 1, 0.1, 400);
+    this.camera.position.set(0, 3.35, 0);
+
+    // Éclairage crépusculaire : dôme violet + soleil orange bas + rebond bleu
+    this.hemi = new THREE.HemisphereLight(0x8a6ac9, 0x2a2436, 0.95);
+    this.scene.add(this.hemi);
+    this.sun = new THREE.DirectionalLight(0xffa050, 1.15);
+    this.sun.position.set(4, 6, -40);
+    this.scene.add(this.sun);
+    const rim = new THREE.DirectionalLight(0x4a6aff, 0.35);
+    rim.position.set(-6, 8, 12);
+    this.scene.add(rim);
+
+    this.glowTex = Tex.glow();
+    this.blobTex = Tex.blob();
+    this.world = new World3D(this.scene, this.glowTex);
+    this.rig = new PlayerRig(this.scene, this.glowTex, this.blobTex);
+  }
+
+  /* -------------------- pools de meshes pour les entités -------------------- */
+  initPools() {
+    const D = OBSTACLE_DEFS;
+
+    /* Barrière */
+    const barrierTex = Tex.barrier();
+    const mkBarrier = () => {
+      const grp = new THREE.Group();
+      const panel = new THREE.Mesh(
+        new THREE.BoxGeometry(D.barrier.w, 0.5, 0.16),
+        new THREE.MeshLambertMaterial({ map: barrierTex })
+      );
+      panel.position.y = 0.75;
+      grp.add(panel);
+      const legMat = new THREE.MeshLambertMaterial({ color: 0x454b68 });
+      for (const s of [-1, 1]) {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.55, 0.09), legMat);
+        leg.position.set(s * (D.barrier.w / 2 - 0.15), 0.27, 0);
+        grp.add(leg);
+      }
+      return grp;
+    };
+
+    /* Panneau suspendu */
+    const signTex = Tex.signPanel();
+    const mkSign = () => {
+      const grp = new THREE.Group();
+      const poleMat = new THREE.MeshLambertMaterial({ color: 0x454b68 });
+      for (const s of [-1, 1]) {
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.6, 8), poleMat);
+        pole.position.set(s * D.sign.w / 2, 1.3, 0);
+        grp.add(pole);
+      }
+      const panel = new THREE.Mesh(
+        new THREE.BoxGeometry(D.sign.w, D.sign.h, 0.12),
+        new THREE.MeshLambertMaterial({ map: signTex, emissive: 0xffffff, emissiveMap: signTex, emissiveIntensity: 0.7 })
+      );
+      panel.position.y = D.sign.gapBottom + D.sign.h / 2;
+      grp.add(panel);
+      return grp;
+    };
+
+    /* Caisse */
+    const crateTexs = [Tex.crate("#8b5cf6", "DASH"), Tex.crate("#4a5178", "ZONE"), Tex.crate("#6d3fd6", "VLT")];
+    const mkCrate = () => {
+      const tex = pick(crateTexs);
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(D.crate.w, D.crate.h, D.crate.d),
+        new THREE.MeshLambertMaterial({ map: tex })
+      );
+      mesh.position.y = D.crate.h / 2;
+      const grp = new THREE.Group();
+      grp.add(mesh);
+      return grp;
+    };
+
+    /* Wagon */
+    const wagonSkins = [
+      { side: Tex.wagonSide(["#5d9aff", "#2f7bff", "#1f5cd0"]), front: Tex.wagonFront(["#5d9aff", "#2f7bff", "#1f5cd0"]) },
+      { side: Tex.wagonSide(["#4c548a", "#39406b", "#2b3050"]), front: Tex.wagonFront(["#4c548a", "#39406b", "#2b3050"]) },
+    ];
+    const mkWagon = () => {
+      const skin = pick(wagonSkins);
+      const grp = new THREE.Group();
+      const sideMat = new THREE.MeshLambertMaterial({ map: skin.side, emissive: 0xffffff, emissiveMap: skin.side, emissiveIntensity: 0.28 });
+      const frontMat = new THREE.MeshLambertMaterial({ map: skin.front, emissive: 0xffffff, emissiveMap: skin.front, emissiveIntensity: 0.28 });
+      const topMat = new THREE.MeshLambertMaterial({ color: 0x9aa3bd });
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(D.wagon.w, D.wagon.h - 0.5, D.wagon.d),
+        [sideMat, sideMat, topMat, topMat, frontMat, frontMat]
+      );
+      body.position.y = 0.45 + (D.wagon.h - 0.5) / 2;
+      grp.add(body);
+      // toit arrondi
+      const roof = new THREE.Mesh(
+        new THREE.CylinderGeometry(D.wagon.w / 2, D.wagon.w / 2, D.wagon.d, 14, 1, false, 0, Math.PI),
+        topMat
+      );
+      roof.rotation.z = Math.PI / 2;
+      roof.rotation.y = Math.PI / 2;
+      // local X → hauteur monde : on aplatit le dôme du toit
+      roof.scale.set(0.3, 1, 1);
+      roof.position.y = D.wagon.h - 0.05;
+      grp.add(roof);
+      // bogies
+      const bogieMat = new THREE.MeshLambertMaterial({ color: 0x14161f });
+      for (const zz of [-D.wagon.d / 2 + 1.4, D.wagon.d / 2 - 1.4]) {
+        const bogie = new THREE.Mesh(new THREE.BoxGeometry(D.wagon.w - 0.5, 0.5, 1.8), bogieMat);
+        bogie.position.set(0, 0.25, zz);
+        grp.add(bogie);
+      }
+      // halo de phare (face avant = -z, vers le joueur)
+      const lamp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: this.glowTex, color: 0xffe9a8, transparent: true, opacity: 0.9,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      lamp.scale.set(1.1, 1.1, 1);
+      lamp.position.set(0, 0.8, -D.wagon.d / 2 - 0.05);
+      grp.add(lamp);
+      return grp;
+    };
+
+    this.factories = { barrier: mkBarrier, sign: mkSign, crate: mkCrate, wagon: mkWagon };
+    this.pools = { barrier: [], sign: [], crate: [], wagon: [] };
+
+    /* Pièces : InstancedMesh doré */
+    const coinGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.09, 22);
+    const coinMat = new THREE.MeshStandardMaterial({
+      color: 0xffc93c, metalness: 0.75, roughness: 0.28,
+      emissive: 0x92610d, emissiveIntensity: 0.55,
+    });
+    this.coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, 128);
+    this.coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.coinMesh.frustumCulled = false;
+    this.coinMesh.count = 0;
+    this.scene.add(this.coinMesh);
+    this.coinDummy = new THREE.Object3D();
+    this.coinDummy.rotation.order = "YXZ";
+
+    /* Power-ups : capsule + icône + halo */
+    this.puIconTex = {};
+    for (const [k, def] of Object.entries(POWERUP_DEFS)) {
+      this.puIconTex[k] = Tex.puIcon(def.label, def.css);
+    }
+    this.puPool = [];
+
+    /* Particules : pool de sprites additifs */
+    this.particles = [];
+    this.particlePool = [];
+    for (let i = 0; i < 90; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: this.glowTex, transparent: true, opacity: 1,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      sp.visible = false;
+      this.scene.add(sp);
+      this.particlePool.push(sp);
+    }
+  }
+
+  obtainObstacleMesh(o) {
+    const pool = this.pools[o.type];
+    const mesh = pool.pop() || this.factories[o.type]();
+    mesh.visible = true;
+    this.scene.add(mesh);
+    return mesh;
+  }
+  releaseObstacleMesh(o) {
+    if (!o.mesh) return;
+    o.mesh.visible = false;
+    this.scene.remove(o.mesh);
+    this.pools[o.type].push(o.mesh);
+    o.mesh = null;
+  }
+
+  obtainPuMesh(pu) {
+    let grp = this.puPool.pop();
+    if (!grp) {
+      grp = new THREE.Group();
+      const icon = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false }));
+      icon.scale.set(0.9, 0.9, 1);
+      grp.add(icon);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: this.glowTex, transparent: true, opacity: 0.6,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      halo.scale.set(2.2, 2.2, 1);
+      grp.add(halo);
+      grp.userData = { icon, halo };
+    }
+    grp.userData.icon.material.map = this.puIconTex[pu.kind];
+    grp.userData.icon.material.needsUpdate = true;
+    grp.userData.halo.material.color.setHex(POWERUP_DEFS[pu.kind].color);
+    grp.visible = true;
+    this.scene.add(grp);
+    return grp;
+  }
+  releasePuMesh(pu) {
+    if (!pu.mesh) return;
+    pu.mesh.visible = false;
+    this.scene.remove(pu.mesh);
+    this.puPool.push(pu.mesh);
+    pu.mesh = null;
+  }
+
+  /* Particules 3D */
+  emit({ x, y, z, count = 8, color = 0xffc93c, speed = 5, size = 0.35, life = 0.5, gravity = -9 }) {
+    if (!this.fxHigh) count = Math.ceil(count / 2);
+    for (let i = 0; i < count; i++) {
+      const sp = this.particlePool.pop();
+      if (!sp) return;
+      sp.visible = true;
+      sp.material.color.setHex(color);
+      sp.position.set(x + rand(-0.2, 0.2), y + rand(-0.2, 0.2), z + rand(-0.2, 0.2));
+      const a = Math.random() * Math.PI * 2;
+      const v = speed * rand(0.4, 1);
+      this.particles.push({
+        sp,
+        vx: Math.cos(a) * v,
+        vy: rand(0.3, 1) * speed * 0.8,
+        vz: Math.sin(a) * v * 0.4,
+        size: size * rand(0.7, 1.4),
+        life, maxLife: life, gravity,
+      });
+    }
+  }
+  updateParticles(dt, dz) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.life -= dt;
+      if (p.life <= 0) {
+        p.sp.visible = false;
+        this.particlePool.push(p.sp);
+        this.particles.splice(i, 1);
+        continue;
+      }
+      p.sp.position.x += p.vx * dt;
+      p.sp.position.y += p.vy * dt;
+      p.sp.position.z += p.vz * dt + dz; // suit le défilement du monde
+      p.vy += p.gravity * dt;
+      const a = p.life / p.maxLife;
+      const s = p.size * (0.5 + a * 0.5);
+      p.sp.scale.set(s, s, 1);
+      p.sp.material.opacity = a;
+    }
   }
 
   /* ------------------------------ UI events ------------------------------ */
@@ -1233,6 +1726,7 @@ class Game {
     fxBtn.addEventListener("click", () => {
       this.fxHigh = !this.fxHigh;
       localStorage.setItem("metrodash_fx", this.fxHigh ? "high" : "low");
+      this.applyQuality();
       syncOptions();
     });
     $("btn-reset-best").addEventListener("click", () => {
@@ -1240,22 +1734,34 @@ class Game {
       this.ui.$("menu-best").textContent = "0";
     });
     syncOptions();
+    this.applyQuality();
+  }
+
+  applyQuality() {
+    const dpr = devicePixelRatio || 1;
+    this.renderer.setPixelRatio(this.fxHigh ? Math.min(dpr, 2) : Math.min(dpr, 1.25));
   }
 
   /* ------------------------------ états ------------------------------ */
+  clearEntities() {
+    for (const o of this.obstacles) this.releaseObstacleMesh(o);
+    for (const p of this.powerups) this.releasePuMesh(p);
+    this.obstacles = [];
+    this.coins = [];
+    this.powerups = [];
+  }
+
   toMenu() {
     this.state = "menu";
     this.audio.stopMusic();
     this.ui.setHud(false);
     this.ui.$("menu-best").textContent = this.scoreMgr.best;
     this.ui.show("menu");
-    this.resetRun(); // décor animé derrière le menu
+    this.resetRun();
   }
 
   resetRun() {
-    this.obstacles = [];
-    this.coins = [];
-    this.powerups = [];
+    this.clearEntities();
     this.active = {};
     this.elapsed = 0;
     this.speed = CONFIG.BASE_SPEED;
@@ -1265,7 +1771,6 @@ class Game {
     this.world.reset();
     this.spawner.reset();
     this.scoreMgr.reset();
-    this.particles.list.length = 0;
     this.ui.updatePowerups({});
   }
 
@@ -1287,20 +1792,20 @@ class Game {
       this.state = "playing";
       this.ui.show("__none__");
       this.audio.startMusic();
-      this.last = performance.now(); // évite un dt géant à la reprise
+      this.last = performance.now();
     }
   }
 
   die() {
     this.state = "dying";
     this.dieT = 0.9;
-    this.timescale = 0.25;   // ralenti dramatique
-    this.shakeT = 0.5;
+    this.timescale = 0.25;
+    this.shakeT = 0.55;
     this.audio.crash();
     this.audio.stopMusic();
-    const p = this.projFn()(this.player.x, 1, CONFIG.PLAYER_Z);
-    this.particles.emit({ x: p.x, y: p.y, count: this.fxHigh ? 26 : 12, color: "#ff8a2a", speed: 260, size: 6, life: 0.8 });
-    this.particles.emit({ x: p.x, y: p.y, count: this.fxHigh ? 18 : 8, color: "#f4f6ff", speed: 200, size: 4, life: 0.6 });
+    this.fx.doFlash("rgba(255,60,40,1)", 0.5);
+    this.emit({ x: this.player.x, y: 1, z: -CONFIG.PLAYER_Z, count: 26, color: 0xff8a2a, speed: 7, size: 0.5, life: 0.8 });
+    this.emit({ x: this.player.x, y: 1, z: -CONFIG.PLAYER_Z, count: 14, color: 0xf4f6ff, speed: 6, size: 0.35, life: 0.6 });
   }
 
   finishGameOver() {
@@ -1317,7 +1822,6 @@ class Game {
     });
   }
 
-  /* ------------------------------ power-ups ------------------------------ */
   activate(kind) {
     this.active[kind] = { t: CONFIG.POWERUP_DUR[kind], dur: CONFIG.POWERUP_DUR[kind] };
     this.audio.powerup();
@@ -1326,34 +1830,36 @@ class Game {
 
   /* ------------------------------ boucle ------------------------------ */
   loop(now) {
-    requestAnimationFrame((t) => this.loop(t));
     let dt = Math.min((now - this.last) / 1000, 0.05);
     this.last = now;
     dt *= this.timescale;
 
+    let dz = 0;
     if (this.state === "menu" || this.state === "loading") {
-      // décor qui défile doucement derrière le menu
       this.world.update(dt, 9);
+      this.player.runPhase += dt * 9;
+      dz = 9 * dt;
     } else if (this.state === "playing") {
-      this.update(dt);
+      dz = this.update(dt);
     } else if (this.state === "dying") {
-      this.dieT -= dt / this.timescale; // temps réel
+      this.dieT -= dt / this.timescale;
       this.shakeT = Math.max(0, this.shakeT - dt);
-      this.particles.update(dt);
       if (this.dieT <= 0) this.finishGameOver();
     }
 
-    this.render();
+    this.updateParticles(dt, dz);
+    this.render(dt);
   }
 
   update(dt) {
     this.elapsed += dt;
 
-    // Progression de difficulté : +vitesse toutes les 15 s
-    const target = Math.min(CONFIG.BASE_SPEED + Math.floor(this.elapsed / 15) * CONFIG.SPEED_STEP * 1.0
-      + this.elapsed * 0.02, CONFIG.MAX_SPEED);
+    const target = Math.min(
+      CONFIG.BASE_SPEED + Math.floor(this.elapsed / 15) * 0.95 + this.elapsed * 0.02,
+      CONFIG.MAX_SPEED
+    );
     const boost = this.has("boost") ? 1.55 : 1;
-    this.speed = lerp(this.speed, target * boost, 1 - Math.exp(-1.6 * dt));
+    this.speed = damp(this.speed, target * boost, 1.6, dt);
 
     const mult = this.has("x2") ? 2 : 1;
     this.scoreMgr.addDistance(this.speed * dt, mult);
@@ -1361,35 +1867,41 @@ class Game {
     this.player.update(dt);
     this.world.update(dt, this.speed);
     this.spawner.update(dt, this.speed, this.elapsed);
-    this.particles.update(dt);
 
     // Avancement des entités
     const dz = this.speed * dt;
     for (const o of this.obstacles) o.z -= dz;
     for (const c of this.coins) c.z -= dz;
     for (const p of this.powerups) p.z -= dz;
-    this.obstacles = this.obstacles.filter((o) => !o.dead && o.z + o.def.d > CONFIG.KILL_Z);
-    this.coins = this.coins.filter((c) => !c.dead && c.z > CONFIG.KILL_Z);
-    this.powerups = this.powerups.filter((p) => !p.dead && p.z > CONFIG.KILL_Z);
 
-    // Timers de power-ups
+    this.obstacles = this.obstacles.filter((o) => {
+      const keep = !o.dead && o.z + o.def.d > CONFIG.KILL_Z;
+      if (!keep) this.releaseObstacleMesh(o);
+      return keep;
+    });
+    this.coins = this.coins.filter((c) => !c.dead && c.z > CONFIG.KILL_Z);
+    this.powerups = this.powerups.filter((p) => {
+      const keep = !p.dead && p.z > CONFIG.KILL_Z;
+      if (!keep) this.releasePuMesh(p);
+      return keep;
+    });
+
     for (const kind of Object.keys(this.active)) {
       this.active[kind].t -= dt;
       if (this.active[kind].t <= 0) delete this.active[kind];
     }
 
-    // Aimant : attire les pièces proches vers le joueur
+    // Aimant
     if (this.has("magnet")) {
       for (const c of this.coins) {
         if (c.z < 20) {
-          c.x = lerp(c.x, this.player.x, 1 - Math.exp(-8 * dt));
-          c.y = lerp(c.y, 1.0 + this.player.y, 1 - Math.exp(-8 * dt));
+          c.x = damp(c.x, this.player.x, 8, dt);
+          c.y = damp(c.y, 1.0 + this.player.y, 8, dt);
         }
       }
     }
 
-    // Collecte de pièces (fenêtre généreuse)
-    const proj = this.projFn();
+    // Collecte de pièces
     for (const c of this.coins) {
       const grabR = this.has("magnet") ? 1.6 : 0.95;
       if (Math.abs(c.z - CONFIG.PLAYER_Z) < 1.4 &&
@@ -1398,18 +1910,16 @@ class Game {
         c.dead = true;
         this.scoreMgr.addCoin(mult);
         this.audio.coin();
-        const pc = proj(c.x, c.y, c.z);
-        this.particles.emit({ x: pc.x, y: pc.y, count: this.fxHigh ? 8 : 4, color: "#ffc93c", speed: 140, size: 4, life: 0.45, gravity: 60 });
+        this.emit({ x: c.x, y: c.y, z: -c.z, count: 7, color: 0xffc93c, speed: 3.5, size: 0.3, life: 0.45, gravity: -4 });
       }
     }
 
-    // Ramassage de power-ups
+    // Power-ups
     for (const p of this.powerups) {
       if (Math.abs(p.z - CONFIG.PLAYER_Z) < 1.4 && Math.abs(p.x - this.player.x) < 1.1 && this.player.y < 1.6) {
         p.dead = true;
         this.activate(p.kind);
-        const pp = proj(p.x, 1.2, p.z);
-        this.particles.emit({ x: pp.x, y: pp.y, count: this.fxHigh ? 14 : 7, color: POWERUP_DEFS[p.kind].color, speed: 180, size: 5, life: 0.6, gravity: 40 });
+        this.emit({ x: p.x, y: 1.2, z: -p.z, count: 14, color: POWERUP_DEFS[p.kind].color, speed: 5, size: 0.45, life: 0.6, gravity: -2 });
       }
     }
 
@@ -1418,361 +1928,151 @@ class Game {
       const hit = CollisionManager.check(this.player, this.obstacles);
       if (hit) {
         if (this.has("shield")) {
-          delete this.active.shield;       // le bouclier absorbe UN choc
+          delete this.active.shield;
           hit.dead = true;
           this.player.invincibleT = 1.2;
-          this.shakeT = 0.25;
+          this.shakeT = 0.28;
           this.audio.shieldHit();
-          const ph = proj(hit.x, 1, hit.z);
-          this.particles.emit({ x: ph.x, y: ph.y, count: this.fxHigh ? 16 : 8, color: "#00d0ff", speed: 220, size: 5, life: 0.6 });
+          this.fx.doFlash("rgba(0,208,255,1)", 0.3);
+          this.emit({ x: hit.x, y: 1, z: -hit.z, count: 16, color: 0x00d0ff, speed: 6, size: 0.45, life: 0.6 });
         } else {
           this.die();
         }
       }
     } else if (this.has("boost")) {
-      // En boost : on pulvérise les obstacles traversés
       const hit = CollisionManager.check(this.player, this.obstacles);
       if (hit) {
         hit.dead = true;
         this.shakeT = 0.18;
-        this.audio.noise({ dur: 0.15, vol: 0.25, freq: 700 });
-        const ph = proj(hit.x, 1.2, hit.z);
-        this.particles.emit({ x: ph.x, y: ph.y, count: this.fxHigh ? 20 : 10, color: "#ff8a2a", speed: 260, size: 6, life: 0.7 });
+        this.audio.smash();
+        this.emit({ x: hit.x, y: 1.2, z: -hit.z, count: 18, color: 0xff8a2a, speed: 7, size: 0.5, life: 0.7 });
       }
     }
 
-    // Particules de foulée / traînée de boost
+    // Poussière de foulée + traînée de boost
     if (this.fxHigh) {
-      if (!this.player.jumping && Math.random() < dt * 22) {
-        const pp = proj(this.player.x + rand(-0.3, 0.3), 0.05, CONFIG.PLAYER_Z + rand(-0.4, 0));
-        this.particles.emit({ x: pp.x, y: pp.y, count: 1, color: "rgba(180,190,220,0.8)", speed: 30, size: 3, life: 0.4, gravity: -30 });
+      if (!this.player.jumping && Math.random() < dt * 18) {
+        this.emit({ x: this.player.x + rand(-0.25, 0.25), y: 0.1, z: -CONFIG.PLAYER_Z + rand(-0.4, 0.1), count: 1, color: 0x8890b8, speed: 0.7, size: 0.22, life: 0.4, gravity: 1.5 });
       }
-      if (this.has("boost") && Math.random() < dt * 60) {
-        const pp = proj(this.player.x + rand(-0.35, 0.35), rand(0.2, 1.6) + this.player.y, CONFIG.PLAYER_Z + 0.4);
-        this.particles.emit({ x: pp.x, y: pp.y, count: 1, color: pick(["#ff8a2a", "#ffc93c"]), speed: 60, size: 5, life: 0.5, gravity: 0, angle: Math.PI / 2, spread: 0.6 });
+      if (this.has("boost") && Math.random() < dt * 50) {
+        this.emit({ x: this.player.x + rand(-0.3, 0.3), y: rand(0.3, 1.6) + this.player.y, z: -CONFIG.PLAYER_Z + 0.5, count: 1, color: pick([0xff8a2a, 0xffc93c]), speed: 1.2, size: 0.4, life: 0.5, gravity: 0 });
       }
     }
 
     this.shakeT = Math.max(0, this.shakeT - dt);
     this.ui.updateHud(this.scoreMgr.score, this.scoreMgr.coins, this.scoreMgr.best);
     this.ui.updatePowerups(this.active);
+    return dz;
   }
 
   /* ------------------------------ rendu ------------------------------ */
   resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = Math.floor(innerWidth * dpr);
-    this.canvas.height = Math.floor(innerHeight * dpr);
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.w = innerWidth;
-    this.h = innerHeight;
-    // Focale adaptée au format (portrait ↔ paysage) sans déformer le gameplay :
-    // en portrait le joueur descend vers le bas de l'écran pour dégager la vue.
-    const portrait = this.h > this.w;
-    this.focal = portrait
-      ? Math.min(this.h * 0.52, this.w * 1.05)
-      : Math.min(this.h * 0.92, this.w * 0.78);
-    this.horizon = this.h * (portrait ? 0.44 : 0.36);
-    this.vignette = null; // regénérée au prochain rendu
+    const w = innerWidth, h = innerHeight;
+    this.renderer.setSize(w, h);
+    this.camera.aspect = w / h;
+    this.baseFov = h > w ? 74 : 62;
+    this.camera.updateProjectionMatrix();
+    this.fx.resize();
+    this.applyQuality();
   }
 
-  projFn() {
-    const { focal, horizon, w } = this;
-    const cx = w / 2;
-    const shx = this.shakeX || 0, shy = this.shakeY || 0;
-    return (x, y, z) => {
-      const s = focal / Math.max(z, 0.6);
-      return { x: cx + x * s + shx, y: horizon + (CONFIG.CAM_H - y) * s + shy, s };
-    };
+  syncEntityMeshes() {
+    // Obstacles
+    for (const o of this.obstacles) {
+      if (!o.mesh) o.mesh = this.obtainObstacleMesh(o);
+      o.mesh.position.set(o.x, 0, -(o.z + o.def.d / 2));
+    }
+    // Pièces (instanciées)
+    let n = 0;
+    const spin = performance.now() / 260;
+    for (const c of this.coins) {
+      if (n >= 128 || c.z > 100) continue;
+      this.coinDummy.position.set(c.x, c.y, -c.z);
+      this.coinDummy.rotation.set(Math.PI / 2, spin + c.spin, 0);
+      this.coinDummy.updateMatrix();
+      this.coinMesh.setMatrixAt(n++, this.coinDummy.matrix);
+    }
+    this.coinMesh.count = n;
+    this.coinMesh.instanceMatrix.needsUpdate = true;
+    // Power-ups
+    const now = performance.now() / 300;
+    for (const p of this.powerups) {
+      if (!p.mesh) p.mesh = this.obtainPuMesh(p);
+      p.mesh.position.set(p.x, 1.2 + Math.sin(now + p.bob) * 0.15, -p.z);
+      const pulse = 1 + Math.sin(now * 2 + p.bob) * 0.08;
+      p.mesh.userData.halo.scale.set(2.2 * pulse, 2.2 * pulse, 1);
+    }
   }
 
-  render() {
-    const ctx = this.ctx;
-    const { w, h, horizon } = this;
+  updateCamera(dt) {
+    const p = this.player;
+    const targetX = p.x * 0.45;
+    this.camera.position.x = damp(this.camera.position.x, targetX, 6, dt);
+    this.camera.position.y = damp(this.camera.position.y, 3.35 + p.y * 0.22, 8, dt);
 
-    // Secousse caméra
+    // FOV dynamique : la vitesse « étire » la perspective
+    const speedK = clamp((this.speed - CONFIG.BASE_SPEED) / (CONFIG.MAX_SPEED - CONFIG.BASE_SPEED), 0, 1);
+    const targetFov = this.baseFov + speedK * 9 + (this.has("boost") ? 7 : 0);
+    if (Math.abs(this.camera.fov - targetFov) > 0.05) {
+      this.camera.fov = damp(this.camera.fov, targetFov, 4, dt);
+      this.camera.updateProjectionMatrix();
+    }
+
+    // secousse
+    let sx = 0, sy = 0;
     if (this.shakeT > 0) {
-      const a = this.shakeT * 14;
-      this.shakeX = rand(-a, a);
-      this.shakeY = rand(-a, a);
-    } else {
-      this.shakeX = this.shakeY = 0;
+      const a = this.shakeT * 0.28;
+      sx = rand(-a, a);
+      sy = rand(-a, a);
     }
-    const proj = this.projFn();
-
-    ctx.clearRect(0, 0, w, h);
-    this.world.draw(ctx, proj, w, h, horizon + (this.shakeY || 0));
-
-    // Entités triées de la plus lointaine à la plus proche
-    const drawables = [
-      ...this.obstacles.map((o) => ({ z: o.z + o.def.d, kind: "obs", o })),
-      ...this.coins.map((c) => ({ z: c.z, kind: "coin", o: c })),
-      ...this.powerups.map((p) => ({ z: p.z, kind: "pu", o: p })),
-    ].sort((a, b) => b.z - a.z);
-
-    for (const d of drawables) {
-      if (d.o.z > 92 || d.o.z < 2) continue;
-      if (d.kind === "obs") this.drawObstacle(ctx, proj, d.o);
-      else if (d.kind === "coin") this.drawCoin(ctx, proj, d.o);
-      else this.drawPowerUp(ctx, proj, d.o);
-    }
-
-    // Joueur (sauf une fois l'écran game over affiché)
-    if (this.state !== "gameover") {
-      this.player.draw(ctx, proj, { shield: this.has("shield"), boost: this.has("boost") });
-    }
-
-    this.particles.draw(ctx);
-
-    // Lignes de vitesse sur les bords quand ça va vite
-    const speedFx = clamp((this.speed - 20) / 14, 0, 1) + (this.has("boost") ? 0.5 : 0);
-    if (this.fxHigh && speedFx > 0 && (this.state === "playing" || this.state === "dying")) {
-      ctx.strokeStyle = `rgba(255,255,255,${0.16 * speedFx})`;
-      ctx.lineWidth = 2;
-      const n = Math.floor(9 * speedFx);
-      for (let i = 0; i < n; i++) {
-        const y = rand(0, h);
-        const edge = Math.random() < 0.5;
-        const x0 = edge ? rand(0, w * 0.16) : rand(w * 0.84, w);
-        const len = rand(30, 90) * speedFx;
-        ctx.beginPath();
-        ctx.moveTo(x0, y);
-        ctx.lineTo(x0 + (edge ? -len : len), y);
-        ctx.stroke();
-      }
-    }
-
-    // Vignette pour le focus central (mise en cache)
-    if (!this.vignette) {
-      const vg = ctx.createRadialGradient(w / 2, h * 0.55, h * 0.35, w / 2, h * 0.55, h * 0.95);
-      vg.addColorStop(0, "rgba(0,0,0,0)");
-      vg.addColorStop(1, "rgba(0,0,0,0.42)");
-      this.vignette = vg;
-    }
-    ctx.fillStyle = this.vignette;
-    ctx.fillRect(0, 0, w, h);
-
-    // Flash rouge translucide pendant la mort
-    if (this.state === "dying") {
-      ctx.fillStyle = `rgba(255,60,40,${0.22 * (this.dieT / 0.9)})`;
-      ctx.fillRect(0, 0, w, h);
-    }
+    this.camera.position.x += sx;
+    this.camera.position.y += sy;
+    this.camera.lookAt(p.x * 0.72 + sx * 0.5, 1.1 + p.y * 0.3, -16);
   }
 
-  /* Boîte pseudo-3D générique : faces avant + dessus + côté */
-  drawBox(ctx, proj, cx, w2, y0, y1, z0, z1, faces) {
-    const fl = proj(cx - w2, y0, z0), fr = proj(cx + w2, y0, z0);
-    const ftl = proj(cx - w2, y1, z0), ftr = proj(cx + w2, y1, z0);
-    const btl = proj(cx - w2, y1, z1), btr = proj(cx + w2, y1, z1);
+  render(dt) {
+    // ambiance tunnel : brouillard + lumière assombris
+    const tun = this.world.inTunnel() ? 1 : 0;
+    this.tunnelK = damp(this.tunnelK ?? 0, tun, 3, dt);
+    this.scene.fog.color.lerpColors(this.fogNormal, this.fogTunnel, this.tunnelK);
+    this.scene.fog.near = lerp(35, 14, this.tunnelK);
+    this.scene.fog.far = lerp(130, 70, this.tunnelK);
+    this.hemi.intensity = lerp(0.95, 0.45, this.tunnelK);
+    this.sun.intensity = lerp(1.15, 0.2, this.tunnelK);
+    this.sky.visible = this.tunnelK < 0.85;
 
-    // dessus
-    ctx.fillStyle = faces.top;
-    ctx.beginPath();
-    ctx.moveTo(ftl.x, ftl.y); ctx.lineTo(ftr.x, ftr.y);
-    ctx.lineTo(btr.x, btr.y); ctx.lineTo(btl.x, btl.y);
-    ctx.closePath(); ctx.fill();
+    this.syncEntityMeshes();
+    this.rig.update(this.player, dt, { shield: this.has("shield"), boost: this.has("boost") });
+    this.rig.group.visible = this.state !== "gameover" && this.rig.group.visible;
+    this.updateCamera(dt);
 
-    // côté visible (selon la position par rapport au centre de l'écran)
-    if (cx !== 0 && faces.side) {
-      const inner = cx > 0 ? -w2 : w2;
-      const bl = proj(cx + inner, y0, z1);
-      const tl = proj(cx + inner, y1, z1);
-      const fl2 = proj(cx + inner, y0, z0);
-      const ftl2 = proj(cx + inner, y1, z0);
-      ctx.fillStyle = faces.side;
-      ctx.beginPath();
-      ctx.moveTo(fl2.x, fl2.y); ctx.lineTo(ftl2.x, ftl2.y);
-      ctx.lineTo(tl.x, tl.y); ctx.lineTo(bl.x, bl.y);
-      ctx.closePath(); ctx.fill();
-    }
+    this.renderer.render(this.scene, this.camera);
 
-    // face avant
-    ctx.fillStyle = faces.front;
-    ctx.beginPath();
-    ctx.moveTo(fl.x, fl.y); ctx.lineTo(fr.x, fr.y);
-    ctx.lineTo(ftr.x, ftr.y); ctx.lineTo(ftl.x, ftl.y);
-    ctx.closePath(); ctx.fill();
-
-    return { fl, fr, ftl, ftr };
+    // overlay 2D : lignes de vitesse + flashs
+    const speedFx = this.state === "playing" || this.state === "dying"
+      ? clamp((this.speed - 20) / 14, 0, 1) + (this.has("boost") ? 0.5 : 0)
+      : 0;
+    this.fx.render(dt, this.fxHigh ? speedFx : 0, this.state === "dying", this.dieT / 0.9);
   }
 
-  drawObstacle(ctx, proj, o) {
-    const fog = clamp(1 - o.z / 95, 0.15, 1);
-    ctx.globalAlpha = fog;
-    const def = o.def;
-
-    if (o.type === "barrier") {
-      // Barrière rayée orange/blanc sur pieds
-      const f = this.drawBox(ctx, proj, o.x, def.w / 2, 0.55, def.h, o.z, o.z + def.d,
-        { front: "#ff8a2a", top: "#ffab5e", side: "#d96f15" });
-      // rayures blanches
-      const stripes = 3;
-      ctx.fillStyle = "#f4f6ff";
-      for (let i = 0; i < stripes; i++) {
-        const t0 = (i + 0.15) / stripes, t1 = (i + 0.5) / stripes;
-        ctx.beginPath();
-        ctx.moveTo(lerp(f.fl.x, f.fr.x, t0), lerp(f.fl.y, f.fr.y, t0));
-        ctx.lineTo(lerp(f.fl.x, f.fr.x, t1), lerp(f.fl.y, f.fr.y, t1));
-        ctx.lineTo(lerp(f.ftl.x, f.ftr.x, t1), lerp(f.ftl.y, f.ftr.y, t1));
-        ctx.lineTo(lerp(f.ftl.x, f.ftr.x, t0), lerp(f.ftl.y, f.ftr.y, t0));
-        ctx.closePath(); ctx.fill();
-      }
-      // pieds
-      const s = proj(o.x, 0, o.z).s;
-      ctx.fillStyle = "#454b68";
-      for (const sx of [-def.w / 2 + 0.2, def.w / 2 - 0.2]) {
-        const pf = proj(o.x + sx, 0, o.z);
-        ctx.fillRect(pf.x - s * 0.05, pf.y - s * 0.56, s * 0.1, s * 0.56);
-      }
-    } else if (o.type === "sign") {
-      // Panneau suspendu entre deux poteaux : passage en glissade
-      const gap = def.gapBottom;
-      const top = gap + def.h;
-      // poteaux
-      ctx.strokeStyle = "#454b68";
-      const pb = proj(o.x, 0, o.z);
-      ctx.lineWidth = Math.max(2, pb.s * 0.09);
-      for (const sx of [-def.w / 2, def.w / 2]) {
-        const a = proj(o.x + sx, 0, o.z);
-        const b = proj(o.x + sx, top, o.z);
-        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-      }
-      // panneau néon
-      const tl = proj(o.x - def.w / 2, top, o.z), br = proj(o.x + def.w / 2, gap, o.z);
-      ctx.fillStyle = "#141724";
-      ctx.fillRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
-      ctx.strokeStyle = "#00d0ff";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
-      ctx.fillStyle = "#00d0ff";
-      ctx.font = `800 ${Math.max(8, pb.s * 0.34)}px system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.fillText("⬇ BAISSE-TOI", (tl.x + br.x) / 2, (tl.y + br.y) / 2 + pb.s * 0.12);
-      // flèche clignotante dessous
-      if (Math.floor(performance.now() / 400) % 2 === 0) {
-        ctx.fillStyle = "rgba(0,208,255,0.7)";
-        const pa = proj(o.x, gap - 0.25, o.z);
-        ctx.beginPath();
-        ctx.moveTo(pa.x - pa.s * 0.14, pa.y - pa.s * 0.12);
-        ctx.lineTo(pa.x + pa.s * 0.14, pa.y - pa.s * 0.12);
-        ctx.lineTo(pa.x, pa.y + pa.s * 0.08);
-        ctx.closePath(); ctx.fill();
-      }
-    } else if (o.type === "crate") {
-      // Caisse taguée
-      const hue = o.tint < 0.5 ? { f: "#8b5cf6", t: "#a78bfa", s: "#6d3fd6" } : { f: "#4a5178", t: "#5d6591", s: "#3a4060" };
-      const f = this.drawBox(ctx, proj, o.x, def.w / 2, 0, def.h, o.z, o.z + def.d,
-        { front: hue.f, top: hue.t, side: hue.s });
-      // tag graffiti
-      const pc = proj(o.x, def.h * 0.5, o.z);
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
-      ctx.font = `900 ${Math.max(8, pc.s * 0.4)}px system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.fillText(o.tint < 0.33 ? "DASH" : o.tint < 0.66 ? "ZONE" : "VLT", pc.x, pc.y + pc.s * 0.14);
-      // liseré de contour
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(f.fl.x, f.fl.y); ctx.lineTo(f.fr.x, f.fr.y);
-      ctx.lineTo(f.ftr.x, f.ftr.y); ctx.lineTo(f.ftl.x, f.ftl.y);
-      ctx.closePath(); ctx.stroke();
-    } else if (o.type === "wagon") {
-      // Rame de métro à l'arrêt : longue, avec fenêtres et phare
-      const c = o.tint < 0.5 ? { f: "#2f7bff", t: "#5d9aff", s: "#1f5cd0" } : { f: "#39406b", t: "#4c548a", s: "#2b3050" };
-      this.drawBox(ctx, proj, o.x, def.w / 2, 0.25, def.h, o.z, o.z + def.d,
-        { front: c.f, top: c.t, side: c.s });
-      const front = proj(o.x, 0, o.z);
-      // bandeau + fenêtres avant
-      const wl = proj(o.x - def.w / 2 + 0.25, def.h * 0.55, o.z);
-      const wr = proj(o.x + def.w / 2 - 0.25, def.h * 0.8, o.z);
-      ctx.fillStyle = "#101322";
-      ctx.fillRect(wl.x, wr.y, wr.x - wl.x, wl.y - wr.y);
-      // phare (halo en deux passes, sans shadowBlur coûteux)
-      const lampY = proj(o.x, 0.75, o.z).y;
-      const lampR = Math.max(2, front.s * 0.09);
-      ctx.fillStyle = "rgba(255,233,168,0.35)";
-      ctx.beginPath();
-      ctx.arc(front.x, lampY, lampR * 2.4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ffe9a8";
-      ctx.beginPath();
-      ctx.arc(front.x, lampY, lampR, 0, Math.PI * 2);
-      ctx.fill();
-      // fenêtres latérales le long du wagon
-      ctx.fillStyle = "rgba(190,215,255,0.5)";
-      const inner = o.x > 0 ? -1 : 1;
-      for (let zz = o.z + 2; zz < o.z + def.d - 1; zz += 2.4) {
-        const pw = proj(o.x + inner * def.w / 2, 1.9, zz);
-        const ws = Math.max(2, pw.s * 0.5);
-        ctx.fillRect(pw.x - ws / 2, pw.y - ws * 0.4, ws * 0.8, ws * 0.55);
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  drawCoin(ctx, proj, c) {
-    const fog = clamp(1 - c.z / 95, 0.2, 1);
-    const p = proj(c.x, c.y, c.z);
-    const spin = Math.cos(performance.now() / 180 + c.spin);
-    const r = Math.max(2, p.s * 0.32);
-    ctx.globalAlpha = fog;
-    // halo
-    ctx.fillStyle = "rgba(255,201,60,0.25)";
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, r * 1.6, 0, Math.PI * 2);
-    ctx.fill();
-    // pièce qui tourne (ellipse)
-    ctx.fillStyle = "#ffc93c";
-    ctx.beginPath();
-    ctx.ellipse(p.x, p.y, r * Math.max(0.18, Math.abs(spin)), r, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#b8860b";
-    ctx.lineWidth = Math.max(1, r * 0.16);
-    ctx.stroke();
-    if (Math.abs(spin) > 0.5) {
-      ctx.fillStyle = "#ffe9a8";
-      ctx.font = `900 ${r * 1.05}px system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.fillText("¤", p.x, p.y + r * 0.38);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  drawPowerUp(ctx, proj, pu) {
-    const def = POWERUP_DEFS[pu.kind];
-    const bob = Math.sin(performance.now() / 300 + pu.bob) * 0.15;
-    const p = proj(pu.x, 1.2 + bob, pu.z);
-    const r = Math.max(4, p.s * 0.42);
-    const fog = clamp(1 - pu.z / 95, 0.2, 1);
-    ctx.globalAlpha = fog;
-    // halo pulsant
-    const pulse = 1 + Math.sin(performance.now() / 200) * 0.12;
-    const g = ctx.createRadialGradient(p.x, p.y, r * 0.2, p.x, p.y, r * 2.2 * pulse);
-    g.addColorStop(0, def.color + "");
-    g.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.globalAlpha = fog * 0.35;
-    ctx.fillStyle = g;
-    ctx.fillRect(p.x - r * 2.4, p.y - r * 2.4, r * 4.8, r * 4.8);
-    ctx.globalAlpha = fog;
-    // capsule
-    ctx.fillStyle = "#12141c";
-    ctx.strokeStyle = def.color;
-    ctx.lineWidth = Math.max(2, r * 0.18);
-    ctx.beginPath();
-    ctx.roundRect(p.x - r, p.y - r, r * 2, r * 2, r * 0.5);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = def.color;
-    ctx.font = `900 ${r * 1.05}px system-ui, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.fillText(def.label, p.x, p.y + r * 0.4);
-    ctx.globalAlpha = 1;
-  }
+  get sky() { return this.world.sky; }
 }
 
 /* --------------------------------------------------------------------------
-   Lancement
+   Lancement (avec garde WebGL)
    -------------------------------------------------------------------------- */
-window.addEventListener("DOMContentLoaded", () => {
-  window.metroDash = new Game();
-});
+function boot() {
+  try {
+    window.metroDash = new Game();
+  } catch (err) {
+    console.error(err);
+    const msg = document.getElementById("loading-msg");
+    if (msg) msg.textContent = "⚠️ WebGL indisponible sur cet appareil — impossible de lancer le jeu.";
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot);
+} else {
+  boot();
+}
