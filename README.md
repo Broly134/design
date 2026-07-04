@@ -1,5 +1,11 @@
 # AeroCool Mobile — Landing page climatiseur mobile
 
+> Ce repo contient aussi **Metro Dash**, un mini-jeu endless runner urbain
+> (HTML/CSS/JS vanilla, zéro dépendance) dans `public/metro-dash/`.
+> En ligne : https://broly134.github.io/design/metro-dash/ — en local :
+> ouvrez `public/metro-dash/index.html` dans un navigateur, ou lancez
+> `npm run dev` puis visitez `/metro-dash/`.
+
 Landing page e-commerce premium pour la vente de climatiseurs mobiles en France.
 Design minimaliste inspiré iOS/Apple : glassmorphism subtil, animations douces au
 scroll, cartes arrondies et palette bleu glacier.
