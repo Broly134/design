@@ -571,6 +571,25 @@ function makeTexture(w, h, draw, { repeat, anis = 4 } = {}) {
   return t;
 }
 
+
+/* Boîte aux angles arrondis (pour les objets colorés unis ; les textures
+   détaillées sont posées en décalques plans par-dessus). */
+function roundedBoxGeo(w, h, d, r, smooth = 3) {
+  r = Math.min(r, w / 2 - 0.001, h / 2 - 0.001, d / 2 - 0.001);
+  const shape = new THREE.Shape();
+  const x = w / 2 - r, y = h / 2 - r;
+  shape.absarc(x, y, r, 0, Math.PI / 2);
+  shape.absarc(-x, y, r, Math.PI / 2, Math.PI);
+  shape.absarc(-x, -y, r, Math.PI, Math.PI * 1.5);
+  shape.absarc(x, -y, r, Math.PI * 1.5, Math.PI * 2);
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: d - r * 2, steps: 1, curveSegments: smooth * 2,
+    bevelEnabled: true, bevelSegments: smooth, bevelSize: r, bevelThickness: r,
+  });
+  geo.center();
+  return geo;
+}
+
 const Tex = {
   /* Ciel : dégradé crépuscule + soleil + étoiles + skyline en silhouette */
   sky() {
@@ -1087,151 +1106,202 @@ const Tex = {
 };
 
 /* ==========================================================================
-   PlayerRig — coureur 3D entièrement articulé : bassin, torse, tête,
-   casquette + casque audio, sac à dos, bras (épaule + coude), jambes
-   (hanche + genou + pied). Cycle de course avec flexion des genoux,
-   contre-rotation du torse, squash d'atterrissage, poses fondues.
+   PlayerRig — coureur organique : silhouette entièrement arrondie
+   (capsules + sphères d'articulation), matériaux PBR, respiration,
+   cycle de course avec genoux/coudes, squash d'atterrissage, poses fondues.
    ========================================================================== */
 class PlayerRig {
   constructor(scene, glowTex, blobTex) {
     this.group = new THREE.Group();
     scene.add(this.group);
 
-    const M = (c) => new THREE.MeshLambertMaterial({ color: c });
-    const skin = M(0xe8b087), jacket = M(0xff8a2a), jacketD = M(0xd96f14),
-      pants = M(0x2c3150), pantsD = M(0x222744), shoe = M(0xf4f6ff), sole = M(0x20242f),
-      bag = M(0x7c4ce0), bagD = M(0x5f35c4), cap = M(0x2f7bff), hair = M(0x503a28);
-    const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
-    const caps = (r, l, m) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 4, 10), m);
-    const sph = (r, m, ws = 14, hs = 10) => new THREE.Mesh(new THREE.SphereGeometry(r, ws, hs), m);
+    /* Matériaux PBR : peau satinée, textile mat, sneakers semi-brillantes */
+    const S = (c, rough = 0.85, metal = 0) =>
+      new THREE.MeshStandardMaterial({ color: c, roughness: rough, metalness: metal });
+    const skin = S(0xe8b087, 0.55);
+    const jacket = S(0xff8a2a, 0.8);
+    const jacketD = S(0xd96f14, 0.8);
+    const pants = S(0x2c3150, 0.9);
+    const pantsD = S(0x222744, 0.9);
+    const shoe = S(0xf4f6ff, 0.45);
+    const sole = S(0x20242f, 0.6);
+    const bag = S(0x7c4ce0, 0.75);
+    const bagD = S(0x5f35c4, 0.75);
+    const capM = S(0x2f7bff, 0.7);
+    const hair = S(0x503a28, 0.95);
 
-    /* ----- bassin (pivot central du haut du corps) ----- */
+    const caps = (r, l, m) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 6, 18), m);
+    const sph = (r, m, ws = 22, hs = 16) => new THREE.Mesh(new THREE.SphereGeometry(r, ws, hs), m);
+    const cyl = (r1, r2, hgt, m, seg = 18) => new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, hgt, seg), m);
+
+    /* ----- bassin : ellipsoïde souple ----- */
     this.pelvisG = new THREE.Group();
     this.pelvisG.position.y = 0.98;
     this.group.add(this.pelvisG);
-    const pelvis = box(0.34, 0.16, 0.22, pantsD);
-    pelvis.position.y = -0.06;
+    const pelvis = sph(0.19, pantsD);
+    pelvis.scale.set(1.05, 0.72, 0.82);
+    pelvis.position.y = -0.05;
     this.pelvisG.add(pelvis);
 
-    /* ----- torse (contre-rotation pendant la course) ----- */
+    /* ----- torse : capsule galbée + épaules rondes ----- */
     this.torso = new THREE.Group();
     this.torso.position.y = 0.02;
     this.pelvisG.add(this.torso);
-    const chest = caps(0.21, 0.3, jacket);
-    chest.position.y = 0.32;
-    this.torso.add(chest);
-    const zip = box(0.04, 0.42, 0.02, jacketD);           // fermeture éclair (face avant)
-    zip.position.set(0, 0.3, -0.215);
-    this.torso.add(zip);
-    const hood = sph(0.15, jacketD);                       // capuche roulée sur la nuque
-    hood.scale.set(1, 0.65, 0.8);
-    hood.position.set(0, 0.5, 0.18);
+    this.chest = caps(0.2, 0.26, jacket);
+    this.chest.scale.set(1.14, 1, 0.86);
+    this.chest.position.y = 0.32;
+    this.torso.add(this.chest);
+    for (const s of [-1, 1]) {                        // épaules
+      const shoulder = sph(0.105, jacket);
+      shoulder.position.set(0.23 * s, 0.5, 0);
+      this.torso.add(shoulder);
+    }
+    const collar = cyl(0.115, 0.135, 0.07, jacketD);  // col de la veste
+    collar.position.y = 0.56;
+    this.torso.add(collar);
+    const hood = sph(0.15, jacketD);                  // capuche roulée
+    hood.scale.set(1, 0.6, 0.85);
+    hood.position.set(0, 0.52, 0.17);
     this.torso.add(hood);
 
-    /* sac à dos : coque + poche + sangles */
-    const pack = box(0.36, 0.44, 0.16, bag);
-    pack.position.set(0, 0.3, 0.25);
+    /* sac à dos arrondi + poche + gourde */
+    const pack = new THREE.Mesh(roundedBoxGeo(0.34, 0.44, 0.17, 0.06), bag);
+    pack.position.set(0, 0.3, 0.26);
     this.torso.add(pack);
-    const pocket = box(0.24, 0.17, 0.06, bagD);
-    pocket.position.set(0, 0.19, 0.34);
+    const pocket = new THREE.Mesh(roundedBoxGeo(0.22, 0.16, 0.06, 0.03), bagD);
+    pocket.position.set(0, 0.18, 0.36);
     this.torso.add(pocket);
+    const bottle = cyl(0.045, 0.045, 0.2, S(0x9adcff, 0.3), 14);
+    bottle.position.set(0.2, 0.28, 0.3);
+    this.torso.add(bottle);
     for (const s of [-1, 1]) {
-      const strap = box(0.06, 0.4, 0.05, bagD);
-      strap.position.set(0.13 * s, 0.36, 0.12);
-      strap.rotation.x = 0.3;
+      const strap = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.024, 8, 18, Math.PI * 1.1), bagD);
+      strap.position.set(0.13 * s, 0.38, 0.1);
+      strap.rotation.y = Math.PI / 2;
+      strap.rotation.z = -0.25;
       this.torso.add(strap);
     }
 
-    /* ----- tête : crâne, cheveux, casquette, casque audio ----- */
+    /* ----- cou + tête ronde, casquette galbée, casque audio ----- */
+    const neck = cyl(0.065, 0.075, 0.09, skin, 14);
+    neck.position.y = 0.6;
+    this.torso.add(neck);
     this.headG = new THREE.Group();
-    this.headG.position.y = 0.62;
+    this.headG.position.y = 0.64;
     this.torso.add(this.headG);
-    const head = sph(0.17, skin, 18, 14);
+    const head = sph(0.175, skin, 26, 20);
     head.position.y = 0.1;
+    head.scale.set(0.94, 1, 0.98);
     this.headG.add(head);
-    const hairC = new THREE.Mesh(new THREE.SphereGeometry(0.176, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hair);
-    hairC.position.y = 0.11;
+    const hairC = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.5), hair);
+    hairC.position.y = 0.1;
     this.headG.add(hairC);
-    const capTop = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.185, 0.085, 16), cap);
-    capTop.position.y = 0.225;
-    this.headG.add(capTop);
-    const brim = box(0.26, 0.035, 0.16, cap);
-    brim.position.set(0, 0.21, -0.22);
+    const capDome = new THREE.Mesh(new THREE.SphereGeometry(0.185, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), capM);
+    capDome.position.y = 0.12;
+    this.headG.add(capDome);
+    const capRim = new THREE.Mesh(new THREE.TorusGeometry(0.155, 0.02, 8, 24), capM);
+    capRim.position.y = 0.2;
+    capRim.rotation.x = Math.PI / 2;
+    this.headG.add(capRim);
+    const brim = sph(0.12, capM, 18, 10);              // visière : ellipsoïde plat
+    brim.scale.set(1.1, 0.16, 1.4);
+    brim.position.set(0, 0.19, -0.2);
     this.headG.add(brim);
-    for (const s of [-1, 1]) {                              // écouteurs
-      const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.04, 10), bagD);
-      ear.rotation.z = Math.PI / 2;
-      ear.position.set(0.17 * s, 0.09, 0);
-      this.headG.add(ear);
+    for (const s of [-1, 1]) {                          // écouteurs ronds
+      const cup = cyl(0.055, 0.05, 0.045, bagD, 16);
+      cup.rotation.z = Math.PI / 2;
+      cup.position.set(0.17 * s, 0.08, 0);
+      this.headG.add(cup);
+      const cushion = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.014, 8, 14), S(0x2a2140, 0.95));
+      cushion.rotation.y = Math.PI / 2;
+      cushion.position.set(0.155 * s, 0.08, 0);
+      this.headG.add(cushion);
     }
-    const band = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.018, 6, 14, Math.PI), bagD);
-    band.position.y = 0.1;
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.175, 0.02, 8, 22, Math.PI), bagD);
+    band.position.y = 0.09;
     this.headG.add(band);
 
-    /* ----- bras à deux segments (épaule → coude → main) ----- */
+    /* ----- bras : articulation sphérique visible à chaque jointure ----- */
     const mkArm = (side) => {
       const sh = new THREE.Group();
-      sh.position.set(0.27 * side, 0.5, 0);
+      sh.position.set(0.26 * side, 0.5, 0);
       this.torso.add(sh);
-      const up = caps(0.062, 0.2, jacket);
-      up.position.y = -0.15;
+      const up = caps(0.06, 0.16, jacket);
+      up.position.y = -0.13;
       sh.add(up);
+      const elbowBall = sph(0.06, jacketD);
+      elbowBall.position.y = -0.27;
+      sh.add(elbowBall);
       const el = new THREE.Group();
-      el.position.y = -0.3;
+      el.position.y = -0.27;
       sh.add(el);
-      const fo = caps(0.052, 0.18, jacketD);
+      const fo = caps(0.05, 0.15, jacketD);
       fo.position.y = -0.12;
       el.add(fo);
-      const hand = sph(0.055, skin, 10, 8);
-      hand.position.y = -0.26;
+      const wrist = sph(0.045, skin);
+      wrist.position.y = -0.22;
+      el.add(wrist);
+      const hand = sph(0.058, skin);
+      hand.scale.set(0.9, 1.15, 0.75);
+      hand.position.y = -0.28;
       el.add(hand);
       return { sh, el };
     };
     this.armL = mkArm(-1);
     this.armR = mkArm(1);
 
-    /* ----- jambes à deux segments (hanche → genou → pied) ----- */
+    /* ----- jambes : hanche/genou/cheville sphériques + sneakers galbées ----- */
     const mkLeg = (side, thighMat) => {
       const hip = new THREE.Group();
       hip.position.set(0.12 * side, 0.98, 0);
       this.group.add(hip);
-      const th = caps(0.085, 0.26, thighMat);
-      th.position.y = -0.2;
+      const hipBall = sph(0.09, pantsD);
+      hipBall.position.y = -0.02;
+      hip.add(hipBall);
+      const th = caps(0.082, 0.22, thighMat);
+      th.position.y = -0.19;
       hip.add(th);
+      const kneeBall = sph(0.072, pantsD);
+      kneeBall.position.y = -0.42;
+      hip.add(kneeBall);
       const kn = new THREE.Group();
-      kn.position.y = -0.44;
+      kn.position.y = -0.42;
       hip.add(kn);
-      const shn = caps(0.065, 0.26, pantsD);
-      shn.position.y = -0.19;
+      const shn = caps(0.06, 0.22, pantsD);
+      shn.position.y = -0.18;
       kn.add(shn);
+      const ankle = sph(0.05, pantsD);
+      ankle.position.y = -0.4;
+      kn.add(ankle);
       const foot = new THREE.Group();
       foot.position.y = -0.44;
       kn.add(foot);
-      const sneak = box(0.15, 0.09, 0.27, shoe);
-      sneak.position.set(0, -0.01, -0.05);
+      const sneak = sph(0.085, shoe, 20, 14);          // chaussure : ellipsoïde
+      sneak.scale.set(0.95, 0.62, 1.9);
+      sneak.position.set(0, -0.015, -0.06);
       foot.add(sneak);
-      const soleM = box(0.16, 0.035, 0.3, sole);
-      soleM.position.set(0, -0.07, -0.05);
+      const soleM = new THREE.Mesh(roundedBoxGeo(0.15, 0.045, 0.3, 0.02), sole);
+      soleM.position.set(0, -0.065, -0.05);
       foot.add(soleM);
-      const lace = box(0.1, 0.02, 0.1, sole);
-      lace.position.set(0, 0.045, -0.1);
-      foot.add(lace);
       return { hip, kn, foot };
     };
     this.legL = mkLeg(-1, pants);
-    this.legR = mkLeg(1, new THREE.MeshLambertMaterial({ color: 0x343a5e }));
+    this.legR = mkLeg(1, S(0x343a5e, 0.9));
 
-    /* ombre portée */
+    /* le personnage projette de vraies ombres */
+    this.group.traverse((m) => { if (m.isMesh) m.castShadow = true; });
+
+    /* ombre douce d'appoint (renforce l'ancrage au sol) */
     this.shadowMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(1.5, 1.1),
-      new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })
+      new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, opacity: 0.5, depthWrite: false })
     );
     this.shadowMesh.rotation.x = -Math.PI / 2;
     scene.add(this.shadowMesh);
 
     /* aura bouclier */
     this.shieldFx = new THREE.Mesh(
-      new THREE.SphereGeometry(0.95, 20, 14),
+      new THREE.SphereGeometry(0.95, 24, 16),
       new THREE.MeshBasicMaterial({ color: 0x00d0ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })
     );
     this.shieldFx.visible = false;
@@ -1258,6 +1328,7 @@ class PlayerRig {
 
   update(player, dt, fx, speedK = 0) {
     const g = this.group;
+    const now = performance.now();
     g.position.x = player.x;
     g.position.z = -CONFIG.PLAYER_Z;
 
@@ -1270,6 +1341,10 @@ class PlayerRig {
     const bob = Math.abs(Math.cos(t)) * 0.05 * ground;
     g.position.y = player.y + bob - slideW * 0.55;
 
+    /* respiration : la cage thoracique se dilate doucement */
+    const breath = 1 + Math.sin(now / 850) * 0.022;
+    this.chest.scale.set(1.14 * breath, 1, 0.86 * breath);
+
     /* squash d'atterrissage : compression puis rebond */
     if (this.squashT > 0) {
       this.squashT -= dt;
@@ -1280,12 +1355,12 @@ class PlayerRig {
       g.scale.set(1, 1, 1);
     }
 
-    /* inclinaison dans les virages + penché avec la vitesse */
+    /* inclinaison dans les virages */
     const lean = clamp((CONFIG.LANE_X[player.lane] - player.x) * 0.4, -0.35, 0.35);
     g.rotation.z = damp(g.rotation.z, -lean, 12, dt);
     g.rotation.y = damp(g.rotation.y, lean * 0.5, 10, dt);
 
-    /* ---- cycle de course : jambe = hanche + genou + cheville ---- */
+    /* ---- cycle de course : hanche + genou + cheville ---- */
     const legCycle = (p) => ({
       thigh: Math.sin(p) * (0.85 + speedK * 0.25),
       shin: Math.max(0, Math.sin(p - 1.5)) * 1.5 + 0.12,
@@ -1307,7 +1382,7 @@ class PlayerRig {
     this.legR.kn.rotation.x = mixPose(cR.shin, airR.shin, slideR.shin);
     this.legR.foot.rotation.x = mixPose(cR.foot, airR.foot, slideR.foot);
 
-    /* jambes suivent la hauteur du bassin en glissade */
+    /* jambes suivent le bassin en glissade */
     this.legL.hip.position.y = 0.98 - slideW * 0.55;
     this.legR.hip.position.y = 0.98 - slideW * 0.55;
     this.legL.hip.position.z = slideW * -0.15;
@@ -1324,27 +1399,27 @@ class PlayerRig {
     this.armL.sh.rotation.z = 0.12 + slideW * 0.5;
     this.armR.sh.rotation.z = -0.12 - slideW * 0.5;
 
-    /* ---- torse : penché en avant, contre-rotation, tête stabilisée ---- */
+    /* ---- torse penché, contre-rotation, tête stabilisée + micro-vie ---- */
     this.pelvisG.rotation.x = mixPose(0.14 + speedK * 0.12, -0.02, -1.3);
     this.torso.rotation.y = Math.sin(t) * 0.1 * ground;
-    this.headG.rotation.x = -this.pelvisG.rotation.x * 0.55;
-    this.headG.rotation.y = -this.torso.rotation.y * 0.6;
+    this.headG.rotation.x = -this.pelvisG.rotation.x * 0.55 + Math.sin(now / 1400) * 0.03;
+    this.headG.rotation.y = -this.torso.rotation.y * 0.6 + Math.sin(now / 2300) * 0.05;
 
-    /* ombre au sol */
+    /* ombre d'appoint */
     this.shadowMesh.position.set(player.x, 0.02, -CONFIG.PLAYER_Z);
     const sh = clamp(1 - player.y / 3, 0.3, 1);
     this.shadowMesh.scale.set(sh, sh * (1 + slideW * 0.7), 1);
-    this.shadowMesh.material.opacity = sh;
+    this.shadowMesh.material.opacity = sh * 0.5;
 
     /* effets d'état */
     this.shieldFx.visible = fx.shield;
     if (fx.shield) {
-      const p = 1 + Math.sin(performance.now() / 160) * 0.06;
+      const p = 1 + Math.sin(now / 160) * 0.06;
       this.shieldFx.scale.set(p, p * 1.15, p);
     }
     this.boostFx.visible = fx.boost;
 
-    g.visible = !(player.invincibleT > 0 && Math.floor(performance.now() / 90) % 2 === 0);
+    g.visible = !(player.invincibleT > 0 && Math.floor(now / 90) % 2 === 0);
   }
 }
 
@@ -1363,7 +1438,7 @@ class World3D {
 
     const lambert = (c) => new THREE.MeshLambertMaterial({ color: c });
     this.matPole = lambert(0x3a3f58);
-    this.matDark = lambert(0x191d30);
+    this.matDark = lambert(0x272d4a);
     this.matMetal = lambert(0x6a7290);
 
     /* ---------- ciel + skyline parallaxe ---------- */
@@ -1393,6 +1468,7 @@ class World3D {
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, 0, -116);
     ground.material.map.repeat.set(1, 288 / this.TILE);
+    ground.receiveShadow = true;
     this.scroller.add(ground);
 
     const wallTex = Tex.wall();
@@ -1402,15 +1478,25 @@ class World3D {
         new THREE.MeshLambertMaterial({ map: wallTex })
       );
       wall.position.set(side * 5.1, 0.55, -116);
+      wall.receiveShadow = true;
       this.scroller.add(wall);
+      /* couvre-mur arrondi */
+      const coping = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 288, 12),
+        new THREE.MeshLambertMaterial({ color: 0x4a5070 })
+      );
+      coping.rotation.x = Math.PI / 2;
+      coping.position.set(side * 5.1, 1.12, -116);
+      this.scroller.add(coping);
     }
 
     /* rails métalliques continus */
     const railMat = new THREE.MeshStandardMaterial({ color: 0xaab6d0, metalness: 0.85, roughness: 0.35 });
     for (const lane of CONFIG.LANE_X) {
       for (const off of [-0.72, 0.72]) {
-        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 288), railMat);
-        rail.position.set(lane + off, 0.05, -116);
+        const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 288, 10), railMat);
+        rail.rotation.x = Math.PI / 2;
+        rail.position.set(lane + off, 0.06, -116);
         scene.add(rail);
       }
     }
@@ -1431,7 +1517,7 @@ class World3D {
 
         /* corps du bâtiment */
         const matIn = new THREE.MeshLambertMaterial({
-          map: pick(facades), emissive: 0xffffff, emissiveIntensity: 0.55,
+          map: pick(facades), emissive: 0xffffff, emissiveIntensity: 0.85,
         });
         matIn.emissiveMap = matIn.map;
         const mats = [side < 0 ? matIn : this.matDark, side < 0 ? this.matDark : matIn,
@@ -2062,6 +2148,10 @@ class Game {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.setClearColor(0x12102e); // nuit profonde hors du dôme céleste
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;   // rendu cinéma
+    this.renderer.toneMappingExposure = 1.55;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene = new THREE.Scene();
     this.fogNormal = new THREE.Color(0x33224e);
@@ -2072,11 +2162,21 @@ class Game {
     this.camera.position.set(0, 3.35, 0);
 
     // Éclairage crépusculaire : dôme violet + soleil orange bas + rebond bleu
-    this.hemi = new THREE.HemisphereLight(0x8a6ac9, 0x2a2436, 0.95);
+    this.hemi = new THREE.HemisphereLight(0x8a6ac9, 0x2a2436, 1.25);
     this.scene.add(this.hemi);
-    this.sun = new THREE.DirectionalLight(0xffa050, 1.15);
-    this.sun.position.set(4, 6, -40);
-    this.scene.add(this.sun);
+    this.sun = new THREE.DirectionalLight(0xffa050, 1.35);
+    this.sun.position.set(6, 11, -26);
+    this.sun.castShadow = true;
+    this.sun.shadow.mapSize.set(1024, 1024);
+    this.sun.shadow.camera.left = -14;
+    this.sun.shadow.camera.right = 14;
+    this.sun.shadow.camera.top = 18;
+    this.sun.shadow.camera.bottom = -12;
+    this.sun.shadow.camera.near = 1;
+    this.sun.shadow.camera.far = 70;
+    this.sun.shadow.bias = -0.0008;
+    this.sun.target.position.set(0, 0, -14);
+    this.scene.add(this.sun, this.sun.target);
     const rim = new THREE.DirectionalLight(0x4a6aff, 0.35);
     rim.position.set(-6, 8, 12);
     this.scene.add(rim);
@@ -2090,131 +2190,193 @@ class Game {
   /* -------------------- pools de meshes pour les entités -------------------- */
   initPools() {
     const D = OBSTACLE_DEFS;
+    const std = (c, rough = 0.7, metal = 0.1) =>
+      new THREE.MeshStandardMaterial({ color: c, roughness: rough, metalness: metal });
+    const castAll = (grp) => grp.traverse((m) => {
+      if (m.isMesh && !m.material.transparent) m.castShadow = true;
+    });
 
     /* Matériau partagé des gyrophares de chantier (clignote globalement) */
     this.blinkMat = new THREE.MeshBasicMaterial({ color: 0xffb020 });
 
-    /* Barrière */
+    /* Barrière : panneau arrondi + décalque rayé + pieds cylindriques */
     const barrierTex = Tex.barrier();
     const mkBarrier = () => {
       const grp = new THREE.Group();
-      const panel = new THREE.Mesh(
-        new THREE.BoxGeometry(D.barrier.w, 0.5, 0.16),
-        new THREE.MeshLambertMaterial({ map: barrierTex })
-      );
+      const panel = new THREE.Mesh(roundedBoxGeo(D.barrier.w, 0.5, 0.16, 0.06), std(0xff8a2a, 0.65));
       panel.position.y = 0.75;
       grp.add(panel);
-      const legMat = new THREE.MeshLambertMaterial({ color: 0x454b68 });
-      for (const s of [-1, 1]) {
-        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.55, 0.09), legMat);
-        leg.position.set(s * (D.barrier.w / 2 - 0.15), 0.27, 0);
+      const decal = new THREE.Mesh(
+        new THREE.PlaneGeometry(D.barrier.w - 0.14, 0.42),
+        new THREE.MeshLambertMaterial({ map: barrierTex })
+      );
+      decal.position.set(0, 0.75, 0.085);
+      grp.add(decal);
+      const legMat = std(0x454b68, 0.6, 0.3);
+      for (const sd of [-1, 1]) {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.55, 12), legMat);
+        leg.position.set(sd * (D.barrier.w / 2 - 0.15), 0.27, 0);
         grp.add(leg);
+        const footPad = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.04, 12), legMat);
+        footPad.position.set(sd * (D.barrier.w / 2 - 0.15), 0.02, 0);
+        grp.add(footPad);
       }
-      // gyrophare de chantier clignotant
-      const blink = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), this.blinkMat);
+      const blink = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 10), this.blinkMat);
       blink.position.set(0, D.barrier.h + 0.08, 0);
       grp.add(blink);
+      castAll(grp);
       return grp;
     };
 
-    /* Panneau suspendu */
+    /* Panneau suspendu : cadre arrondi + décalque néon des deux côtés */
     const signTex = Tex.signPanel();
     const mkSign = () => {
       const grp = new THREE.Group();
-      const poleMat = new THREE.MeshLambertMaterial({ color: 0x454b68 });
-      for (const s of [-1, 1]) {
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.6, 8), poleMat);
-        pole.position.set(s * D.sign.w / 2, 1.3, 0);
+      const poleMat = std(0x454b68, 0.55, 0.35);
+      for (const sd of [-1, 1]) {
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.6, 12), poleMat);
+        pole.position.set(sd * D.sign.w / 2, 1.3, 0);
         grp.add(pole);
+        const cap2 = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), poleMat);
+        cap2.position.set(sd * D.sign.w / 2, 2.62, 0);
+        grp.add(cap2);
       }
-      const panel = new THREE.Mesh(
-        new THREE.BoxGeometry(D.sign.w, D.sign.h, 0.12),
-        new THREE.MeshLambertMaterial({ map: signTex, emissive: 0xffffff, emissiveMap: signTex, emissiveIntensity: 0.7 })
+      const frame = new THREE.Mesh(roundedBoxGeo(D.sign.w, D.sign.h, 0.12, 0.05), std(0x1a2030, 0.8));
+      frame.position.y = D.sign.gapBottom + D.sign.h / 2;
+      grp.add(frame);
+      const face = new THREE.Mesh(
+        new THREE.PlaneGeometry(D.sign.w - 0.12, D.sign.h - 0.12),
+        new THREE.MeshBasicMaterial({ map: signTex })
       );
-      panel.position.y = D.sign.gapBottom + D.sign.h / 2;
-      grp.add(panel);
+      face.position.set(0, D.sign.gapBottom + D.sign.h / 2, 0.065);
+      grp.add(face);
+      castAll(grp);
       return grp;
     };
 
-    /* Caisse */
-    const crateTexs = [Tex.crate("#8b5cf6", "DASH"), Tex.crate("#4a5178", "ZONE"), Tex.crate("#6d3fd6", "VLT")];
+    /* Caisse : volume arrondi + décalque graffiti sur la face avant */
+    const crateSkins = [
+      { color: 0x8b5cf6, tex: Tex.crate("#8b5cf6", "DASH") },
+      { color: 0x4a5178, tex: Tex.crate("#4a5178", "ZONE") },
+      { color: 0x6d3fd6, tex: Tex.crate("#6d3fd6", "VLT") },
+    ];
     const mkCrate = () => {
-      const tex = pick(crateTexs);
-      const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(D.crate.w, D.crate.h, D.crate.d),
-        new THREE.MeshLambertMaterial({ map: tex })
-      );
-      mesh.position.y = D.crate.h / 2;
+      const skin = pick(crateSkins);
       const grp = new THREE.Group();
-      grp.add(mesh);
+      const body = new THREE.Mesh(
+        roundedBoxGeo(D.crate.w, D.crate.h, D.crate.d, 0.12),
+        std(skin.color, 0.75)
+      );
+      body.position.y = D.crate.h / 2;
+      grp.add(body);
+      const decal = new THREE.Mesh(
+        new THREE.PlaneGeometry(D.crate.w - 0.24, D.crate.h - 0.24),
+        new THREE.MeshLambertMaterial({ map: skin.tex })
+      );
+      decal.position.set(0, D.crate.h / 2, D.crate.d / 2 + 0.005);
+      grp.add(decal);
+      /* sangles de levage arrondies */
+      const strapMat = std(0x20242f, 0.9);
+      for (const zz of [-D.crate.d * 0.28, D.crate.d * 0.28]) {
+        const strap = new THREE.Mesh(new THREE.TorusGeometry(D.crate.h * 0.52, 0.035, 8, 22), strapMat);
+        strap.position.set(0, D.crate.h / 2, zz);
+        strap.scale.x = D.crate.w / D.crate.h;
+        grp.add(strap);
+      }
+      castAll(grp);
       return grp;
     };
 
-    /* Wagon */
+    /* Wagon : caisse galbée + décalques fenêtres + pantographe + feux */
     const wagonSkins = [
-      { side: Tex.wagonSide(["#5d9aff", "#2f7bff", "#1f5cd0"]), front: Tex.wagonFront(["#5d9aff", "#2f7bff", "#1f5cd0"]) },
-      { side: Tex.wagonSide(["#4c548a", "#39406b", "#2b3050"]), front: Tex.wagonFront(["#4c548a", "#39406b", "#2b3050"]) },
+      { base: 0x2f7bff, side: Tex.wagonSide(["#5d9aff", "#2f7bff", "#1f5cd0"]), front: Tex.wagonFront(["#5d9aff", "#2f7bff", "#1f5cd0"]) },
+      { base: 0x39406b, side: Tex.wagonSide(["#4c548a", "#39406b", "#2b3050"]), front: Tex.wagonFront(["#4c548a", "#39406b", "#2b3050"]) },
     ];
     const mkWagon = () => {
       const skin = pick(wagonSkins);
       const grp = new THREE.Group();
-      const sideMat = new THREE.MeshLambertMaterial({ map: skin.side, emissive: 0xffffff, emissiveMap: skin.side, emissiveIntensity: 0.28 });
-      const frontMat = new THREE.MeshLambertMaterial({ map: skin.front, emissive: 0xffffff, emissiveMap: skin.front, emissiveIntensity: 0.28 });
-      const topMat = new THREE.MeshLambertMaterial({ color: 0x9aa3bd });
+      const bodyH = D.wagon.h - 0.55;
       const body = new THREE.Mesh(
-        new THREE.BoxGeometry(D.wagon.w, D.wagon.h - 0.5, D.wagon.d),
-        [sideMat, sideMat, topMat, topMat, frontMat, frontMat]
+        roundedBoxGeo(D.wagon.w, bodyH, D.wagon.d, 0.3, 4),
+        std(skin.base, 0.5, 0.35)
       );
-      body.position.y = 0.45 + (D.wagon.h - 0.5) / 2;
+      body.position.y = 0.5 + bodyH / 2;
       grp.add(body);
-      // toit arrondi
+      /* décalques latéraux et avant (fenêtres, phares) */
+      const emiss = (tex) => new THREE.MeshLambertMaterial({
+        map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.5,
+      });
+      for (const sd of [-1, 1]) {
+        const sideDecal = new THREE.Mesh(
+          new THREE.PlaneGeometry(D.wagon.d - 0.9, bodyH - 0.55),
+          emiss(skin.side)
+        );
+        sideDecal.position.set(sd * (D.wagon.w / 2 + 0.004), 0.62 + bodyH / 2, 0);
+        sideDecal.rotation.y = sd * Math.PI / 2;
+        grp.add(sideDecal);
+      }
+      const frontDecal = new THREE.Mesh(
+        new THREE.PlaneGeometry(D.wagon.w - 0.5, bodyH - 0.35),
+        emiss(skin.front)
+      );
+      frontDecal.position.set(0, 0.58 + bodyH / 2, D.wagon.d / 2 + 0.004);
+      grp.add(frontDecal);
+      /* toit galbé */
       const roof = new THREE.Mesh(
-        new THREE.CylinderGeometry(D.wagon.w / 2, D.wagon.w / 2, D.wagon.d, 14, 1, false, 0, Math.PI),
-        topMat
+        new THREE.CylinderGeometry(D.wagon.w / 2, D.wagon.w / 2, D.wagon.d - 0.5, 18, 1, false, 0, Math.PI),
+        std(0x9aa3bd, 0.45, 0.4)
       );
       roof.rotation.z = Math.PI / 2;
       roof.rotation.y = Math.PI / 2;
-      // local X → hauteur monde : on aplatit le dôme du toit
-      roof.scale.set(0.3, 1, 1);
-      roof.position.y = D.wagon.h - 0.05;
+      roof.scale.set(0.28, 1, 1);
+      roof.position.y = D.wagon.h - 0.08;
       grp.add(roof);
-      // bogies
-      const bogieMat = new THREE.MeshLambertMaterial({ color: 0x14161f });
-      for (const zz of [-D.wagon.d / 2 + 1.4, D.wagon.d / 2 - 1.4]) {
-        const bogie = new THREE.Mesh(new THREE.BoxGeometry(D.wagon.w - 0.5, 0.5, 1.8), bogieMat);
-        bogie.position.set(0, 0.25, zz);
+      /* bogies arrondis + roues */
+      const bogieMat = std(0x14161f, 0.8);
+      for (const zz of [-D.wagon.d / 2 + 1.5, D.wagon.d / 2 - 1.5]) {
+        const bogie = new THREE.Mesh(roundedBoxGeo(D.wagon.w - 0.6, 0.42, 1.7, 0.12), bogieMat);
+        bogie.position.set(0, 0.3, zz);
         grp.add(bogie);
+        for (const sd of [-1, 1]) {
+          const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.08, 16), std(0x30364a, 0.4, 0.7));
+          wheel.rotation.z = Math.PI / 2;
+          wheel.position.set(sd * (D.wagon.w / 2 - 0.22), 0.24, zz);
+          grp.add(wheel);
+        }
       }
-      // halo de phare (face avant = -z, vers le joueur)
+      /* phare avant + halo */
       const lamp = new THREE.Sprite(new THREE.SpriteMaterial({
         map: this.glowTex, color: 0xffe9a8, transparent: true, opacity: 0.9,
         blending: THREE.AdditiveBlending, depthWrite: false,
       }));
       lamp.scale.set(1.1, 1.1, 1);
-      lamp.position.set(0, 0.8, -D.wagon.d / 2 - 0.05);
+      lamp.position.set(0, 0.8, D.wagon.d / 2 + 0.05);
       grp.add(lamp);
-      // pantographe sur le toit
-      const pbase = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 0.9), bogieMat);
-      pbase.position.set(0, D.wagon.h + 0.04, -2);
+      /* pantographe fin (cylindres) */
+      const panMat = std(0x20242f, 0.5, 0.5);
+      const pbase = new THREE.Mesh(roundedBoxGeo(0.6, 0.07, 0.8, 0.03), panMat);
+      pbase.position.set(0, D.wagon.h + 0.02, -2);
       grp.add(pbase);
-      for (const s of [-1, 1]) {
-        const armP = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.75, 0.05), bogieMat);
-        armP.position.set(0.16 * s, D.wagon.h + 0.4, -2);
-        armP.rotation.x = 0.45 * s;
+      for (const sd of [-1, 1]) {
+        const armP = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.78, 8), panMat);
+        armP.position.set(0.14 * sd, D.wagon.h + 0.38, -2);
+        armP.rotation.x = 0.45 * sd;
         grp.add(armP);
       }
-      const pTop = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.05, 0.14), bogieMat);
-      pTop.position.set(0, D.wagon.h + 0.74, -2);
+      const pTop = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.05, 8), panMat);
+      pTop.rotation.z = Math.PI / 2;
+      pTop.position.set(0, D.wagon.h + 0.72, -2);
       grp.add(pTop);
-      // feu arrière rouge clignotant
+      /* feu arrière rouge clignotant */
       const tail = new THREE.Sprite(new THREE.SpriteMaterial({
         map: this.glowTex, color: 0xff3b30, transparent: true, opacity: 0.9,
         blending: THREE.AdditiveBlending, depthWrite: false,
       }));
       tail.scale.set(0.8, 0.8, 1);
-      tail.position.set(0.7, 2.2, D.wagon.d / 2 + 0.05);
+      tail.position.set(0.7, 2.2, -D.wagon.d / 2 - 0.05);
       grp.add(tail);
       grp.userData.tail = tail.material;
+      castAll(grp);
       return grp;
     };
 
@@ -2746,8 +2908,8 @@ class Game {
     this.scene.fog.color.lerpColors(this.fogNormal, this.fogTunnel, this.tunnelK);
     this.scene.fog.near = lerp(35, 14, this.tunnelK);
     this.scene.fog.far = lerp(130, 70, this.tunnelK);
-    this.hemi.intensity = lerp(0.95, 0.45, this.tunnelK);
-    this.sun.intensity = lerp(1.15, 0.2, this.tunnelK);
+    this.hemi.intensity = lerp(1.25, 0.55, this.tunnelK);
+    this.sun.intensity = lerp(1.35, 0.25, this.tunnelK);
     this.sky.visible = this.tunnelK < 0.85;
 
     // animations d'ambiance synchronisées
