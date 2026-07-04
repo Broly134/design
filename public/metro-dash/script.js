@@ -102,6 +102,7 @@ class AudioManager {
   coin()    { this.tone({ type: "square", from: 950, to: 1500, dur: 0.09, vol: 0.16 }); }
   jump()    { this.tone({ type: "sine", from: 300, to: 640, dur: 0.16, vol: 0.22 }); }
   slide()   { this.noise({ dur: 0.18, vol: 0.14, freq: 500 }); }
+  thud()    { this.noise({ dur: 0.12, vol: 0.28, freq: 220 }); }
   crash()   { this.noise({ dur: 0.4, vol: 0.5, freq: 350 }); this.tone({ type: "sawtooth", from: 220, to: 50, dur: 0.4, vol: 0.3 }); }
   powerup() { [523, 659, 784, 1046].forEach((f, i) => this.tone({ type: "triangle", from: f, dur: 0.12, vol: 0.2, delay: i * 0.07 })); }
   shieldHit(){ this.tone({ type: "triangle", from: 880, to: 220, dur: 0.3, vol: 0.3 }); }
@@ -195,6 +196,7 @@ class Player {
     this.slideT = 0;
     this.runPhase = 0;
     this.invincibleT = 0;
+    this.justLanded = false;
   }
 
   get height() { return this.sliding ? CONFIG.SLIDE_H : CONFIG.PLAYER_H; }
@@ -229,7 +231,7 @@ class Player {
     if (this.jumping) {
       this.y += this.vy * dt;
       this.vy -= CONFIG.GRAVITY * dt;
-      if (this.y <= 0) { this.y = 0; this.vy = 0; this.jumping = false; }
+      if (this.y <= 0) { this.y = 0; this.vy = 0; this.jumping = false; this.justLanded = true; }
     }
     if (this.sliding) {
       this.slideT -= dt;
@@ -590,6 +592,30 @@ const Tex = {
       sun.addColorStop(1, "rgba(255,150,70,0)");
       g.fillStyle = sun;
       g.fillRect(0, 0, w, h);
+      // lune avec cratères et halo
+      const mx = w * 0.78, my = h * 0.18, mr = 26;
+      const mh = g.createRadialGradient(mx, my, mr * 0.4, mx, my, mr * 3.2);
+      mh.addColorStop(0, "rgba(210,220,255,0.5)");
+      mh.addColorStop(1, "rgba(210,220,255,0)");
+      g.fillStyle = mh;
+      g.fillRect(mx - mr * 3.2, my - mr * 3.2, mr * 6.4, mr * 6.4);
+      g.fillStyle = "#e8ecff";
+      g.beginPath();
+      g.arc(mx, my, mr, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = "rgba(160,170,210,0.5)";
+      for (const [cx2, cy2, cr] of [[-8, -4, 5], [7, 6, 7], [4, -9, 3.5], [-4, 10, 3]]) {
+        g.beginPath();
+        g.arc(mx + cx2, my + cy2, cr, 0, Math.PI * 2);
+        g.fill();
+      }
+      // bancs de nuages fins
+      g.fillStyle = "rgba(90,60,110,0.35)";
+      for (let i = 0; i < 7; i++) {
+        g.beginPath();
+        g.ellipse(Math.random() * w, HOR * (0.35 + Math.random() * 0.5), rand(120, 340), rand(6, 14), 0, 0, Math.PI * 2);
+        g.fill();
+      }
       // étoiles
       g.fillStyle = "rgba(255,255,255,0.7)";
       for (let i = 0; i < 90; i++) {
@@ -931,97 +957,271 @@ const Tex = {
       g.fillText(label, w / 2, h / 2 + 2);
     });
   },
+
+  /* Silhouettes de gratte-ciel intermédiaires (couche de parallaxe) */
+  skyline() {
+    return makeTexture(1024, 160, (g, w, h) => {
+      g.clearRect(0, 0, w, h);
+      let x = 0;
+      while (x < w) {
+        const bw = rand(30, 80), bh = rand(40, 140);
+        g.fillStyle = "#221a3f";
+        g.fillRect(x, h - bh, bw, bh);
+        g.fillStyle = "rgba(255,200,120,0.35)";
+        for (let i = 0; i < bw * bh * 0.0012; i++) {
+          g.fillRect(x + rand(3, bw - 5), h - bh + rand(3, bh - 6), 2, 3);
+        }
+        if (Math.random() < 0.25) {
+          g.fillStyle = pick(["#00d0ff", "#ff5c8a", "#ffc93c"]);
+          g.fillRect(x + 4, h - bh - 4, bw - 8, 3);
+        }
+        x += bw + rand(6, 30);
+      }
+    });
+  },
+
+  /* Vitrine de boutique éclairée (rez-de-chaussée des immeubles) */
+  shopWindow() {
+    return makeTexture(512, 170, (g, w, h) => {
+      g.fillStyle = "#182338";
+      g.fillRect(0, 0, w, h);
+      const glow2 = g.createLinearGradient(0, 0, 0, h);
+      glow2.addColorStop(0, "rgba(255,214,150,0.9)");
+      glow2.addColorStop(1, "rgba(255,180,110,0.55)");
+      g.fillStyle = glow2;
+      g.fillRect(10, 14, w - 20, h - 34);
+      g.fillStyle = "#10131f";
+      for (let x = 10; x <= w - 12; x += (w - 20) / 4) g.fillRect(x, 14, 8, h - 34);
+      g.fillStyle = "rgba(20,24,40,0.8)";
+      for (let i = 0; i < 8; i++) {
+        const bx = 26 + i * 58, bh2 = rand(20, 50);
+        g.fillRect(bx, h - 26 - bh2, 26, bh2);
+      }
+      g.fillStyle = "rgba(0,0,0,0.4)";
+      g.fillRect(0, h - 16, w, 16);
+    });
+  },
+
+  /* Façade lumineuse de distributeur automatique */
+  vending() {
+    return makeTexture(128, 256, (g, w, h) => {
+      g.fillStyle = "#16305a";
+      g.fillRect(0, 0, w, h);
+      g.fillStyle = "rgba(120,200,255,0.85)";
+      g.fillRect(12, 14, w - 24, h * 0.55);
+      g.fillStyle = "#10131f";
+      for (let r = 0; r < 3; r++)
+        for (let c = 0; c < 3; c++)
+          g.fillRect(18 + c * 32, 22 + r * 42, 24, 32);
+      for (let r = 0; r < 3; r++)
+        for (let c = 0; c < 3; c++)
+          if (Math.random() < 0.7) {
+            g.fillStyle = pick(["#ff5c8a", "#ffc93c", "#00e08a"]);
+            g.fillRect(22 + c * 32, 28 + r * 42, 16, 20);
+          }
+      g.fillStyle = "#0d1626";
+      g.fillRect(12, h * 0.62, w - 24, 34);
+    });
+  },
+
+  /* Tache douce pour les flaques réfléchissant les néons */
+  puddle() {
+    return makeTexture(128, 128, (g, w, h) => {
+      const grad = g.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
+      grad.addColorStop(0, "rgba(255,255,255,0.9)");
+      grad.addColorStop(0.5, "rgba(255,255,255,0.3)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, h);
+    });
+  },
+
+  /* Enseigne suspendue de la station */
+  stationSign() {
+    return makeTexture(512, 96, (g, w, h) => {
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = "#101a2e";
+      g.beginPath();
+      g.roundRect(2, 2, w - 4, h - 4, 18);
+      g.fill();
+      g.strokeStyle = "#ffc93c";
+      g.lineWidth = 5;
+      g.stroke();
+      g.font = "900 44px system-ui, sans-serif";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      g.shadowColor = "#ffc93c";
+      g.shadowBlur = 14;
+      g.fillStyle = "#ffe9a8";
+      g.fillText("Ⓜ STATION NOVA", w / 2, h / 2);
+    });
+  },
+
+  /* Paroi de tunnel : panneaux boulonnés, câbles, bandes de danger */
+  tunnelWall() {
+    return makeTexture(512, 256, (g, w, h) => {
+      g.fillStyle = "#171a26";
+      g.fillRect(0, 0, w, h);
+      g.strokeStyle = "rgba(0,0,0,0.5)";
+      g.lineWidth = 3;
+      for (let x = 0; x < w; x += 86) {
+        g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke();
+      }
+      g.strokeStyle = "#2a3046";
+      g.lineWidth = 5;
+      for (const y of [h * 0.2, h * 0.28]) {
+        g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke();
+      }
+      for (let x = 0; x < w; x += 40) {
+        g.fillStyle = (x / 40) % 2 ? "#d9a92e" : "#181818";
+        g.fillRect(x, h - 22, 40, 12);
+      }
+      for (let i = 0; i < 26; i++) {
+        g.fillStyle = `rgba(0,0,0,${rand(0.08, 0.2)})`;
+        g.beginPath();
+        g.ellipse(Math.random() * w, Math.random() * h, rand(12, 44), rand(6, 16), 0, 0, Math.PI * 2);
+        g.fill();
+      }
+    });
+  },
 };
 
 /* ==========================================================================
-   PlayerRig — coureur 3D articulé (torse, tête, casquette, sac, bras, jambes)
+   PlayerRig — coureur 3D entièrement articulé : bassin, torse, tête,
+   casquette + casque audio, sac à dos, bras (épaule + coude), jambes
+   (hanche + genou + pied). Cycle de course avec flexion des genoux,
+   contre-rotation du torse, squash d'atterrissage, poses fondues.
    ========================================================================== */
 class PlayerRig {
   constructor(scene, glowTex, blobTex) {
     this.group = new THREE.Group();
     scene.add(this.group);
 
-    const skin = new THREE.MeshLambertMaterial({ color: 0xe8b087 });
-    const jacket = new THREE.MeshLambertMaterial({ color: 0xff8a2a });
-    const jacketD = new THREE.MeshLambertMaterial({ color: 0xd96f14 });
-    const pants = new THREE.MeshLambertMaterial({ color: 0x2c3150 });
-    const shoe = new THREE.MeshLambertMaterial({ color: 0xf4f6ff });
-    const bag = new THREE.MeshLambertMaterial({ color: 0x8b5cf6 });
-    const cap = new THREE.MeshLambertMaterial({ color: 0x2f7bff });
-    const hair = new THREE.MeshLambertMaterial({ color: 0x503a28 });
-    const box = (w, h, d, mat) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    const M = (c) => new THREE.MeshLambertMaterial({ color: c });
+    const skin = M(0xe8b087), jacket = M(0xff8a2a), jacketD = M(0xd96f14),
+      pants = M(0x2c3150), pantsD = M(0x222744), shoe = M(0xf4f6ff), sole = M(0x20242f),
+      bag = M(0x7c4ce0), bagD = M(0x5f35c4), cap = M(0x2f7bff), hair = M(0x503a28);
+    const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+    const caps = (r, l, m) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 4, 10), m);
+    const sph = (r, m, ws = 14, hs = 10) => new THREE.Mesh(new THREE.SphereGeometry(r, ws, hs), m);
 
-    // Corps : pivot au niveau des hanches pour la glissade
-    this.body = new THREE.Group();
-    this.body.position.y = 0.85;
-    this.group.add(this.body);
+    /* ----- bassin (pivot central du haut du corps) ----- */
+    this.pelvisG = new THREE.Group();
+    this.pelvisG.position.y = 0.98;
+    this.group.add(this.pelvisG);
+    const pelvis = box(0.34, 0.16, 0.22, pantsD);
+    pelvis.position.y = -0.06;
+    this.pelvisG.add(pelvis);
 
-    // torse + bande de veste
-    const torso = box(0.52, 0.64, 0.3, jacket);
-    torso.position.y = 0.32;
-    this.body.add(torso);
-    const stripe = box(0.08, 0.6, 0.31, jacketD);
-    stripe.position.set(0, 0.32, 0.005);
-    this.body.add(stripe);
+    /* ----- torse (contre-rotation pendant la course) ----- */
+    this.torso = new THREE.Group();
+    this.torso.position.y = 0.02;
+    this.pelvisG.add(this.torso);
+    const chest = caps(0.21, 0.3, jacket);
+    chest.position.y = 0.32;
+    this.torso.add(chest);
+    const zip = box(0.04, 0.42, 0.02, jacketD);           // fermeture éclair (face avant)
+    zip.position.set(0, 0.3, -0.215);
+    this.torso.add(zip);
+    const hood = sph(0.15, jacketD);                       // capuche roulée sur la nuque
+    hood.scale.set(1, 0.65, 0.8);
+    hood.position.set(0, 0.5, 0.18);
+    this.torso.add(hood);
 
-    // sac à dos (face caméra : +z)
-    const pack = box(0.42, 0.5, 0.2, bag);
-    pack.position.set(0, 0.36, 0.25);
-    this.body.add(pack);
-    const strapL = box(0.07, 0.5, 0.05, bag);
-    strapL.position.set(-0.18, 0.36, 0.16);
-    this.body.add(strapL);
-    const strapR = strapL.clone();
-    strapR.position.x = 0.18;
-    this.body.add(strapR);
+    /* sac à dos : coque + poche + sangles */
+    const pack = box(0.36, 0.44, 0.16, bag);
+    pack.position.set(0, 0.3, 0.25);
+    this.torso.add(pack);
+    const pocket = box(0.24, 0.17, 0.06, bagD);
+    pocket.position.set(0, 0.19, 0.34);
+    this.torso.add(pocket);
+    for (const s of [-1, 1]) {
+      const strap = box(0.06, 0.4, 0.05, bagD);
+      strap.position.set(0.13 * s, 0.36, 0.12);
+      strap.rotation.x = 0.3;
+      this.torso.add(strap);
+    }
 
-    // tête + cheveux + casquette (visière vers -z, sens de course)
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 18, 14), skin);
-    head.position.y = 0.82;
-    this.body.add(head);
-    const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.195, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hair);
-    hairCap.position.y = 0.83;
-    this.body.add(hairCap);
-    const capTop = box(0.34, 0.11, 0.34, cap);
-    capTop.position.y = 0.97;
-    this.body.add(capTop);
-    const brim = box(0.3, 0.045, 0.18, cap);
-    brim.position.set(0, 0.94, -0.24);
-    this.body.add(brim);
+    /* ----- tête : crâne, cheveux, casquette, casque audio ----- */
+    this.headG = new THREE.Group();
+    this.headG.position.y = 0.62;
+    this.torso.add(this.headG);
+    const head = sph(0.17, skin, 18, 14);
+    head.position.y = 0.1;
+    this.headG.add(head);
+    const hairC = new THREE.Mesh(new THREE.SphereGeometry(0.176, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hair);
+    hairC.position.y = 0.11;
+    this.headG.add(hairC);
+    const capTop = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.185, 0.085, 16), cap);
+    capTop.position.y = 0.225;
+    this.headG.add(capTop);
+    const brim = box(0.26, 0.035, 0.16, cap);
+    brim.position.set(0, 0.21, -0.22);
+    this.headG.add(brim);
+    for (const s of [-1, 1]) {                              // écouteurs
+      const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.04, 10), bagD);
+      ear.rotation.z = Math.PI / 2;
+      ear.position.set(0.17 * s, 0.09, 0);
+      this.headG.add(ear);
+    }
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.018, 6, 14, Math.PI), bagD);
+    band.position.y = 0.1;
+    this.headG.add(band);
 
-    // bras (pivot épaule)
+    /* ----- bras à deux segments (épaule → coude → main) ----- */
     const mkArm = (side) => {
-      const g = new THREE.Group();
-      g.position.set(0.32 * side, 0.56, 0);
-      const arm = box(0.14, 0.46, 0.14, jacket);
-      arm.position.y = -0.22;
-      g.add(arm);
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), skin);
-      hand.position.y = -0.48;
-      g.add(hand);
-      this.body.add(g);
-      return g;
+      const sh = new THREE.Group();
+      sh.position.set(0.27 * side, 0.5, 0);
+      this.torso.add(sh);
+      const up = caps(0.062, 0.2, jacket);
+      up.position.y = -0.15;
+      sh.add(up);
+      const el = new THREE.Group();
+      el.position.y = -0.3;
+      sh.add(el);
+      const fo = caps(0.052, 0.18, jacketD);
+      fo.position.y = -0.12;
+      el.add(fo);
+      const hand = sph(0.055, skin, 10, 8);
+      hand.position.y = -0.26;
+      el.add(hand);
+      return { sh, el };
     };
     this.armL = mkArm(-1);
     this.armR = mkArm(1);
 
-    // jambes (pivot hanche, attachées au groupe racine pour rester au sol)
-    const mkLeg = (side, mat) => {
-      const g = new THREE.Group();
-      g.position.set(0.14 * side, 0.85, 0);
-      const leg = box(0.17, 0.58, 0.17, mat);
-      leg.position.y = -0.29;
-      g.add(leg);
-      const foot = box(0.18, 0.1, 0.3, shoe);
-      foot.position.set(0, -0.6, -0.05);
-      g.add(foot);
-      this.group.add(g);
-      return g;
+    /* ----- jambes à deux segments (hanche → genou → pied) ----- */
+    const mkLeg = (side, thighMat) => {
+      const hip = new THREE.Group();
+      hip.position.set(0.12 * side, 0.98, 0);
+      this.group.add(hip);
+      const th = caps(0.085, 0.26, thighMat);
+      th.position.y = -0.2;
+      hip.add(th);
+      const kn = new THREE.Group();
+      kn.position.y = -0.44;
+      hip.add(kn);
+      const shn = caps(0.065, 0.26, pantsD);
+      shn.position.y = -0.19;
+      kn.add(shn);
+      const foot = new THREE.Group();
+      foot.position.y = -0.44;
+      kn.add(foot);
+      const sneak = box(0.15, 0.09, 0.27, shoe);
+      sneak.position.set(0, -0.01, -0.05);
+      foot.add(sneak);
+      const soleM = box(0.16, 0.035, 0.3, sole);
+      soleM.position.set(0, -0.07, -0.05);
+      foot.add(soleM);
+      const lace = box(0.1, 0.02, 0.1, sole);
+      lace.position.set(0, 0.045, -0.1);
+      foot.add(lace);
+      return { hip, kn, foot };
     };
     this.legL = mkLeg(-1, pants);
-    this.legR = mkLeg(1, new THREE.MeshLambertMaterial({ color: 0x3a4066 }));
+    this.legR = mkLeg(1, new THREE.MeshLambertMaterial({ color: 0x343a5e }));
 
-    // ombre portée
+    /* ombre portée */
     this.shadowMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(1.5, 1.1),
       new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })
@@ -1029,16 +1229,16 @@ class PlayerRig {
     this.shadowMesh.rotation.x = -Math.PI / 2;
     scene.add(this.shadowMesh);
 
-    // aura bouclier
+    /* aura bouclier */
     this.shieldFx = new THREE.Mesh(
       new THREE.SphereGeometry(0.95, 20, 14),
       new THREE.MeshBasicMaterial({ color: 0x00d0ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })
     );
     this.shieldFx.visible = false;
-    this.group.add(this.shieldFx);
     this.shieldFx.position.y = 1.0;
+    this.group.add(this.shieldFx);
 
-    // halo boost
+    /* halo boost */
     this.boostFx = new THREE.Sprite(new THREE.SpriteMaterial({
       map: glowTex, color: 0xff8a2a, transparent: true, opacity: 0.55,
       blending: THREE.AdditiveBlending, depthWrite: false,
@@ -1048,56 +1248,95 @@ class PlayerRig {
     this.boostFx.visible = false;
     this.group.add(this.boostFx);
 
-    this.slideW = 0; // poids de la pose de glissade (0..1)
-    this.airW = 0;   // poids de la pose aérienne
+    this.slideW = 0;
+    this.airW = 0;
+    this.squashT = 0;
   }
 
-  update(player, dt, fx) {
+  /* déclenché par le jeu à l'atterrissage d'un saut */
+  land() { this.squashT = 0.16; }
+
+  update(player, dt, fx, speedK = 0) {
     const g = this.group;
     g.position.x = player.x;
     g.position.z = -CONFIG.PLAYER_Z;
 
-    // Poids de poses lissés
     this.slideW = damp(this.slideW, player.sliding ? 1 : 0, 14, dt);
     this.airW = damp(this.airW, player.jumping ? 1 : 0, 12, dt);
+    const slideW = this.slideW, airW = this.airW;
+    const ground = (1 - airW) * (1 - slideW);
 
     const t = player.runPhase;
-    const run = Math.sin(t);
-    const bob = Math.abs(Math.cos(t)) * 0.05 * (1 - this.airW) * (1 - this.slideW);
-    g.position.y = player.y + bob - this.slideW * 0.52;
+    const bob = Math.abs(Math.cos(t)) * 0.05 * ground;
+    g.position.y = player.y + bob - slideW * 0.55;
 
-    // inclinaison lors des changements de voie + penché en avant en course
+    /* squash d'atterrissage : compression puis rebond */
+    if (this.squashT > 0) {
+      this.squashT -= dt;
+      const k = Math.max(this.squashT, 0) / 0.16;
+      const sq = Math.sin(k * Math.PI) * 0.2;
+      g.scale.set(1 + sq * 0.6, 1 - sq, 1 + sq * 0.6);
+    } else {
+      g.scale.set(1, 1, 1);
+    }
+
+    /* inclinaison dans les virages + penché avec la vitesse */
     const lean = clamp((CONFIG.LANE_X[player.lane] - player.x) * 0.4, -0.35, 0.35);
     g.rotation.z = damp(g.rotation.z, -lean, 12, dt);
+    g.rotation.y = damp(g.rotation.y, lean * 0.5, 10, dt);
 
-    // pose de course
-    const swing = run * 0.85;
-    const runLegL = swing, runLegR = -swing;
-    const runArmL = -swing * 0.8, runArmR = swing * 0.8;
+    /* ---- cycle de course : jambe = hanche + genou + cheville ---- */
+    const legCycle = (p) => ({
+      thigh: Math.sin(p) * (0.85 + speedK * 0.25),
+      shin: Math.max(0, Math.sin(p - 1.5)) * 1.5 + 0.12,
+      foot: Math.max(0, -Math.sin(p - 0.5)) * 0.45 - 0.1,
+    });
+    const airL = { thigh: -1.05, shin: 1.7, foot: 0.3 };
+    const airR = { thigh: 0.5, shin: 0.55, foot: -0.3 };
+    const slideL = { thigh: -1.5, shin: 0.25, foot: 0.1 };
+    const slideR = { thigh: -1.15, shin: 0.7, foot: 0.1 };
 
-    // pose aérienne : jambes groupées, bras levés
-    const airLegL = -0.9, airLegR = 0.45, airArm = -2.3;
+    const mixPose = (run, air, slide) =>
+      lerp(lerp(run, air, airW), slide, slideW);
 
-    // pose de glissade : corps basculé en arrière, jambes tendues devant
-    const slideBody = -1.25, slideLeg = -1.35, slideArm = -0.6;
+    const cL = legCycle(t), cR = legCycle(t + Math.PI);
+    this.legL.hip.rotation.x = mixPose(cL.thigh, airL.thigh, slideL.thigh);
+    this.legL.kn.rotation.x = mixPose(cL.shin, airL.shin, slideL.shin);
+    this.legL.foot.rotation.x = mixPose(cL.foot, airL.foot, slideL.foot);
+    this.legR.hip.rotation.x = mixPose(cR.thigh, airR.thigh, slideR.thigh);
+    this.legR.kn.rotation.x = mixPose(cR.shin, airR.shin, slideR.shin);
+    this.legR.foot.rotation.x = mixPose(cR.foot, airR.foot, slideR.foot);
 
-    const mix = (runV, airV, slideV) =>
-      lerp(lerp(runV, airV, this.airW), slideV, this.slideW);
+    /* jambes suivent la hauteur du bassin en glissade */
+    this.legL.hip.position.y = 0.98 - slideW * 0.55;
+    this.legR.hip.position.y = 0.98 - slideW * 0.55;
+    this.legL.hip.position.z = slideW * -0.15;
+    this.legR.hip.position.z = slideW * -0.15;
 
-    this.legL.rotation.x = mix(runLegL, airLegL, slideLeg);
-    this.legR.rotation.x = mix(runLegR, airLegR, slideLeg + 0.25);
-    this.armL.rotation.x = mix(runArmL, airArm, slideArm);
-    this.armR.rotation.x = mix(runArmR, airArm * 0.85, slideArm);
-    this.body.rotation.x = mix(0.12, -0.05, slideBody);
-    this.body.position.z = this.slideW * 0.25;
+    /* ---- bras : balancement opposé + coude vivant ---- */
+    const armSwing = Math.sin(t + Math.PI) * (0.7 + speedK * 0.2);
+    const elbowRun = -0.85 - Math.max(0, Math.sin(t + Math.PI)) * 0.35;
+    const elbowRunR = -0.85 - Math.max(0, Math.sin(t)) * 0.35;
+    this.armL.sh.rotation.x = mixPose(armSwing, -2.4, -0.5);
+    this.armR.sh.rotation.x = mixPose(-armSwing, -2.1, -0.7);
+    this.armL.el.rotation.x = mixPose(elbowRun, -0.4, -0.5);
+    this.armR.el.rotation.x = mixPose(elbowRunR, -0.5, -0.4);
+    this.armL.sh.rotation.z = 0.12 + slideW * 0.5;
+    this.armR.sh.rotation.z = -0.12 - slideW * 0.5;
 
-    // ombre au sol
+    /* ---- torse : penché en avant, contre-rotation, tête stabilisée ---- */
+    this.pelvisG.rotation.x = mixPose(0.14 + speedK * 0.12, -0.02, -1.3);
+    this.torso.rotation.y = Math.sin(t) * 0.1 * ground;
+    this.headG.rotation.x = -this.pelvisG.rotation.x * 0.55;
+    this.headG.rotation.y = -this.torso.rotation.y * 0.6;
+
+    /* ombre au sol */
     this.shadowMesh.position.set(player.x, 0.02, -CONFIG.PLAYER_Z);
     const sh = clamp(1 - player.y / 3, 0.3, 1);
-    this.shadowMesh.scale.set(sh, sh * (1 + this.slideW * 0.7), 1);
+    this.shadowMesh.scale.set(sh, sh * (1 + slideW * 0.7), 1);
     this.shadowMesh.material.opacity = sh;
 
-    // effets
+    /* effets d'état */
     this.shieldFx.visible = fx.shield;
     if (fx.shield) {
       const p = 1 + Math.sin(performance.now() / 160) * 0.06;
@@ -1105,20 +1344,29 @@ class PlayerRig {
     }
     this.boostFx.visible = fx.boost;
 
-    // clignotement d'invulnérabilité
     g.visible = !(player.invincibleT > 0 && Math.floor(performance.now() / 90) % 2 === 0);
   }
 }
 
 /* ==========================================================================
-   World3D — décor : ciel, sol défilant, murs, immeubles, lampes, tunnels
+   World3D — ville ultra détaillée : ciel + skyline parallaxe, sol défilant,
+   murs graffés, immeubles (balcons, toits équipés, vitrines, enseignes),
+   lampadaires, portiques, câbles suspendus, mobilier urbain, flaques néon,
+   poussière atmosphérique, drone, station de métro, tunnel équipé.
+   Tous les éléments sont recyclés en boucle (aucune allocation en jeu).
    ========================================================================== */
 class World3D {
   constructor(scene, glowTex) {
     this.scene = scene;
     this.dist = 0;
+    this.detail = [];        // objets masqués en qualité « réduite »
 
-    /* Ciel (plan lointain, insensible au brouillard) */
+    const lambert = (c) => new THREE.MeshLambertMaterial({ color: c });
+    this.matPole = lambert(0x3a3f58);
+    this.matDark = lambert(0x191d30);
+    this.matMetal = lambert(0x6a7290);
+
+    /* ---------- ciel + skyline parallaxe ---------- */
     this.sky = new THREE.Mesh(
       new THREE.PlaneGeometry(560, 240),
       new THREE.MeshBasicMaterial({ map: Tex.sky(), fog: false, depthWrite: false })
@@ -1126,7 +1374,14 @@ class World3D {
     this.sky.position.set(0, 55, -250);
     scene.add(this.sky);
 
-    /* Sol + murs : groupe « scroller » décalé de (dist % TILE) pour le défilement */
+    this.skyline = new THREE.Mesh(
+      new THREE.PlaneGeometry(420, 60),
+      new THREE.MeshBasicMaterial({ map: Tex.skyline(), transparent: true, fog: false, depthWrite: false })
+    );
+    this.skyline.position.set(0, 18, -160);
+    scene.add(this.skyline);
+
+    /* ---------- sol + murs défilants ---------- */
     this.TILE = 12;
     this.scroller = new THREE.Group();
     scene.add(this.scroller);
@@ -1150,7 +1405,7 @@ class World3D {
       this.scroller.add(wall);
     }
 
-    /* Rails : boîtes fines métalliques, statiques */
+    /* rails métalliques continus */
     const railMat = new THREE.MeshStandardMaterial({ color: 0xaab6d0, metalness: 0.85, roughness: 0.35 });
     for (const lane of CONFIG.LANE_X) {
       for (const off of [-0.72, 0.72]) {
@@ -1160,85 +1415,141 @@ class World3D {
       }
     }
 
-    /* Immeubles recyclés (8 par côté) */
+    /* ---------- immeubles détaillés (8 par côté, recyclés) ---------- */
     this.buildings = [];
     const facades = ["#232842", "#1e2338", "#2a2440", "#20304a"].map((c) => Tex.facade(c));
     const neonNames = ["NOVA", "VOLT CAFÉ", "RAPID+", "PIXEL BAR", "ORBIT", "KUMO", "LUMA", "DASH 24"];
     const neonCols = ["#00d0ff", "#ff8a2a", "#c084fc", "#ff5c8a"];
+    const awningCols = [0xff5c8a, 0x00b8e0, 0xff8a2a, 0x8b5cf6];
     this.BSPAN = 8 * 34;
+
     for (let side = -1; side <= 1; side += 2) {
       for (let i = 0; i < 8; i++) {
+        const grp = new THREE.Group();
         const h = rand(9, 18);
-        const geo = new THREE.BoxGeometry(10, 1, 26);
+        const inX = 11.5 + rand(0, 2.5);
+
+        /* corps du bâtiment */
         const matIn = new THREE.MeshLambertMaterial({
-          map: pick(facades),
-          emissive: 0xffffff,
-          emissiveMap: null,
-          emissiveIntensity: 0.55,
+          map: pick(facades), emissive: 0xffffff, emissiveIntensity: 0.55,
         });
         matIn.emissiveMap = matIn.map;
-        const plain = new THREE.MeshLambertMaterial({ color: 0x191d30 });
-        // face intérieure texturée (index 0 = +x, 1 = -x)
-        const mats = [side < 0 ? matIn : plain, side < 0 ? plain : matIn, plain, plain, plain, plain];
-        const mesh = new THREE.Mesh(geo, mats);
+        const mats = [side < 0 ? matIn : this.matDark, side < 0 ? this.matDark : matIn,
+          this.matDark, this.matDark, this.matDark, this.matDark];
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 26), mats);
         mesh.scale.y = h;
-        mesh.position.set(side * (11.5 + rand(0, 2.5)), h / 2, 0);
-
-        const grp = new THREE.Group();
+        mesh.position.set(side * inX, h / 2, 0);
         grp.add(mesh);
 
-        // enseigne néon éventuelle
-        let sign = null;
-        if (Math.random() < 0.5) {
-          sign = new THREE.Mesh(
-            new THREE.PlaneGeometry(5.5, 1.4),
-            new THREE.MeshBasicMaterial({
-              map: Tex.neon(pick(neonNames), pick(neonCols)),
-              transparent: true, depthWrite: false,
-            })
-          );
-          sign.position.set(side * (11.5 - 5.2), h * 0.55, 0);
-          sign.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
-          grp.add(sign);
+        /* enseigne néon murale (matériau cloné pour le grésillement) */
+        const sign = new THREE.Mesh(
+          new THREE.PlaneGeometry(5.5, 1.4),
+          new THREE.MeshBasicMaterial({
+            map: Tex.neon(pick(neonNames), pick(neonCols)),
+            transparent: true, depthWrite: false,
+          })
+        );
+        sign.position.set(side * (inX - 5.2), h * 0.55, 0);
+        sign.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+        sign.userData.flickAt = performance.now() + rand(2000, 9000);
+        grp.add(sign);
+
+        /* balcons (3 rangées de dalles fines sur la face intérieure) */
+        const balconies = new THREE.Group();
+        for (let b = 0; b < 3; b++) {
+          const slab = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 5.5), this.matDark);
+          slab.position.set(side * (inX - 5.3), 0, -7 + b * 7);
+          const rail2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 5.5), this.matMetal);
+          rail2.position.set(side * (inX - 5.65), 0.28, -7 + b * 7);
+          balconies.add(slab, rail2);
         }
+        grp.add(balconies);
+        this.detail.push(balconies);
+
+        /* toit : citerne + clim + antenne */
+        const roof = new THREE.Group();
+        const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 1.4, 10), this.matMetal);
+        tank.position.set(side * (inX - 2), 0.9, -6);
+        const ac = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.7, 1.2), this.matDark);
+        ac.position.set(side * (inX + 1), 0.35, 4);
+        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 2.6, 6), this.matPole);
+        mast.position.set(side * inX, 1.3, 8);
+        const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6),
+          new THREE.MeshBasicMaterial({ color: 0xff3b30 }));
+        beacon.position.set(side * inX, 2.62, 8);
+        roof.add(tank, ac, mast, beacon);
+        grp.add(roof);
+        grp.userData.roof = roof;
+        this.detail.push(roof);
+
+        /* rez-de-chaussée : vitrine + auvent + porte */
+        const shop = new THREE.Group();
+        const win = new THREE.Mesh(
+          new THREE.PlaneGeometry(6, 2),
+          new THREE.MeshBasicMaterial({ map: Tex.shopWindow(), fog: true })
+        );
+        win.position.set(side * (inX - 5.05), 1.25, 2);
+        win.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+        const awn = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.07, 6.2), lambert(pick(awningCols)));
+        awn.position.set(side * (inX - 5.5), 2.5, 2);
+        awn.rotation.z = side * 0.28;
+        const door = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.1), this.matDark);
+        door.position.set(side * (inX - 5.02), 1.05, -6.5);
+        shop.add(win, awn, door);
+        grp.add(shop);
+        this.detail.push(shop);
 
         grp.position.z = -i * 34 - rand(0, 8);
-        grp.userData = { mesh, sign, side };
-        this.scene.add(grp);
+        grp.userData = { ...grp.userData, mesh, sign, side, inX };
+        scene.add(grp);
         this.buildings.push(grp);
       }
     }
 
-    /* Lampadaires recyclés */
+    /* ---------- lampadaires ---------- */
     this.lamps = [];
     this.LSPAN = 8 * 26;
     const poleGeo = new THREE.CylinderGeometry(0.06, 0.09, 4.6, 8);
-    const poleMat = new THREE.MeshLambertMaterial({ color: 0x3a3f58 });
     for (let i = 0; i < 8; i++) {
       const side = i % 2 === 0 ? 1 : -1;
       const grp = new THREE.Group();
-      const pole = new THREE.Mesh(poleGeo, poleMat);
+      const pole = new THREE.Mesh(poleGeo, this.matPole);
       pole.position.y = 2.3;
       grp.add(pole);
-      const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.16, 10, 8),
-        new THREE.MeshBasicMaterial({ color: 0xffdc96 })
-      );
-      head.position.y = 4.65;
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.9), this.matPole);
+      arm.position.set(0, 4.55, -side * 0 + 0);
+      arm.position.x = -side * 0.4;
+      arm.rotation.y = Math.PI / 2;
+      grp.add(arm);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffdc96 }));
+      head.position.set(-side * 0.75, 4.5, 0);
       grp.add(head);
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({
         map: glowTex, color: 0xffc878, transparent: true, opacity: 0.85,
         blending: THREE.AdditiveBlending, depthWrite: false,
       }));
-      halo.scale.set(2.4, 2.4, 1);
-      halo.position.y = 4.65;
+      halo.scale.set(2.6, 2.6, 1);
+      halo.position.copy(head.position);
       grp.add(halo);
+      /* cône de lumière au sol */
+      const poolLight = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.4, 5),
+        new THREE.MeshBasicMaterial({
+          map: glowTex, color: 0x8a6a30, transparent: true, opacity: 0.4,
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        })
+      );
+      poolLight.rotation.x = -Math.PI / 2;
+      poolLight.position.set(-side * 0.75, 0.03, 0);
+      grp.add(poolLight);
+      this.detail.push(poolLight);
       grp.position.set(side * 4.85, 0, -i * 26 - 12);
       scene.add(grp);
       this.lamps.push(grp);
     }
 
-    /* Portiques publicitaires recyclés */
+    /* ---------- portiques publicitaires ---------- */
     this.gantries = [];
     this.GSPAN = 2 * 130;
     const adTexts = ["NOVA COLA", "VOLT ⚡ ENERGY", "FLY KICKS", "METRO DASH"];
@@ -1246,44 +1557,291 @@ class World3D {
       const grp = new THREE.Group();
       const legGeo = new THREE.CylinderGeometry(0.09, 0.12, 4.6, 8);
       for (const side of [-1, 1]) {
-        const leg = new THREE.Mesh(legGeo, poleMat);
+        const leg = new THREE.Mesh(legGeo, this.matPole);
         leg.position.set(side * 4.6, 2.3, 0);
         grp.add(leg);
+        const brace = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.6, 0.06), this.matMetal);
+        brace.position.set(side * 4.25, 3.4, 0);
+        brace.rotation.z = side * 0.5;
+        grp.add(brace);
       }
-      const bar = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.22, 0.22), poleMat);
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.22, 0.22), this.matPole);
       bar.position.y = 4.5;
       grp.add(bar);
       const panel = new THREE.Mesh(
         new THREE.PlaneGeometry(6.4, 2),
-        new THREE.MeshBasicMaterial({ map: Tex.billboard(pick(adTexts)), depthWrite: true })
+        new THREE.MeshBasicMaterial({ map: Tex.billboard(pick(adTexts)) })
       );
       panel.position.y = 3.4;
       grp.add(panel);
+      /* petits spots au-dessus du panneau */
+      for (const sx of [-2.4, 0, 2.4]) {
+        const spot = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: glowTex, color: 0x9adcff, transparent: true, opacity: 0.5,
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        }));
+        spot.scale.set(1, 1, 1);
+        spot.position.set(sx, 4.55, -0.2);
+        grp.add(spot);
+        this.detail.push(spot);
+      }
       grp.position.z = -60 - i * 130;
       scene.add(grp);
       this.gantries.push(grp);
     }
 
-    /* Tunnel néon recyclé (voûte + anneaux) */
+    /* ---------- câbles urbains suspendus (avec lanterne) ---------- */
+    this.wires = [];
+    this.WSPAN = 3 * 45;
+    const wireMat = new THREE.LineBasicMaterial({ color: 0x161a26 });
+    for (let i = 0; i < 3; i++) {
+      const grp = new THREE.Group();
+      for (const zo of [-0.6, 0, 0.6]) {
+        const pts = [];
+        for (let k = 0; k <= 20; k++) {
+          const x = -7 + (k / 20) * 14;
+          const sag = (1 - (x / 7) ** 2) * 1.1;
+          pts.push(new THREE.Vector3(x, 7.6 - sag, zo));
+        }
+        grp.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), wireMat));
+      }
+      const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6),
+        new THREE.MeshBasicMaterial({ color: 0xffd9a0 }));
+      lantern.position.set(0, 6.4, 0);
+      grp.add(lantern);
+      const lglow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTex, color: 0xffc878, transparent: true, opacity: 0.7,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      lglow.scale.set(1.6, 1.6, 1);
+      lglow.position.copy(lantern.position);
+      grp.add(lglow);
+      grp.position.z = -30 - i * 45;
+      scene.add(grp);
+      this.wires.push(grp);
+      this.detail.push(grp);
+    }
+
+    /* ---------- mobilier urbain le long des murs ---------- */
+    this.props = [];
+    this.PSPAN = 10 * 17;
+    const mkProp = (kind, side) => {
+      const grp = new THREE.Group();
+      if (kind === 0) {           // poubelle
+        const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.85, 10), lambert(0x2e5d43));
+        bin.position.y = 0.43;
+        grp.add(bin);
+      } else if (kind === 1) {    // cônes de chantier
+        for (let c = 0; c < 2; c++) {
+          const cone = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.55, 8), lambert(0xff8a2a));
+          cone.position.set(c * 0.5 - 0.25, 0.28, c * 0.3);
+          grp.add(cone);
+        }
+      } else if (kind === 2) {    // palettes empilées
+        for (let p = 0; p < 3; p++) {
+          const pal = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.12, 0.9), lambert(0x6b5233));
+          pal.position.y = 0.08 + p * 0.15;
+          pal.rotation.y = p * 0.2;
+          grp.add(pal);
+        }
+      } else if (kind === 3) {    // distributeur lumineux
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.7, 0.6), lambert(0x223148));
+        body.position.y = 0.85;
+        grp.add(body);
+        const face = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.55, 1.3),
+          new THREE.MeshBasicMaterial({ map: Tex.vending() })
+        );
+        face.position.set(side < 0 ? 0.36 : -0.36, 0.9, 0);
+        face.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+        grp.add(face);
+      } else {                    // feu de signalisation
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.4, 8), this.matPole);
+        pole.position.y = 1.2;
+        grp.add(pole);
+        const boxH = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.66, 0.22), this.matDark);
+        boxH.position.y = 2.5;
+        grp.add(boxH);
+        const red = new THREE.Mesh(new THREE.CircleGeometry(0.08, 10),
+          new THREE.MeshBasicMaterial({ color: 0xff3b30 }));
+        red.position.set(0, 2.64, side < 0 ? 0.12 : -0.12);
+        red.rotation.y = side < 0 ? 0 : Math.PI;
+        const green = new THREE.Mesh(new THREE.CircleGeometry(0.08, 10),
+          new THREE.MeshBasicMaterial({ color: 0x1fd06a }));
+        green.position.set(0, 2.4, side < 0 ? 0.12 : -0.12);
+        green.rotation.y = red.rotation.y;
+        grp.add(red, green);
+        grp.userData.signal = { red: red.material, green: green.material };
+      }
+      return grp;
+    };
+    for (let i = 0; i < 10; i++) {
+      const side = i % 2 === 0 ? 1 : -1;
+      const grp = mkProp(i % 5, side);
+      grp.position.set(side * (4.55 + rand(0, 0.25)), 0, -i * 17 - rand(0, 6));
+      grp.rotation.y = rand(-0.4, 0.4);
+      scene.add(grp);
+      this.props.push(grp);
+      this.detail.push(grp);
+    }
+
+    /* ---------- flaques « mouillées » reflétant les néons ---------- */
+    this.puddles = [];
+    this.PUSPAN = 6 * 22;
+    const puddleTex = Tex.puddle();
+    const puddleCols = [0x00d0ff, 0xff5c8a, 0x8b5cf6, 0xff8a2a];
+    for (let i = 0; i < 6; i++) {
+      const p = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.6, 3),
+        new THREE.MeshBasicMaterial({
+          map: puddleTex, color: pick(puddleCols), transparent: true, opacity: 0.32,
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        })
+      );
+      p.rotation.x = -Math.PI / 2;
+      p.position.set((i % 2 ? 1 : -1) * rand(2.9, 4.2), 0.025, -i * 22 - rand(0, 8));
+      scene.add(p);
+      this.puddles.push(p);
+      this.detail.push(p);
+    }
+
+    /* ---------- poussière atmosphérique ---------- */
+    this.dust = [];
+    for (let i = 0; i < 30; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTex, color: 0xaab4dc, transparent: true, opacity: 0.1,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      const s = rand(0.06, 0.2);
+      sp.scale.set(s, s, 1);
+      sp.position.set(rand(-8, 8), rand(0.4, 7), rand(-90, 0));
+      scene.add(sp);
+      this.dust.push(sp);
+      this.detail.push(sp);
+    }
+
+    /* ---------- drone qui traverse le ciel ---------- */
+    this.drone = new THREE.Group();
+    const dbody = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.14, 0.5), this.matDark);
+    this.drone.add(dbody);
+    for (const [ax, az] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+      const arm2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.04, 0.06), this.matMetal);
+      arm2.position.set(ax * 0.3, 0.05, az * 0.3);
+      arm2.rotation.y = Math.atan2(az, ax);
+      this.drone.add(arm2);
+      const rotor = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.16, 0.015, 12),
+        new THREE.MeshBasicMaterial({ color: 0x8a93b8, transparent: true, opacity: 0.35 })
+      );
+      rotor.position.set(ax * 0.42, 0.09, az * 0.42);
+      this.drone.add(rotor);
+    }
+    this.droneLight = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTex, color: 0xff3b30, transparent: true, opacity: 0.9,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    }));
+    this.droneLight.scale.set(0.7, 0.7, 1);
+    this.droneLight.position.y = -0.12;
+    this.drone.add(this.droneLight);
+    this.drone.position.set(-40, 14, -60);
+    this.droneTimer = rand(4, 9);
+    this.droneVx = 6;
+    scene.add(this.drone);
+    this.detail.push(this.drone);
+
+    /* ---------- station de métro (quai + auvent + enseigne) ---------- */
+    this.station = new THREE.Group();
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.9, 30), lambert(0x2c3147));
+    platform.position.set(7.2, 0.45, 0);
+    this.station.add(platform);
+    for (let p = 0; p < 4; p++) {
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 3.4, 8), this.matPole);
+      pillar.position.set(7.2, 2.6, -12 + p * 8);
+      this.station.add(pillar);
+    }
+    const canopy = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.16, 30), this.matDark);
+    canopy.position.set(7.2, 4.3, 0);
+    this.station.add(canopy);
+    const stripLight = new THREE.Mesh(
+      new THREE.BoxGeometry(3.8, 0.05, 29),
+      new THREE.MeshBasicMaterial({ color: 0xbfd9ff })
+    );
+    stripLight.position.set(7.2, 4.2, 0);
+    this.station.add(stripLight);
+    const stSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(6, 1),
+      new THREE.MeshBasicMaterial({ map: Tex.stationSign(), transparent: true })
+    );
+    stSign.position.set(5.3, 3.1, 0);
+    stSign.rotation.y = -Math.PI / 2;
+    this.station.add(stSign);
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 2.4), lambert(0x6b5233));
+    bench.position.set(7.6, 1.1, 4);
+    this.station.add(bench);
+    this.station.position.z = -260;
+    scene.add(this.station);
+    this.STSPAN = 420;
+
+    /* ---------- tunnel équipé : voûte texturée, tuyaux, lampes, portail ---------- */
     this.TUNNEL_LEN = 60;
     this.tunnel = new THREE.Group();
+    const wallTexT = Tex.tunnelWall();
     const shell = new THREE.Mesh(
       new THREE.CylinderGeometry(5.8, 5.8, this.TUNNEL_LEN, 24, 1, true, 0, Math.PI),
-      new THREE.MeshLambertMaterial({ color: 0x14161f, side: THREE.DoubleSide })
+      new THREE.MeshLambertMaterial({ map: wallTexT, side: THREE.DoubleSide })
     );
-    shell.rotation.z = Math.PI / 2;      // axe le long de X → on veut Z
+    wallTexT.wrapS = wallTexT.wrapT = THREE.RepeatWrapping;
+    wallTexT.repeat.set(6, 1);
+    shell.rotation.z = Math.PI / 2;
     shell.rotation.y = Math.PI / 2;
     shell.position.y = 0.4;
     this.tunnel.add(shell);
+
     const ringGeo = new THREE.TorusGeometry(5.3, 0.09, 8, 40, Math.PI);
     for (let i = 0; i < this.TUNNEL_LEN / 6; i++) {
-      const ring = new THREE.Mesh(
-        ringGeo,
-        new THREE.MeshBasicMaterial({ color: i % 2 ? 0x8b5cf6 : 0x00d0ff })
-      );
+      const ring = new THREE.Mesh(ringGeo,
+        new THREE.MeshBasicMaterial({ color: i % 2 ? 0x8b5cf6 : 0x00d0ff }));
       ring.position.set(0, 0.4, this.TUNNEL_LEN / 2 - i * 6);
       this.tunnel.add(ring);
     }
+    /* tuyauterie le long des parois */
+    for (const side of [-1, 1]) {
+      const pipe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.09, 0.09, this.TUNNEL_LEN, 8),
+        this.matMetal
+      );
+      pipe.rotation.x = Math.PI / 2;
+      pipe.position.set(side * 4.9, 2.4, 0);
+      this.tunnel.add(pipe);
+      const pipe2 = pipe.clone();
+      pipe2.position.y = 2.1;
+      this.tunnel.add(pipe2);
+    }
+    /* lampes suspendues */
+    for (let i = 0; i < this.TUNNEL_LEN / 12; i++) {
+      const lampT = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.2),
+        new THREE.MeshBasicMaterial({ color: 0xffe9b8 }));
+      lampT.position.set(0, 4.6, this.TUNNEL_LEN / 2 - 6 - i * 12);
+      this.tunnel.add(lampT);
+      const lglow2 = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTex, color: 0xffe0a0, transparent: true, opacity: 0.6,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      lglow2.scale.set(2, 2, 1);
+      lglow2.position.copy(lampT.position);
+      this.tunnel.add(lglow2);
+    }
+    /* portail d'entrée : cadre + enseigne */
+    const portal = new THREE.Mesh(new THREE.TorusGeometry(5.6, 0.35, 8, 40, Math.PI), lambert(0x262b40));
+    portal.position.set(0, 0.4, this.TUNNEL_LEN / 2 + 0.2);
+    this.tunnel.add(portal);
+    const tSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.4, 0.8),
+      new THREE.MeshBasicMaterial({ map: Tex.neon("TUNNEL 07", "#ffc93c"), transparent: true, depthWrite: false })
+    );
+    tSign.position.set(0, 5.2, this.TUNNEL_LEN / 2 + 0.5);
+    this.tunnel.add(tSign);
+
     this.tunnel.position.z = -350;
     scene.add(this.tunnel);
     this.tunnelGapMin = 320;
@@ -1294,15 +1852,19 @@ class World3D {
     this.dist = 0;
   }
 
-  /* Le joueur (caméra) est-il sous la voûte du tunnel ? */
+  setDetail(on) {
+    for (const d of this.detail) d.visible = on;
+  }
+
   inTunnel() {
     const z = this.tunnel.position.z;
     return z + this.TUNNEL_LEN / 2 > -CONFIG.PLAYER_Z - 4 && z - this.TUNNEL_LEN / 2 < 2;
   }
 
   update(dt, speed) {
-    const dz = speed * dt;      // le monde avance vers +z (vers la caméra)
+    const dz = speed * dt;
     this.dist += dz;
+    const now = performance.now();
 
     this.scroller.position.z = this.dist % this.TILE;
 
@@ -1319,16 +1881,66 @@ class World3D {
         const h = rand(9, 18);
         g.userData.mesh.scale.y = h;
         g.userData.mesh.position.y = h / 2;
-        if (g.userData.sign) {
-          g.userData.sign.position.y = h * 0.55;
-          g.userData.sign.visible = Math.random() < 0.75;
-        }
+        g.userData.sign.position.y = h * 0.55;
+        g.userData.sign.visible = Math.random() < 0.75;
+        if (g.userData.roof) g.userData.roof.position.y = h;
       });
+      /* grésillement des néons */
+      const sign = b.userData.sign;
+      if (sign.visible && now > sign.userData.flickAt) {
+        sign.material.opacity = sign.material.opacity < 1 ? 1 : 0.3;
+        sign.userData.flickAt = now + (sign.material.opacity < 1 ? rand(40, 130) : rand(2500, 9000));
+      }
     }
     for (const l of this.lamps) recycle(l, this.LSPAN);
     for (const g of this.gantries) recycle(g, this.GSPAN);
+    for (const w of this.wires) recycle(w, this.WSPAN);
+    for (const p of this.props) recycle(p, this.PSPAN, (g) => { g.rotation.y = rand(-0.4, 0.4); });
+    for (const p of this.puddles) recycle(p, this.PUSPAN);
 
-    // tunnel : réapparaît plus loin après son passage
+    /* feux de signalisation : alternance rouge/vert */
+    const phase = Math.floor(now / 1600) % 2;
+    for (const p of this.props) {
+      if (p.userData.signal) {
+        p.userData.signal.red.color.setHex(phase ? 0xff3b30 : 0x40222a);
+        p.userData.signal.green.color.setHex(phase ? 0x1a3a2a : 0x1fd06a);
+      }
+    }
+
+    /* poussière : dérive lente vers la caméra */
+    for (const sp of this.dust) {
+      sp.position.z += dz * 0.55 + dt * 0.4;
+      sp.position.y += Math.sin(now / 900 + sp.position.x) * dt * 0.12;
+      if (sp.position.z > 2) {
+        sp.position.z = -rand(60, 90);
+        sp.position.x = rand(-8, 8);
+        sp.position.y = rand(0.4, 7);
+      }
+    }
+
+    /* drone : traverse le ciel par intervalles */
+    if (this.droneTimer > 0) {
+      this.droneTimer -= dt;
+      if (this.droneTimer <= 0) {
+        this.drone.position.set(this.droneVx > 0 ? -42 : 42, rand(10, 17), -rand(35, 75));
+        this.droneVx = (Math.random() < 0.5 ? 1 : -1) * rand(5, 9);
+      }
+    } else {
+      this.drone.position.x += this.droneVx * dt;
+      this.drone.position.y += Math.sin(now / 600) * dt * 0.5;
+      this.droneLight.material.opacity = Math.floor(now / 300) % 2 ? 0.9 : 0.15;
+      if (Math.abs(this.drone.position.x) > 45) this.droneTimer = rand(6, 14);
+    }
+
+    /* station : repasse régulièrement, jamais dans un tunnel */
+    this.station.position.z += dz;
+    if (this.station.position.z > 30) {
+      let nz = this.station.position.z - this.STSPAN;
+      if (Math.abs(nz - this.tunnel.position.z) < 90) nz -= 120;
+      this.station.position.z = nz;
+    }
+
+    /* tunnel */
     this.tunnel.position.z += dz;
     if (this.tunnel.position.z - this.TUNNEL_LEN / 2 > 10) {
       this.tunnel.position.z = -rand(this.tunnelGapMin, this.tunnelGapMax);
@@ -1449,6 +2061,7 @@ class Game {
     const canvas = document.getElementById("game");
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.setClearColor(0x12102e); // nuit profonde hors du dôme céleste
 
     this.scene = new THREE.Scene();
     this.fogNormal = new THREE.Color(0x33224e);
@@ -1478,6 +2091,9 @@ class Game {
   initPools() {
     const D = OBSTACLE_DEFS;
 
+    /* Matériau partagé des gyrophares de chantier (clignote globalement) */
+    this.blinkMat = new THREE.MeshBasicMaterial({ color: 0xffb020 });
+
     /* Barrière */
     const barrierTex = Tex.barrier();
     const mkBarrier = () => {
@@ -1494,6 +2110,10 @@ class Game {
         leg.position.set(s * (D.barrier.w / 2 - 0.15), 0.27, 0);
         grp.add(leg);
       }
+      // gyrophare de chantier clignotant
+      const blink = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), this.blinkMat);
+      blink.position.set(0, D.barrier.h + 0.08, 0);
+      grp.add(blink);
       return grp;
     };
 
@@ -1573,6 +2193,28 @@ class Game {
       lamp.scale.set(1.1, 1.1, 1);
       lamp.position.set(0, 0.8, -D.wagon.d / 2 - 0.05);
       grp.add(lamp);
+      // pantographe sur le toit
+      const pbase = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 0.9), bogieMat);
+      pbase.position.set(0, D.wagon.h + 0.04, -2);
+      grp.add(pbase);
+      for (const s of [-1, 1]) {
+        const armP = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.75, 0.05), bogieMat);
+        armP.position.set(0.16 * s, D.wagon.h + 0.4, -2);
+        armP.rotation.x = 0.45 * s;
+        grp.add(armP);
+      }
+      const pTop = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.05, 0.14), bogieMat);
+      pTop.position.set(0, D.wagon.h + 0.74, -2);
+      grp.add(pTop);
+      // feu arrière rouge clignotant
+      const tail = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: this.glowTex, color: 0xff3b30, transparent: true, opacity: 0.9,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      tail.scale.set(0.8, 0.8, 1);
+      tail.position.set(0.7, 2.2, D.wagon.d / 2 + 0.05);
+      grp.add(tail);
+      grp.userData.tail = tail.material;
       return grp;
     };
 
@@ -1585,6 +2227,7 @@ class Game {
       color: 0xffc93c, metalness: 0.75, roughness: 0.28,
       emissive: 0x92610d, emissiveIntensity: 0.55,
     });
+    this.coinMat = coinMat;
     this.coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, 128);
     this.coinMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.coinMesh.frustumCulled = false;
@@ -1740,6 +2383,7 @@ class Game {
   applyQuality() {
     const dpr = devicePixelRatio || 1;
     this.renderer.setPixelRatio(this.fxHigh ? Math.min(dpr, 2) : Math.min(dpr, 1.25));
+    if (this.world) this.world.setDetail(this.fxHigh);
   }
 
   /* ------------------------------ états ------------------------------ */
@@ -1753,6 +2397,7 @@ class Game {
 
   toMenu() {
     this.state = "menu";
+    this.introT = 0;
     this.audio.stopMusic();
     this.ui.setHud(false);
     this.ui.$("menu-best").textContent = this.scoreMgr.best;
@@ -1777,6 +2422,7 @@ class Game {
   start() {
     this.resetRun();
     this.state = "playing";
+    this.introT = 1.4;       // swoop d'entrée de la caméra
     this.ui.show("__none__");
     this.ui.setHud(true);
     this.audio.ensure();
@@ -1867,6 +2513,19 @@ class Game {
     this.player.update(dt);
     this.world.update(dt, this.speed);
     this.spawner.update(dt, this.speed, this.elapsed);
+
+    // Atterrissage : squash du personnage, creux caméra, poussière, bruit sourd
+    if (this.player.justLanded) {
+      this.player.justLanded = false;
+      this.rig.land();
+      this.landDip = 1;
+      this.audio.thud();
+      this.emit({ x: this.player.x, y: 0.08, z: -CONFIG.PLAYER_Z, count: 8, color: 0x8890b8, speed: 2.4, size: 0.3, life: 0.4, gravity: 2 });
+    }
+    // Traînée de poussière pendant la glissade
+    if (this.player.sliding && this.fxHigh && Math.random() < dt * 26) {
+      this.emit({ x: this.player.x + rand(-0.3, 0.3), y: 0.08, z: -CONFIG.PLAYER_Z + 0.3, count: 1, color: 0x9aa3c8, speed: 1.4, size: 0.26, life: 0.35, gravity: 1 });
+    }
 
     // Avancement des entités
     const dz = this.speed * dt;
@@ -1981,6 +2640,9 @@ class Game {
     for (const o of this.obstacles) {
       if (!o.mesh) o.mesh = this.obtainObstacleMesh(o);
       o.mesh.position.set(o.x, 0, -(o.z + o.def.d / 2));
+      if (o.mesh.userData.tail) {
+        o.mesh.userData.tail.opacity = Math.floor(performance.now() / 500) % 2 ? 0.9 : 0.12;
+      }
     }
     // Pièces (instanciées)
     let n = 0;
@@ -2006,19 +2668,55 @@ class Game {
 
   updateCamera(dt) {
     const p = this.player;
+    const now = performance.now();
+
+    /* Menu : lente dérive latérale pour faire vivre la ville */
+    if (this.state === "menu" || this.state === "loading") {
+      this.camera.position.x = damp(this.camera.position.x, Math.sin(now / 5200) * 1.4, 2, dt);
+      this.camera.position.y = damp(this.camera.position.y, 3.6 + Math.sin(now / 3900) * 0.25, 2, dt);
+      this.camera.position.z = 0;
+      this.camera.fov = damp(this.camera.fov, this.baseFov, 4, dt);
+      this.camera.updateProjectionMatrix();
+      this.camera.lookAt(0, 1.6, -20);
+      return;
+    }
+
+    /* Swoop d'intro : la caméra part du niveau du sol, face au coureur,
+       puis glisse en arc jusqu'à sa position de poursuite */
+    let intro = 0;
+    if (this.introT > 0) {
+      this.introT -= dt;
+      const k = clamp(1 - this.introT / 1.4, 0, 1);
+      intro = 1 - k * k * (3 - 2 * k);
+    }
+
     const targetX = p.x * 0.45;
     this.camera.position.x = damp(this.camera.position.x, targetX, 6, dt);
-    this.camera.position.y = damp(this.camera.position.y, 3.35 + p.y * 0.22, 8, dt);
 
-    // FOV dynamique : la vitesse « étire » la perspective
+    /* bob de course + creux d'atterrissage */
+    this.landDip = damp(this.landDip ?? 0, 0, 7, dt);
+    const bobY = (!p.jumping && !p.sliding) ? Math.sin(p.runPhase * 2) * 0.05 : 0;
+    const baseY = 3.35 + p.y * 0.22 + bobY - this.landDip * 0.24;
+    this.camera.position.y = damp(this.camera.position.y, baseY, 8, dt);
+
+    /* dolly dramatique pendant la mort */
+    const dieK = this.state === "dying" ? 1 - this.dieT / 0.9 : 0;
+    const camZ = -dieK * 2.2;
+
+    /* mélange avec la position d'intro (trois-quarts avant, au ras du sol) */
+    this.camera.position.x = lerp(this.camera.position.x, p.x + 2.4, intro);
+    this.camera.position.y = lerp(this.camera.position.y, 1.25, intro);
+    this.camera.position.z = lerp(camZ, -CONFIG.PLAYER_Z + 3.2, intro);
+
+    /* FOV dynamique : la vitesse « étire » la perspective */
     const speedK = clamp((this.speed - CONFIG.BASE_SPEED) / (CONFIG.MAX_SPEED - CONFIG.BASE_SPEED), 0, 1);
-    const targetFov = this.baseFov + speedK * 9 + (this.has("boost") ? 7 : 0);
+    const targetFov = this.baseFov + speedK * 9 + (this.has("boost") ? 7 : 0) - dieK * 6;
     if (Math.abs(this.camera.fov - targetFov) > 0.05) {
       this.camera.fov = damp(this.camera.fov, targetFov, 4, dt);
       this.camera.updateProjectionMatrix();
     }
 
-    // secousse
+    /* secousse */
     let sx = 0, sy = 0;
     if (this.shakeT > 0) {
       const a = this.shakeT * 0.28;
@@ -2027,7 +2725,18 @@ class Game {
     }
     this.camera.position.x += sx;
     this.camera.position.y += sy;
-    this.camera.lookAt(p.x * 0.72 + sx * 0.5, 1.1 + p.y * 0.3, -16);
+
+    this.camera.lookAt(
+      lerp(p.x * 0.72 + sx * 0.5, p.x, intro),
+      lerp(1.1 + p.y * 0.3, 1.25 + p.y, intro),
+      lerp(-16, -CONFIG.PLAYER_Z - 6, intro)
+    );
+
+    /* roulis dans les changements de voie */
+    const laneVel = (p.x - (this.prevPX ?? p.x)) / Math.max(dt, 1e-4);
+    this.prevPX = p.x;
+    this.camRoll = damp(this.camRoll ?? 0, clamp(-laneVel * 0.012, -0.05, 0.05), 8, dt);
+    this.camera.rotateZ(this.camRoll);
   }
 
   render(dt) {
@@ -2041,10 +2750,19 @@ class Game {
     this.sun.intensity = lerp(1.15, 0.2, this.tunnelK);
     this.sky.visible = this.tunnelK < 0.85;
 
+    // animations d'ambiance synchronisées
+    const nowMs = performance.now();
+    this.blinkMat.color.setHex(Math.floor(nowMs / 380) % 2 ? 0xffb020 : 0x4a3410);
+    this.coinMat.emissiveIntensity = 0.45 + Math.sin(nowMs / 240) * 0.2;
+
+    const speedK = clamp((this.speed - CONFIG.BASE_SPEED) / (CONFIG.MAX_SPEED - CONFIG.BASE_SPEED), 0, 1);
     this.syncEntityMeshes();
-    this.rig.update(this.player, dt, { shield: this.has("shield"), boost: this.has("boost") });
+    this.rig.update(this.player, dt, { shield: this.has("shield"), boost: this.has("boost") }, speedK);
     this.rig.group.visible = this.state !== "gameover" && this.rig.group.visible;
     this.updateCamera(dt);
+
+    // parallaxe de la skyline intermédiaire
+    this.world.skyline.position.x = -this.camera.position.x * 1.4;
 
     this.renderer.render(this.scene, this.camera);
 
