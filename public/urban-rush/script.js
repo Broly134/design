@@ -1236,26 +1236,30 @@ class PlayerRig {
     this.group = new THREE.Group();
     scene.add(this.group);
 
-    /* Matériaux PBR : peau satinée, textile mat, sneakers semi-brillantes */
+    /* Palette du personnage de référence : veste technique noire à zips
+       orange, t-shirt gris, sacoche crossbody, cargo jogger noir,
+       sneakers grises/blanches à accents orange, cheveux noirs. */
     const S = (c, rough = 0.85, metal = 0) =>
       new THREE.MeshStandardMaterial({ color: c, roughness: rough, metalness: metal });
-    const skin = S(0xe8b087, 0.55);
-    const jacket = S(0xff8a2a, 0.8);
-    const jacketD = S(0xd96f14, 0.8);
-    const pants = S(0x2c3150, 0.9);
-    const pantsD = S(0x222744, 0.9);
-    const shoe = S(0xf4f6ff, 0.45);
-    const sole = S(0x20242f, 0.6);
-    const bag = S(0x7c4ce0, 0.75);
-    const bagD = S(0x5f35c4, 0.75);
-    const capM = S(0x2f7bff, 0.7);
-    const hair = S(0x503a28, 0.95);
+    const skin = S(0xd9a077, 0.55);
+    const jacket = S(0x33353e, 0.5);
+    const jacketD = S(0x24262e, 0.6);
+    const accent = new THREE.MeshStandardMaterial({ color: 0xe8720c, roughness: 0.45, emissive: 0xb35407, emissiveIntensity: 0.5 });
+    const tee = S(0xa8a9ad, 0.9);
+    const pants = S(0x272931, 0.85);
+    const pantsD = S(0x1c1e25, 0.85);
+    const shoeBody = S(0xc9ccd3, 0.5);
+    const shoeSole = S(0xeceef2, 0.4);
+    const shoeDark = S(0x3a3d46, 0.6);
+    const glove = S(0x23252c, 0.8);
+    const bagM = S(0x1e2027, 0.65);
+    const hairM = S(0x1b1c22, 0.9);
 
     const caps = (r, l, m) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 6, 18), m);
     const sph = (r, m, ws = 22, hs = 16) => new THREE.Mesh(new THREE.SphereGeometry(r, ws, hs), m);
     const cyl = (r1, r2, hgt, m, seg = 18) => new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, hgt, seg), m);
 
-    /* ----- bassin : ellipsoïde souple ----- */
+    /* ----- bassin ----- */
     this.pelvisG = new THREE.Group();
     this.pelvisG.position.y = 0.98;
     this.group.add(this.pelvisG);
@@ -1264,7 +1268,7 @@ class PlayerRig {
     pelvis.position.y = -0.05;
     this.pelvisG.add(pelvis);
 
-    /* ----- torse : capsule galbée + épaules rondes ----- */
+    /* ----- torse : veste noire ouverte sur t-shirt gris ----- */
     this.torso = new THREE.Group();
     this.torso.position.y = 0.02;
     this.pelvisG.add(this.torso);
@@ -1272,39 +1276,61 @@ class PlayerRig {
     this.chest.scale.set(1.14, 1, 0.86);
     this.chest.position.y = 0.32;
     this.torso.add(this.chest);
-    for (const s of [-1, 1]) {                        // épaules
+    /* t-shirt visible dans l'ouverture de la veste (face avant −z) */
+    const teeV = sph(0.13, tee, 16, 12);
+    teeV.scale.set(0.85, 1.25, 0.5);
+    teeV.position.set(0, 0.36, -0.16);
+    this.torso.add(teeV);
+    /* zip orange de la veste */
+    const zip = new THREE.Mesh(roundedBoxGeo(0.028, 0.4, 0.02, 0.01), accent);
+    zip.position.set(0.05, 0.28, -0.205);
+    this.torso.add(zip);
+    /* épaules + col + capuche noire roulée dans le dos */
+    for (const s of [-1, 1]) {
       const shoulder = sph(0.105, jacket);
       shoulder.position.set(0.23 * s, 0.5, 0);
       this.torso.add(shoulder);
     }
-    const collar = cyl(0.115, 0.135, 0.07, jacketD);  // col de la veste
+    const collar = cyl(0.115, 0.135, 0.07, jacketD);
     collar.position.y = 0.56;
     this.torso.add(collar);
-    const hood = sph(0.15, jacketD);                  // capuche roulée
-    hood.scale.set(1, 0.6, 0.85);
-    hood.position.set(0, 0.52, 0.17);
+    const hood = sph(0.16, jacketD);
+    hood.scale.set(1, 0.62, 0.9);
+    hood.position.set(0, 0.5, 0.17);
     this.torso.add(hood);
-
-    /* sac à dos arrondi + poche + gourde */
-    const pack = new THREE.Mesh(roundedBoxGeo(0.34, 0.44, 0.17, 0.06), bag);
-    pack.position.set(0, 0.3, 0.26);
-    this.torso.add(pack);
-    this.pack = pack;
-    const pocket = new THREE.Mesh(roundedBoxGeo(0.22, 0.16, 0.06, 0.03), bagD);
-    pocket.position.set(0, 0.18, 0.36);
-    this.torso.add(pocket);
-    const bottle = cyl(0.045, 0.045, 0.2, S(0x9adcff, 0.3), 14);
-    bottle.position.set(0.2, 0.28, 0.3);
-    this.torso.add(bottle);
+    /* poches poitrine à liseré orange */
     for (const s of [-1, 1]) {
-      const strap = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.024, 8, 18, Math.PI * 1.1), bagD);
-      strap.position.set(0.13 * s, 0.38, 0.1);
-      strap.rotation.y = Math.PI / 2;
-      strap.rotation.z = -0.25;
-      this.torso.add(strap);
+      const pocketC = new THREE.Mesh(roundedBoxGeo(0.09, 0.07, 0.02, 0.01), jacketD);
+      pocketC.position.set(0.11 * s, 0.42, -0.185);
+      this.torso.add(pocketC);
+      const tab = new THREE.Mesh(roundedBoxGeo(0.05, 0.014, 0.022, 0.006), accent);
+      tab.position.set(0.11 * s, 0.455, -0.186);
+      this.torso.add(tab);
     }
 
-    /* ----- cou + tête ronde, casquette galbée, casque audio ----- */
+    /* ----- sacoche crossbody : pochette dans le dos + sangle diagonale ----- */
+    const pack = new THREE.Mesh(roundedBoxGeo(0.3, 0.15, 0.13, 0.05), bagM);
+    pack.position.set(-0.06, 0.34, 0.24);
+    pack.rotation.z = 0.55;
+    this.torso.add(pack);
+    this.pack = pack;
+    for (const off of [-0.08, 0.06]) {                    // boucles orange de la pochette
+      const clip = new THREE.Mesh(roundedBoxGeo(0.035, 0.05, 0.015, 0.007), accent);
+      clip.position.set(-0.06 + off, 0.34 + off * 0.6, 0.315);
+      clip.rotation.z = 0.55;
+      this.torso.add(clip);
+    }
+    /* sangle : tore incliné autour du torse (épaule droite → hanche gauche) */
+    const strap = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.02, 8, 30), bagM);
+    strap.position.y = 0.34;
+    strap.rotation.x = Math.PI / 2;
+    strap.rotation.z = 0.0;
+    strap.rotation.y = 0.12;
+    strap.scale.set(1.05, 0.8, 1.35);
+    strap.rotation.x = Math.PI / 2 - 0.9;                 // diagonale épaule→hanche
+    this.torso.add(strap);
+
+    /* ----- cou + tête : cheveux noirs en bataille, pas de casquette ----- */
     const neck = cyl(0.065, 0.075, 0.09, skin, 14);
     neck.position.y = 0.6;
     this.torso.add(neck);
@@ -1313,37 +1339,35 @@ class PlayerRig {
     this.torso.add(this.headG);
     const head = sph(0.175, skin, 26, 20);
     head.position.y = 0.1;
-    head.scale.set(0.94, 1, 0.98);
+    head.scale.set(0.94, 1.02, 0.98);
     this.headG.add(head);
-    const hairC = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.5), hair);
-    hairC.position.y = 0.1;
+    /* chevelure : calotte + mèches en désordre */
+    const hairC = new THREE.Mesh(new THREE.SphereGeometry(0.185, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.62), hairM);
+    hairC.position.y = 0.12;
+    hairC.scale.set(0.98, 1.02, 1.02);
     this.headG.add(hairC);
-    const capDome = new THREE.Mesh(new THREE.SphereGeometry(0.185, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), capM);
-    capDome.position.y = 0.12;
-    this.headG.add(capDome);
-    const capRim = new THREE.Mesh(new THREE.TorusGeometry(0.155, 0.02, 8, 24), capM);
-    capRim.position.y = 0.2;
-    capRim.rotation.x = Math.PI / 2;
-    this.headG.add(capRim);
-    const brim = sph(0.12, capM, 18, 10);              // visière : ellipsoïde plat
-    brim.scale.set(1.1, 0.16, 1.4);
-    brim.position.set(0, 0.19, -0.2);
-    this.headG.add(brim);
-    for (const s of [-1, 1]) {                          // écouteurs ronds
-      const cup = cyl(0.055, 0.05, 0.045, bagD, 16);
-      cup.rotation.z = Math.PI / 2;
-      cup.position.set(0.17 * s, 0.08, 0);
-      this.headG.add(cup);
-      const cushion = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.014, 8, 14), S(0x2a2140, 0.95));
-      cushion.rotation.y = Math.PI / 2;
-      cushion.position.set(0.155 * s, 0.08, 0);
-      this.headG.add(cushion);
+    const fringe = sph(0.09, hairM, 12, 8);               // frange
+    fringe.scale.set(1.6, 0.5, 0.7);
+    fringe.position.set(0, 0.2, -0.13);
+    fringe.rotation.x = 0.35;
+    this.headG.add(fringe);
+    for (let i = 0; i < 5; i++) {                          // mèches
+      const tuft = sph(0.055, hairM, 8, 6);
+      tuft.scale.set(1.1, 0.55, 0.9);
+      const a = (i / 5) * Math.PI * 2;
+      tuft.position.set(Math.cos(a) * 0.11, 0.26 + (i % 2) * 0.02, Math.sin(a) * 0.11 + 0.02);
+      tuft.rotation.set(rand(-0.4, 0.4), a, rand(-0.3, 0.3));
+      this.headG.add(tuft);
     }
-    const band = new THREE.Mesh(new THREE.TorusGeometry(0.175, 0.02, 8, 22, Math.PI), bagD);
-    band.position.y = 0.09;
-    this.headG.add(band);
+    /* oreilles */
+    for (const s of [-1, 1]) {
+      const ear = sph(0.035, skin, 10, 8);
+      ear.scale.set(0.5, 1, 0.7);
+      ear.position.set(0.165 * s, 0.09, 0.01);
+      this.headG.add(ear);
+    }
 
-    /* ----- bras : articulation sphérique visible à chaque jointure ----- */
+    /* ----- bras : manches noires, mitaines, montre au poignet gauche ----- */
     const mkArm = (side) => {
       const sh = new THREE.Group();
       sh.position.set(0.26 * side, 0.5, 0);
@@ -1360,19 +1384,32 @@ class PlayerRig {
       const fo = caps(0.05, 0.15, jacketD);
       fo.position.y = -0.12;
       el.add(fo);
-      const wrist = sph(0.045, skin);
-      wrist.position.y = -0.22;
-      el.add(wrist);
-      const hand = sph(0.058, skin);
-      hand.scale.set(0.9, 1.15, 0.75);
-      hand.position.y = -0.28;
+      /* poignet : montre à gauche, bracelet fin à droite */
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.014, 8, 14), side < 0 ? shoeDark : glove);
+      band.rotation.x = Math.PI / 2;
+      band.position.y = -0.215;
+      el.add(band);
+      if (side < 0) {
+        const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.015, 12), shoeDark);
+        dial.rotation.z = Math.PI / 2;
+        dial.position.set(-0.055, -0.215, 0);
+        el.add(dial);
+      }
+      /* mitaine : gant noir, doigts peau */
+      const hand = sph(0.058, glove);
+      hand.scale.set(0.9, 1.1, 0.75);
+      hand.position.y = -0.275;
       el.add(hand);
+      const fingers = sph(0.045, skin, 10, 8);
+      fingers.scale.set(0.85, 0.6, 0.7);
+      fingers.position.y = -0.325;
+      el.add(fingers);
       return { sh, el };
     };
     this.armL = mkArm(-1);
     this.armR = mkArm(1);
 
-    /* ----- jambes : hanche/genou/cheville sphériques + sneakers galbées ----- */
+    /* ----- jambes : cargo jogger noir, poches et sangles orange ----- */
     const mkLeg = (side, thighMat) => {
       const hip = new THREE.Group();
       hip.position.set(0.12 * side, 0.98, 0);
@@ -1380,40 +1417,62 @@ class PlayerRig {
       const hipBall = sph(0.09, pantsD);
       hipBall.position.y = -0.02;
       hip.add(hipBall);
-      const th = caps(0.082, 0.22, thighMat);
+      const th = caps(0.085, 0.22, thighMat);
       th.position.y = -0.19;
       hip.add(th);
+      /* poche cargo latérale + languette orange */
+      const cargo = new THREE.Mesh(roundedBoxGeo(0.05, 0.14, 0.12, 0.02), pantsD);
+      cargo.position.set(0.085 * side, -0.2, 0);
+      hip.add(cargo);
+      const tab = new THREE.Mesh(roundedBoxGeo(0.02, 0.03, 0.05, 0.008), accent);
+      tab.position.set(0.11 * side, -0.15, 0);
+      hip.add(tab);
+      /* sangle qui pend */
+      const strap2 = new THREE.Mesh(roundedBoxGeo(0.016, 0.12, 0.016, 0.006), pantsD);
+      strap2.position.set(0.07 * side, -0.3, 0.06);
+      strap2.rotation.x = 0.25;
+      hip.add(strap2);
       const kneeBall = sph(0.072, pantsD);
       kneeBall.position.y = -0.42;
       hip.add(kneeBall);
       const kn = new THREE.Group();
       kn.position.y = -0.42;
       hip.add(kn);
-      const shn = caps(0.06, 0.22, pantsD);
+      const shn = caps(0.06, 0.22, pants);
       shn.position.y = -0.18;
       kn.add(shn);
-      const ankle = sph(0.05, pantsD);
-      ankle.position.y = -0.4;
-      kn.add(ankle);
+      /* revers de jogger resserré à la cheville */
+      const cuff = cyl(0.062, 0.055, 0.07, pantsD, 14);
+      cuff.position.y = -0.36;
+      kn.add(cuff);
       const foot = new THREE.Group();
       foot.position.y = -0.44;
       kn.add(foot);
-      const sneak = sph(0.085, shoe, 20, 14);          // chaussure : ellipsoïde
+      /* sneaker : corps gris clair, pointe sombre, accent orange, semelle blanche */
+      const sneak = sph(0.085, shoeBody, 20, 14);
       sneak.scale.set(0.95, 0.62, 1.9);
       sneak.position.set(0, -0.015, -0.06);
       foot.add(sneak);
-      const soleM = new THREE.Mesh(roundedBoxGeo(0.15, 0.045, 0.3, 0.02), sole);
-      soleM.position.set(0, -0.065, -0.05);
+      const toe = sph(0.06, shoeDark, 14, 10);
+      toe.scale.set(0.9, 0.55, 0.9);
+      toe.position.set(0, -0.03, -0.18);
+      foot.add(toe);
+      const swoosh = new THREE.Mesh(roundedBoxGeo(0.02, 0.03, 0.14, 0.008), accent);
+      swoosh.position.set(0.075 * side, -0.02, -0.05);
+      swoosh.rotation.x = -0.15;
+      foot.add(swoosh);
+      const soleM = new THREE.Mesh(roundedBoxGeo(0.15, 0.05, 0.32, 0.02), shoeSole);
+      soleM.position.set(0, -0.068, -0.05);
       foot.add(soleM);
       return { hip, kn, foot };
     };
     this.legL = mkLeg(-1, pants);
-    this.legR = mkLeg(1, S(0x343a5e, 0.9));
+    this.legR = mkLeg(1, pants);
 
     /* le personnage projette de vraies ombres */
     this.group.traverse((m) => { if (m.isMesh) m.castShadow = true; });
 
-    /* ombre douce d'appoint (renforce l'ancrage au sol) */
+    /* ombre douce d'appoint */
     this.shadowMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(1.5, 1.1),
       new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, opacity: 0.5, depthWrite: false })
@@ -2385,7 +2444,7 @@ class Game {
     this.sun.shadow.bias = -0.0008;
     this.sun.target.position.set(0, 0, -14);
     this.scene.add(this.sun, this.sun.target);
-    const rim = new THREE.DirectionalLight(0x4a6aff, 0.35);
+    const rim = new THREE.DirectionalLight(0x5a78ff, 0.55);
     rim.position.set(-6, 8, 12);
     this.scene.add(rim);
 
