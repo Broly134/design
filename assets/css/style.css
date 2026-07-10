@@ -65,7 +65,7 @@
   --neg: #E0785A;
   --neg-soft: rgba(224, 120, 90, 0.12);
 
-  --glass: rgba(11, 16, 13, 0.72);
+  --glass: rgba(11, 16, 13, 0.84);
   --shadow-card: 0 24px 60px -28px rgba(0, 0, 0, 0.65), 0 2px 6px -2px rgba(0, 0, 0, 0.4);
   --shadow-pop: 0 32px 80px -32px rgba(0, 0, 0, 0.75);
 }
@@ -126,6 +126,19 @@ button {
   border-radius: 4px;
 }
 
+/* Grain photographique : casse la platitude numérique (redesign-skill) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] body::after { opacity: 0.05; }
+
 .skip-link {
   position: fixed;
   top: -100px;
@@ -184,6 +197,20 @@ button {
 
 [data-theme="dark"] .eyebrow { color: var(--accent-soft-ink); }
 
+/* Double-bezel : coque externe + coeur concentrique (soft-skill) */
+.bezel { position: relative; }
+.bezel::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: calc(var(--bez-r, var(--r-card)) + 7px);
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+[data-theme="dark"] .bezel::before { background: rgba(233, 238, 235, 0.04); }
+
 /* ---------- Boutons ---------- */
 
 .btn {
@@ -223,6 +250,37 @@ button {
 
 .btn .icon { width: 1em; height: 1em; }
 
+.btn-orb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.95em;
+  height: 1.95em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  margin-right: -0.7em;
+  transition: transform 0.5s var(--ease);
+}
+.btn-orb .icon { width: 0.9em; height: 0.9em; }
+.btn:hover .btn-orb { transform: translate(3px, -2px); }
+[data-theme="dark"] .btn-primary .btn-orb { background: rgba(6, 19, 13, 0.22); }
+.cta-panel .btn-primary .btn-orb { background: rgba(13, 55, 40, 0.14); }
+
+/* Lien d'ouverture de l'application */
+.lien-app {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  margin-top: 1.2rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.lien-app .icon { transition: transform 0.4s var(--ease); }
+.lien-app:hover { text-decoration: underline; }
+.lien-app:hover .icon { transform: translate(2px, -2px); }
+[data-theme="dark"] .lien-app { color: var(--accent-soft-ink); }
+
 /* ---------- Header ---------- */
 
 .site-header {
@@ -251,6 +309,35 @@ button {
   display: flex;
   align-items: center;
   gap: 2rem;
+}
+
+/* Île flottante : la nav se détache du bord en pilule de verre (soft-skill) */
+@media (min-width: 1024px) {
+  .site-header { padding-top: 0.9rem; }
+  .site-header,
+  .site-header.scrolled {
+    background: transparent;
+    border-bottom: 0;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .nav {
+    height: 60px;
+    padding-inline: 1.4rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: 0 12px 32px -18px rgba(18, 47, 36, 0.25);
+    transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+  .site-header.scrolled .nav {
+    border-color: var(--line-strong);
+    box-shadow: 0 16px 40px -18px rgba(18, 47, 36, 0.35);
+  }
+  [data-theme="dark"] .nav { box-shadow: 0 12px 32px -18px rgba(0, 0, 0, 0.6); }
+  [data-theme="dark"] .site-header.scrolled .nav { box-shadow: 0 16px 40px -18px rgba(0, 0, 0, 0.7); }
 }
 
 .brand {
@@ -1702,14 +1789,15 @@ body.menu-open { overflow: hidden; }
 [data-reveal] {
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+  filter: blur(7px);
+  transition: opacity 0.75s var(--ease), transform 0.75s var(--ease), filter 0.75s var(--ease);
   transition-delay: calc(var(--i, 0) * 70ms);
 }
 
-[data-reveal].revealed { opacity: 1; transform: none; }
+[data-reveal].revealed { opacity: 1; transform: none; filter: blur(0); }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-reveal] { opacity: 1; transform: none; transition: none; }
+  [data-reveal] { opacity: 1; transform: none; filter: none; transition: none; }
   .hero-flow path { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
   .bar { transition: none; }
   * { scroll-behavior: auto; }
