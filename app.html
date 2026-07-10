@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Affluent · Terminal de trésorerie</title>
+  <meta name="description" content="Le Registre : terminal de trésorerie Affluent. Aperçu consolidé, prévisionnel à 90 jours, relances et échéances.">
+  <meta name="theme-color" content="#0A0F0C">
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none" stroke="%234FC08D" stroke-width="3" stroke-linecap="round"><path d="M5 6 C 11 8, 14 12, 16 17"/><path d="M16 4 C 16 9, 16 13, 16 17"/><path d="M27 6 C 21 8, 18 12, 16 17"/><path d="M16 17 L16 28"/></g></svg>'>
+  <link rel="preload" href="assets/fonts/ibm-plex-mono-500.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/hanken-grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/fonts.css">
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="i-arrow-down-right" viewBox="0 0 256 256"><path d="M200,88V192a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h84.69L58.34,69.66A8,8,0,0,1,69.66,58.34L184,172.69V88a8,8,0,0,1,16,0Z"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 256 256"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></symbol>
+    <symbol id="i-arrow-up-right" viewBox="0 0 256 256"><path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"/></symbol>
+    <symbol id="i-arrows-clockwise" viewBox="0 0 256 256"><path d="M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z"/></symbol>
+    <symbol id="i-bank" viewBox="0 0 256 256"><path d="M24,104H48v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16H208V104h24a8,8,0,0,0,4.19-14.81l-104-64a8,8,0,0,0-8.38,0l-104,64A8,8,0,0,0,24,104Zm40,0H96v64H64Zm80,0v64H112V104Zm48,64H160V104h32ZM128,41.39,203.74,88H52.26ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208Z"/></symbol>
+    <symbol id="i-bell-ringing" viewBox="0 0 256 256"><path d="M224,71.1a8,8,0,0,1-10.78-3.42,94.13,94.13,0,0,0-33.46-36.91,8,8,0,1,1,8.54-13.54,111.46,111.46,0,0,1,39.12,43.09A8,8,0,0,1,224,71.1ZM35.71,72a8,8,0,0,0,7.1-4.32A94.13,94.13,0,0,1,76.27,30.77a8,8,0,1,0-8.54-13.54A111.46,111.46,0,0,0,28.61,60.32,8,8,0,0,0,35.71,72Zm186.1,103.94A16,16,0,0,1,208,200H167.2a40,40,0,0,1-78.4,0H48a16,16,0,0,1-13.79-24.06C43.22,160.39,48,138.28,48,112a80,80,0,0,1,160,0C208,138.27,212.78,160.38,221.81,175.94ZM150.62,200H105.38a24,24,0,0,0,45.24,0ZM208,184c-10.64-18.27-16-42.49-16-72a64,64,0,0,0-128,0c0,29.52-5.38,53.74-16,72Z"/></symbol>
+    <symbol id="i-buildings" viewBox="0 0 256 256"><path d="M240,208H224V96a16,16,0,0,0-16-16H144V32a16,16,0,0,0-24.88-13.32L39.12,72A16,16,0,0,0,32,85.34V208H16a8,8,0,0,0,0,16H240a8,8,0,0,0,0-16ZM208,96V208H144V96ZM48,85.34,128,32V208H48ZM112,112v16a8,8,0,0,1-16,0V112a8,8,0,1,1,16,0Zm-32,0v16a8,8,0,0,1-16,0V112a8,8,0,1,1,16,0Zm0,56v16a8,8,0,0,1-16,0V168a8,8,0,0,1,16,0Zm32,0v16a8,8,0,0,1-16,0V168a8,8,0,0,1,16,0Z"/></symbol>
+    <symbol id="i-calendar-check" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-38.34-85.66a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L116,164.69l42.34-42.35A8,8,0,0,1,169.66,122.34Z"/></symbol>
+    <symbol id="i-caret-down" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
+    <symbol id="i-chart-line-up" viewBox="0 0 256 256"><path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V156.69l50.34-50.35a8,8,0,0,1,11.32,0L128,132.69,180.69,80H160a8,8,0,0,1,0-16h40a8,8,0,0,1,8,8v40a8,8,0,0,1-16,0V91.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31l-56,56V200H224A8,8,0,0,1,232,208Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z"/></symbol>
+    <symbol id="i-envelope-simple" viewBox="0 0 256 256"><path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM203.43,64,128,133.15,52.57,64ZM216,192H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 256 256"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 256 256"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></symbol>
+    <symbol id="i-plugs-connected" viewBox="0 0 256 256"><path d="M237.66,18.34a8,8,0,0,0-11.32,0l-52.4,52.41-5.37-5.38a32.05,32.05,0,0,0-45.26,0L100,88.69l-6.34-6.35A8,8,0,0,0,82.34,93.66L88.69,100,65.37,123.31a32,32,0,0,0,0,45.26l5.38,5.37-52.41,52.4a8,8,0,0,0,11.32,11.32l52.4-52.41,5.37,5.38a32,32,0,0,0,45.26,0L156,167.31l6.34,6.35a8,8,0,0,0,11.32-11.32L167.31,156l23.32-23.31a32,32,0,0,0,0-45.26l-5.38-5.37,52.41-52.4A8,8,0,0,0,237.66,18.34Zm-116.29,161a16,16,0,0,1-22.62,0L76.69,157.25a16,16,0,0,1,0-22.62L100,111.31,144.69,156Zm57.94-57.94L156,144.69,111.31,100l23.32-23.31a16,16,0,0,1,22.62,0l22.06,22A16,16,0,0,1,179.31,121.37ZM88.57,35A8,8,0,0,1,103.43,29l8,20A8,8,0,0,1,96.57,55ZM24.57,93A8,8,0,0,1,35,88.57l20,8A8,8,0,0,1,49,111.43l-20-8A8,8,0,0,1,24.57,93ZM231.43,163a8,8,0,0,1-10.4,4.46l-20-8A8,8,0,1,1,207,144.57l20,8A8,8,0,0,1,231.43,163Zm-64,58.06A8,8,0,0,1,152.57,227l-8-20A8,8,0,0,1,159.43,201Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 256 256"><path d="M72,104a8,8,0,0,1,8-8h96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,104Zm8,40h96a8,8,0,0,0,0-16H80a8,8,0,0,0,0,16ZM232,56V208a8,8,0,0,1-11.58,7.15L192,200.94l-28.42,14.21a8,8,0,0,1-7.16,0L128,200.94,99.58,215.15a8,8,0,0,1-7.16,0L64,200.94,35.58,215.15A8,8,0,0,1,24,208V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Zm-16,0H40V195.06l20.42-10.22a8,8,0,0,1,7.16,0L96,199.06l28.42-14.22a8,8,0,0,1,7.16,0L160,199.06l28.42-14.22a8,8,0,0,1,7.16,0L216,195.06Z"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 256 256"><path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 256 256"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol>
+  </svg>
+
+  <div class="app">
+
+    <!-- ===== Rail (desktop) ===== -->
+    <aside class="rail">
+      <a class="brand" href="index.html" aria-label="Affluent, retour au site">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">
+          <path d="M5 6 C 11 8, 14 12, 16 17"/>
+          <path d="M16 4 C 16 9, 16 13, 16 17"/>
+          <path d="M27 6 C 21 8, 18 12, 16 17"/>
+          <path d="M16 17 L16 28"/>
+        </svg>
+        <span>Affluent<small>Le Registre</small></span>
+      </a>
+
+      <nav class="rail-nav" aria-label="Vues principales">
+        <button class="nav-item" data-vue="apercu" aria-current="page">
+          <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
+          Aperçu
+        </button>
+        <button class="nav-item" data-vue="previsionnel">
+          <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
+          Prévisionnel
+        </button>
+        <button class="nav-item" data-vue="relances">
+          <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
+          Relances
+        </button>
+        <button class="nav-item" data-vue="echeances">
+          <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
+          Échéances
+        </button>
+      </nav>
+
+      <div class="rail-foot">
+        <div class="entite" id="entite">
+          <button class="entite-btn" id="entite-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="pastille" aria-hidden="true">MB</span>
+            <span>
+              <span class="nom" id="entite-nom">Consolidé</span><br>
+              <span class="role">3 entités, 3 comptes</span>
+            </span>
+            <svg class="icon" aria-hidden="true"><use href="#i-caret-down"/></svg>
+          </button>
+          <div class="entite-menu" role="listbox" aria-label="Choisir l'entité" id="entite-menu">
+            <button role="option" data-entite="conso" aria-selected="true">
+              Consolidé <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+            </button>
+            <button role="option" data-entite="sas" aria-selected="false">
+              Maison Bocage SAS <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+            </button>
+            <button role="option" data-entite="holding" aria-selected="false">
+              Bocage Holding <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== Colonne principale ===== -->
+    <div class="colonne">
+      <header class="topbar">
+        <span class="brand-mini" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
+            <path d="M5 6 C 11 8, 14 12, 16 17"/>
+            <path d="M16 4 C 16 9, 16 13, 16 17"/>
+            <path d="M27 6 C 21 8, 18 12, 16 17"/>
+            <path d="M16 17 L16 28"/>
+          </svg>
+        </span>
+        <h1 class="vue-titre" id="vue-titre">Aperçu</h1>
+        <span class="sync-note"><span class="point-vif" aria-hidden="true"></span> Synchronisé il y a 4 min</span>
+        <div class="ticker">
+          <span class="libelle">Solde consolidé</span>
+          <span class="num" id="ticker-solde">184&#8239;320&#8239;€</span>
+        </div>
+      </header>
+
+      <main class="contenu" id="contenu">
+
+        <!-- ================= VUE APERÇU ================= -->
+        <section class="vue active" id="vue-apercu" aria-label="Aperçu">
+          <div class="grille grille-apercu">
+
+            <div class="panneau bloc-kpi kpi">
+              <span class="libelle">Solde consolidé</span>
+              <span class="valeur num" id="kpi-solde">184&#8239;320&#8239;€</span>
+              <span class="tendance pos">
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
+                +12,4&#8239;% vs juin
+              </span>
+            </div>
+            <div class="panneau bloc-kpi kpi">
+              <span class="libelle">Encaissements 30&#8239;j</span>
+              <span class="valeur num" id="kpi-entrees">64&#8239;180&#8239;€</span>
+              <span class="tendance pos">
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
+                +8,1&#8239;%
+              </span>
+            </div>
+            <div class="panneau bloc-kpi kpi">
+              <span class="libelle">Décaissements 30&#8239;j</span>
+              <span class="valeur num">51&#8239;730&#8239;€</span>
+              <span class="tendance neg">
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow-down-right"/></svg>
+                +2,9&#8239;%
+              </span>
+            </div>
+            <div class="panneau bloc-kpi kpi">
+              <span class="libelle">Autonomie</span>
+              <span class="valeur num">7,4&#8239;mois</span>
+              <span class="tendance">au rythme actuel</span>
+            </div>
+
+            <div class="panneau bloc-graphe">
+              <div class="panneau-tete">
+                <span class="libelle">Trésorerie</span>
+                <div class="chip-groupe" role="group" aria-label="Période du graphique">
+                  <button class="chip" data-periode="30j" aria-pressed="false">30&#8239;j</button>
+                  <button class="chip" data-periode="90j" aria-pressed="false">90&#8239;j</button>
+                  <button class="chip" data-periode="6m" aria-pressed="true">6&#8239;mois</button>
+                </div>
+              </div>
+              <div class="chart" id="chart-solde">
+                <div class="chart-canvas"></div>
+                <div class="chart-labels" id="chart-solde-labels" aria-hidden="true"></div>
+              </div>
+            </div>
+
+            <div class="panneau bloc-comptes">
+              <div class="panneau-tete">
+                <span class="libelle">Comptes</span>
+                <button class="lien" data-vue-lien="echeances">Échéances</button>
+              </div>
+              <div id="liste-comptes"></div>
+              <button class="sync-btn" id="sync-btn">
+                <svg class="icon" aria-hidden="true"><use href="#i-arrows-clockwise"/></svg>
+                Forcer la synchronisation
+              </button>
+            </div>
+
+            <div class="panneau bloc-ecritures">
+              <div class="panneau-tete">
+                <span class="libelle">Dernières écritures</span>
+              </div>
+              <table class="livre">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Libellé</th>
+                    <th scope="col" class="col-cat">Catégorie</th>
+                    <th scope="col" style="text-align:right">Débit</th>
+                    <th scope="col" style="text-align:right">Crédit</th>
+                  </tr>
+                </thead>
+                <tbody id="livre-corps"></tbody>
+              </table>
+            </div>
+
+            <div class="panneau bloc-veille">
+              <div class="panneau-tete">
+                <span class="libelle">À surveiller</span>
+              </div>
+              <div id="liste-veille"></div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ================= VUE PRÉVISIONNEL ================= -->
+        <section class="vue" id="vue-previsionnel" aria-label="Prévisionnel" hidden>
+          <div class="grille grille-prev">
+
+            <div class="panneau">
+              <div class="panneau-tete">
+                <span class="libelle">Hypothèses</span>
+              </div>
+              <div class="scenarios" role="group" aria-label="Scénario">
+                <button class="scenario" data-scenario="prudent" aria-pressed="false">Prudent</button>
+                <button class="scenario" data-scenario="neutre" aria-pressed="true">Neutre</button>
+                <button class="scenario" data-scenario="optimiste" aria-pressed="false">Optimiste</button>
+              </div>
+
+              <div class="curseur">
+                <label for="curseur-delai">Délai d'encaissement moyen
+                  <output id="sortie-delai">31&#8239;jours</output>
+                </label>
+                <input type="range" id="curseur-delai" min="15" max="60" step="1" value="31"
+                  aria-describedby="aide-delai">
+                <p class="provision-note" id="aide-delai">Le délai constaté sur vos 12 derniers mois est de 31 jours.</p>
+              </div>
+
+              <div class="curseur">
+                <label for="curseur-ca">Variation du chiffre d'affaires
+                  <output id="sortie-ca">+2&#8239;%</output>
+                </label>
+                <input type="range" id="curseur-ca" min="-10" max="15" step="1" value="2"
+                  aria-describedby="aide-ca">
+                <p class="provision-note" id="aide-ca">Appliquée progressivement sur les 3 prochains mois.</p>
+              </div>
+
+              <div class="verdict">
+                <span class="libelle">Solde projeté au 31 octobre</span>
+                <span class="num" id="verdict-valeur">191&#8239;400&#8239;€</span>
+              </div>
+
+              <div class="alerte-seuil" id="alerte-seuil" role="status">
+                <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
+                <span id="alerte-texte">Passage sous votre seuil de 20&#8239;000&#8239;€ prévu mi-septembre.</span>
+              </div>
+            </div>
+
+            <div class="panneau">
+              <div class="panneau-tete">
+                <span class="libelle">Projection à 90 jours</span>
+              </div>
+              <div class="chart" id="chart-prev">
+                <div class="chart-canvas"></div>
+                <div class="chart-labels" aria-hidden="true">
+                  <span>Mars</span><span>Avr</span><span>Mai</span><span>Juin</span><span>Juil</span><span>Août</span><span>Sept</span><span>Oct</span>
+                </div>
+              </div>
+              <div class="legende">
+                <span><span class="trait" aria-hidden="true"></span> Réalisé</span>
+                <span><span class="trait pointille" aria-hidden="true"></span> Projeté</span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ================= VUE RELANCES ================= -->
+        <section class="vue" id="vue-relances" aria-label="Relances" hidden>
+          <div class="pipeline-stats">
+            <div class="panneau kpi">
+              <span class="libelle">Encours client</span>
+              <span class="valeur num" id="kpi-encours">29&#8239;310&#8239;€</span>
+            </div>
+            <div class="panneau kpi">
+              <span class="libelle">Retard moyen</span>
+              <span class="valeur num" id="kpi-retard">8&#8239;j</span>
+            </div>
+            <div class="panneau kpi">
+              <span class="libelle">Encaissé après relance</span>
+              <span class="valeur num" id="kpi-encaisse">7&#8239;650&#8239;€</span>
+            </div>
+          </div>
+
+          <div class="grille grille-relances">
+            <div class="panneau">
+              <div class="panneau-tete">
+                <span class="libelle">Factures en cours</span>
+              </div>
+              <div id="liste-factures" role="listbox" aria-label="Factures"></div>
+            </div>
+
+            <div class="panneau panneau-detail" id="panneau-detail">
+              <div id="detail-contenu">
+                <p class="detail-vide">
+                  <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
+                  Sélectionnez une facture pour voir sa séquence de relance.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= VUE ÉCHÉANCES ================= -->
+        <section class="vue" id="vue-echeances" aria-label="Échéances" hidden>
+          <div class="grille grille-echeances">
+
+            <div class="panneau">
+              <div class="panneau-tete">
+                <span class="libelle">Provision de TVA, 6 mois</span>
+              </div>
+              <div class="barres" id="barres-tva" aria-label="Provisions de TVA mensuelles">
+                <div class="barre-col"><div class="barre" data-h="70"><span class="barre-val">6&#8239;240&#8239;€</span></div><span class="barre-mois">Fév</span></div>
+                <div class="barre-col"><div class="barre" data-h="66"><span class="barre-val">5&#8239;910&#8239;€</span></div><span class="barre-mois">Mars</span></div>
+                <div class="barre-col"><div class="barre" data-h="83"><span class="barre-val">7&#8239;430&#8239;€</span></div><span class="barre-mois">Avr</span></div>
+                <div class="barre-col"><div class="barre" data-h="77"><span class="barre-val">6&#8239;870&#8239;€</span></div><span class="barre-mois">Mai</span></div>
+                <div class="barre-col"><div class="barre" data-h="91"><span class="barre-val">8&#8239;120&#8239;€</span></div><span class="barre-mois">Juin</span></div>
+                <div class="barre-col"><div class="barre" data-h="100"><span class="barre-val">8&#8239;940&#8239;€</span></div><span class="barre-mois">Juil</span></div>
+              </div>
+              <div class="interrupteur-ligne">
+                <button class="interrupteur" id="interrupteur-provision" role="switch" aria-checked="true" aria-labelledby="provision-libelle"></button>
+                <span id="provision-libelle">Provision automatique hebdomadaire</span>
+              </div>
+              <p class="provision-note" id="provision-note">2&#8239;235&#8239;€ mis de côté chaque lundi. Le 15 du mois, l'argent est déjà là.</p>
+            </div>
+
+            <div class="panneau">
+              <div class="panneau-tete">
+                <span class="libelle">À régler</span>
+              </div>
+              <div id="liste-echeances"></div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Tabbar mobile -->
+  <nav class="tabbar" aria-label="Vues principales">
+    <button class="tab" data-vue="apercu" aria-current="page">
+      <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
+      Aperçu
+    </button>
+    <button class="tab" data-vue="previsionnel">
+      <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
+      Prévisionnel
+    </button>
+    <button class="tab" data-vue="relances">
+      <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
+      Relances
+    </button>
+    <button class="tab" data-vue="echeances">
+      <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
+      Échéances
+    </button>
+  </nav>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="assets/js/terminal.js" defer></script>
+</body>
+</html>
