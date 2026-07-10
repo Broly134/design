@@ -830,7 +830,7 @@ body.menu-open { overflow: hidden; }
 }
 
 .proj-alert {
-  display: flex;
+  display: none;
   align-items: flex-start;
   gap: 0.6rem;
   margin-top: 1rem;
@@ -840,13 +840,18 @@ body.menu-open { overflow: hidden; }
   color: var(--neg);
   font-size: 0.92rem;
   font-weight: 500;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(4px);
-  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease), visibility 0.3s;
 }
-.proj-alert.visible { opacity: 1; visibility: visible; transform: none; }
+.proj-alert.visible { display: flex; }
 .proj-alert .icon { margin-top: 0.15em; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .proj-alert.visible { animation: alert-in 0.35s var(--ease); }
+}
+
+@keyframes alert-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
 
 .big-chart .chart { margin-top: 0; padding: 1.2rem 1.2rem 0.6rem; }
 
