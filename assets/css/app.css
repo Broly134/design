@@ -1,5 +1,5 @@
 /* ============================================================
-   AFFLUENT · LE REGISTRE — terminal de trésorerie
+   MANNE · RADAR — pilotage des aides publiques
    Thème sombre unique, assumé (écran d'opérations, OLED).
    Rayons : panneaux 16px · tuiles 10px · pilules pour l'interactif.
    Données de graphe validées (dataviz, surface #0D1310) :
@@ -7,9 +7,15 @@
    ============================================================ */
 
 :root {
-  --font-display: "Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
-  --font-ui: "Hanken Grotesk", system-ui, sans-serif;
-  --font-data: "IBM Plex Mono", ui-monospace, monospace;
+  --font-display: "Gabarito", "Figtree", system-ui, sans-serif;
+  --font-ui: "Figtree", system-ui, sans-serif;
+  --font-data: "Spline Sans Mono", ui-monospace, monospace;
+
+  /* Teintes iOS par vue */
+  --tint-radar: #3DDC97;
+  --tint-simulateur: #8B7CFF;
+  --tint-dossiers: #FFA05C;
+  --tint-guichets: #FF6B8B;
 
   --encre: #0A0F0C;
   --encre-2: #0D1310;
@@ -35,8 +41,8 @@
   --ambre-data: #B98A35;
   --ambre-voile: rgba(185, 138, 53, 0.14);
 
-  --r-panneau: 16px;
-  --r-tuile: 10px;
+  --r-panneau: 22px;
+  --r-tuile: 14px;
 
   --rail: 232px;
   --topbar: 64px;
@@ -194,6 +200,10 @@ body::before {
   background: var(--menthe-voile);
   color: var(--menthe);
 }
+.nav-item[data-vue="radar"][aria-current="page"] { color: var(--tint-radar); background: color-mix(in srgb, var(--tint-radar) 13%, transparent); }
+.nav-item[data-vue="simulateur"][aria-current="page"] { color: var(--tint-simulateur); background: color-mix(in srgb, var(--tint-simulateur) 14%, transparent); }
+.nav-item[data-vue="dossiers"][aria-current="page"] { color: var(--tint-dossiers); background: color-mix(in srgb, var(--tint-dossiers) 13%, transparent); }
+.nav-item[data-vue="guichets"][aria-current="page"] { color: var(--tint-guichets); background: color-mix(in srgb, var(--tint-guichets) 13%, transparent); }
 
 .nav-item .icon { width: 1.2rem; height: 1.2rem; }
 
@@ -223,11 +233,11 @@ body::before {
 .entite-btn .pastille {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 9px;
   display: grid;
   place-items: center;
-  background: var(--menthe-voile);
-  color: var(--menthe);
+  background: linear-gradient(135deg, #2FBE83, #2BB3C0 55%, #8B7CFF);
+  color: #FFFFFF;
   font-family: var(--font-data);
   font-size: 0.7rem;
   font-weight: 600;
@@ -288,8 +298,8 @@ body::before {
 
 .vue-titre {
   font-family: var(--font-display);
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.45rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
@@ -412,6 +422,11 @@ body::before {
 }
 
 /* ---------- KPI ---------- */
+
+.grille-apercu .bloc-kpi:nth-child(1) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-radar) 13%, var(--registre)) 0%, var(--registre) 62%); }
+.grille-apercu .bloc-kpi:nth-child(2) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-simulateur) 13%, var(--registre)) 0%, var(--registre) 62%); }
+.grille-apercu .bloc-kpi:nth-child(3) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-dossiers) 12%, var(--registre)) 0%, var(--registre) 62%); }
+.grille-apercu .bloc-kpi:nth-child(4) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-guichets) 12%, var(--registre)) 0%, var(--registre) 62%); }
 
 .kpi .libelle { display: block; margin-bottom: 0.45rem; }
 
@@ -550,6 +565,12 @@ body::before {
   padding: 0.55rem 0.15rem;
 }
 .compte + .compte { border-top: 1px solid var(--filet); }
+.compte .icon, .veille-item .icon, .echeance .icon {
+  padding: 6px;
+  border-radius: 9px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  box-sizing: content-box;
+}
 .compte .icon { color: var(--craie-3); }
 .compte .nom { font-size: 0.92rem; font-weight: 500; }
 .compte .maj { font-size: 0.72rem; color: var(--craie-3); font-family: var(--font-data); }
@@ -736,9 +757,9 @@ input[type="range"]::-moz-range-thumb {
   margin-top: 0.9rem;
   padding: 0.85rem 1rem;
   border-radius: var(--r-tuile);
-  background: var(--sienne-voile);
-  border: 1px solid rgba(206, 96, 64, 0.35);
-  color: var(--sienne);
+  background: var(--ambre-voile);
+  border: 1px solid rgba(185, 138, 53, 0.4);
+  color: var(--ambre);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -1032,6 +1053,10 @@ input[type="range"]::-moz-range-thumb {
 }
 .tab .icon { width: 1.3rem; height: 1.3rem; }
 .tab[aria-current="page"] { color: var(--menthe); background: var(--menthe-voile); }
+.tab[data-vue="radar"][aria-current="page"] { color: var(--tint-radar); background: color-mix(in srgb, var(--tint-radar) 13%, transparent); }
+.tab[data-vue="simulateur"][aria-current="page"] { color: var(--tint-simulateur); background: color-mix(in srgb, var(--tint-simulateur) 14%, transparent); }
+.tab[data-vue="dossiers"][aria-current="page"] { color: var(--tint-dossiers); background: color-mix(in srgb, var(--tint-dossiers) 13%, transparent); }
+.tab[data-vue="guichets"][aria-current="page"] { color: var(--tint-guichets); background: color-mix(in srgb, var(--tint-guichets) 13%, transparent); }
 .tab:active { transform: scale(0.96); }
 
 /* ---------- Toasts ---------- */

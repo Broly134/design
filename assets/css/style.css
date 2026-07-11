@@ -1,5 +1,5 @@
 /* ============================================================
-   AFFLUENT · Pilotage de trésorerie pour PME
+   MANNE · Aides, subventions et crédits d'impôt pour PME
    Système : thème clair par défaut, [data-theme="dark"] sur <html>.
    Rayons : boutons/puces = pill · cartes = 20px · tuiles/champs = 12px.
    Accent unique : vert profond. Graphiques validés (dataviz) :
@@ -7,9 +7,16 @@
    ============================================================ */
 
 :root {
-  --font-display: "Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
-  --font-body: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --font-display: "Gabarito", "Figtree", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, sans-serif;
+  --font-mono: "Spline Sans Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Teintes iOS par domaine (chrome uniquement, les données restent validées) */
+  --t-menthe: #3DDC97;
+  --t-cyan: #2BB3C0;
+  --t-indigo: #8B7CFF;
+  --t-abricot: #FFA05C;
+  --t-rose: #FF6B8B;
 
   --bg: #F5F7F4;
   --bg-soft: #ECF0EA;
@@ -351,8 +358,7 @@ body::after {
   text-decoration: none;
 }
 
-.brand-mark { color: var(--accent); }
-[data-theme="dark"] .brand-mark { color: var(--accent-soft-ink); }
+.brand-logo svg { display: block; filter: drop-shadow(0 3px 9px rgba(43, 179, 192, 0.35)); }
 
 .nav-links {
   display: flex;
@@ -470,16 +476,14 @@ body.menu-open { overflow: hidden; }
   width: min(900px, 74vw);
   height: 100%;
   pointer-events: none;
-  color: var(--accent);
-  opacity: 0.45;
+  opacity: 0.6;
 }
 
-[data-theme="dark"] .hero-flow { opacity: 0.4; color: var(--accent-soft-ink); }
+[data-theme="dark"] .hero-flow { opacity: 0.5; }
 
 .hero-flow path {
   fill: none;
-  stroke: url(#flow-fade);
-  stroke-width: 1.4;
+  stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
 }
 
@@ -545,10 +549,17 @@ body.menu-open { overflow: hidden; }
   font-style: italic;
   line-height: 1.1;
   padding-bottom: 0.06em;
-  color: var(--accent);
+  background: linear-gradient(94deg, #0F8A62 0%, var(--t-cyan) 52%, #6E5BE8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-[data-theme="dark"] .hero-copy h1 em { color: var(--accent-soft-ink); }
+[data-theme="dark"] .hero-copy h1 em {
+  background: linear-gradient(94deg, var(--t-menthe) 0%, #55C8D6 52%, var(--t-indigo) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
 
 .hero-sub {
   margin-top: 1.4rem;
@@ -1228,6 +1239,13 @@ body.menu-open { overflow: hidden; }
 .cell-secure .cell-icon { background: rgba(255, 255, 255, 0.12); }
 .cell-icon .icon { width: 1.35rem; height: 1.35rem; }
 
+.cell-sync .cell-icon { background: color-mix(in srgb, var(--t-menthe) 20%, transparent); color: #0C7A52; }
+.cell-alerts .cell-icon { background: color-mix(in srgb, var(--t-indigo) 20%, transparent); color: #5B4BD6; }
+.cell-expert .cell-icon { background: color-mix(in srgb, var(--t-abricot) 24%, transparent); color: #BC5F14; }
+[data-theme="dark"] .cell-sync .cell-icon { color: var(--t-menthe); }
+[data-theme="dark"] .cell-alerts .cell-icon { color: var(--t-indigo); }
+[data-theme="dark"] .cell-expert .cell-icon { color: var(--t-abricot); }
+
 .badge-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; }
 .cell-secure .badge-row .chip {
   background: rgba(255, 255, 255, 0.12);
@@ -1354,6 +1372,13 @@ body.menu-open { overflow: hidden; }
   color: var(--accent-soft-ink);
 }
 .step-icon .icon { width: 1.5rem; height: 1.5rem; }
+
+.step:nth-child(1) .step-icon { background: color-mix(in srgb, var(--t-menthe) 20%, transparent); color: #0C7A52; }
+.step:nth-child(2) .step-icon { background: color-mix(in srgb, var(--t-indigo) 20%, transparent); color: #5B4BD6; }
+.step:nth-child(3) .step-icon { background: color-mix(in srgb, var(--t-abricot) 24%, transparent); color: #BC5F14; }
+[data-theme="dark"] .step:nth-child(1) .step-icon { color: var(--t-menthe); }
+[data-theme="dark"] .step:nth-child(2) .step-icon { color: var(--t-indigo); }
+[data-theme="dark"] .step:nth-child(3) .step-icon { color: var(--t-abricot); }
 
 .step h3 { font-size: 1.45rem; margin-bottom: 0.5rem; }
 .step p { color: var(--ink-2); max-width: 34rem; }
@@ -1677,7 +1702,9 @@ body.menu-open { overflow: hidden; }
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(200deg, rgba(7, 22, 15, 0.55) 0%, rgba(7, 22, 15, 0.88) 85%);
+  background:
+    linear-gradient(25deg, rgba(139, 124, 255, 0.28) 0%, transparent 45%),
+    linear-gradient(200deg, rgba(21, 94, 99, 0.5) 0%, rgba(7, 22, 15, 0.9) 85%);
 }
 
 .cta-panel h2 {

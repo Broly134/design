@@ -25,7 +25,7 @@
     themeToggle.addEventListener("click", function () {
       var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
       root.setAttribute("data-theme", next);
-      try { localStorage.setItem("affluent-theme", next); } catch (e) {}
+      try { localStorage.setItem("manne-theme", next); } catch (e) {}
       applyThemeColor();
       document.dispatchEvent(new CustomEvent("themechange"));
     });
@@ -390,22 +390,22 @@
 
   var heroChart = flowChart("chart-hero", {
     height: 150,
-    hist: [131250, 122480, 149300, 141750, 163900, 184320],
+    hist: [31400, 38200, 52700, 61900, 74300, 87400],
     labels: ["Février", "Mars", "Avril", "Mai", "Juin", "Juillet"]
   });
 
   var SCENARIOS = {
-    prudent:   [148700, 24300, 58900],
-    neutre:    [176800, 168300, 191400],
-    optimiste: [189500, 197200, 218600]
+    artisan:   [52400, 55100, 58300],
+    scaleup:   [58900, 71200, 83600],
+    industrie: [61800, 86200, 97400]
   };
 
   var projChart = flowChart("chart-proj", {
     height: 260,
-    hist: [122480, 149300, 141750, 163900, 184320],
-    proj: SCENARIOS.neutre.slice(),
-    band: { low: SCENARIOS.prudent, high: SCENARIOS.optimiste },
-    domain: [24300, 218600],
+    hist: [21300, 29800, 38400, 43100, 46900],
+    proj: SCENARIOS.scaleup.slice(),
+    band: { low: SCENARIOS.artisan, high: SCENARIOS.industrie },
+    domain: [19000, 106000],
     labels: ["Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre"]
   });
 
@@ -446,7 +446,7 @@
       var data = SCENARIOS[name];
       if (projChart) projChart.setProjection(data);
       if (projValue) projValue.textContent = euroFmt.format(data[data.length - 1]);
-      if (projAlert) projAlert.classList.toggle("visible", name === "prudent");
+      if (projAlert) projAlert.classList.toggle("visible", name === "industrie");
     });
   });
 

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Affluent · Terminal de trésorerie</title>
-  <meta name="description" content="Le Registre : terminal de trésorerie Affluent. Aperçu consolidé, prévisionnel à 90 jours, relances et échéances.">
+  <title>Manne · Radar des aides</title>
+  <meta name="description" content="Le Radar Manne : aides détectées, simulateur d'éligibilité, dossiers suivis et guichets surveillés. Tout est réel, tout se manipule.">
   <meta name="theme-color" content="#0A0F0C">
-  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none" stroke="%234FC08D" stroke-width="3" stroke-linecap="round"><path d="M5 6 C 11 8, 14 12, 16 17"/><path d="M16 4 C 16 9, 16 13, 16 17"/><path d="M27 6 C 21 8, 18 12, 16 17"/><path d="M16 17 L16 28"/></g></svg>'>
-  <link rel="preload" href="assets/fonts/ibm-plex-mono-500.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/hanken-grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%233DDC97"/><stop offset=".5" stop-color="%232BB3C0"/><stop offset="1" stop-color="%238B7CFF"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(%23g)"/><g fill="none" stroke="white" stroke-width="5.5" stroke-linecap="round"><path d="M15 17 C 24 20, 28 26, 32 34"/><path d="M32 14 C 32 22, 32 28, 32 34"/><path d="M49 17 C 40 20, 36 26, 32 34"/><path d="M32 34 L 32 50"/></g></svg>'>
+  <link rel="preload" href="assets/fonts/spline-sans-mono-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/figtree-300.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/fonts.css">
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
@@ -43,32 +43,42 @@
 
     <!-- ===== Rail (desktop) ===== -->
     <aside class="rail">
-      <a class="brand" href="index.html" aria-label="Affluent, retour au site">
-        <svg width="26" height="26" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true">
-          <path d="M5 6 C 11 8, 14 12, 16 17"/>
-          <path d="M16 4 C 16 9, 16 13, 16 17"/>
-          <path d="M27 6 C 21 8, 18 12, 16 17"/>
-          <path d="M16 17 L16 28"/>
+      <a class="brand" href="index.html" aria-label="Manne, retour au site">
+        <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="mg-rail" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#3DDC97"/>
+              <stop offset="0.5" stop-color="#2BB3C0"/>
+              <stop offset="1" stop-color="#8B7CFF"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#mg-rail)"/>
+          <g fill="none" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round">
+            <path d="M15 17 C 24 20, 28 26, 32 34"/>
+            <path d="M32 14 C 32 22, 32 28, 32 34"/>
+            <path d="M49 17 C 40 20, 36 26, 32 34"/>
+            <path d="M32 34 L 32 50"/>
+          </g>
         </svg>
-        <span>Affluent<small>Le Registre</small></span>
+        <span>Manne<small>Radar</small></span>
       </a>
 
       <nav class="rail-nav" aria-label="Vues principales">
-        <button class="nav-item" data-vue="apercu" aria-current="page">
-          <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
-          Aperçu
-        </button>
-        <button class="nav-item" data-vue="previsionnel">
+        <button class="nav-item" data-vue="radar" aria-current="page">
           <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
-          Prévisionnel
+          Radar
         </button>
-        <button class="nav-item" data-vue="relances">
-          <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
-          Relances
+        <button class="nav-item" data-vue="simulateur">
+          <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
+          Simulateur
         </button>
-        <button class="nav-item" data-vue="echeances">
+        <button class="nav-item" data-vue="dossiers">
+          <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+          Dossiers
+        </button>
+        <button class="nav-item" data-vue="guichets">
           <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
-          Échéances
+          Guichets
         </button>
       </nav>
 
@@ -77,14 +87,14 @@
           <button class="entite-btn" id="entite-btn" aria-haspopup="listbox" aria-expanded="false">
             <span class="pastille" aria-hidden="true">MB</span>
             <span>
-              <span class="nom" id="entite-nom">Consolidé</span><br>
-              <span class="role">3 entités, 3 comptes</span>
+              <span class="nom" id="entite-nom">Groupe consolidé</span><br>
+              <span class="role">3 entités</span>
             </span>
             <svg class="icon" aria-hidden="true"><use href="#i-caret-down"/></svg>
           </button>
           <div class="entite-menu" role="listbox" aria-label="Choisir l'entité" id="entite-menu">
             <button role="option" data-entite="conso" aria-selected="true">
-              Consolidé <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+              Groupe consolidé <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
             </button>
             <button role="option" data-entite="sas" aria-selected="false">
               Maison Bocage SAS <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
@@ -101,64 +111,74 @@
     <div class="colonne">
       <header class="topbar">
         <span class="brand-mini" aria-hidden="true">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
-            <path d="M5 6 C 11 8, 14 12, 16 17"/>
-            <path d="M16 4 C 16 9, 16 13, 16 17"/>
-            <path d="M27 6 C 21 8, 18 12, 16 17"/>
-            <path d="M16 17 L16 28"/>
+          <svg width="26" height="26" viewBox="0 0 64 64">
+            <defs>
+              <linearGradient id="mg-mini" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#3DDC97"/>
+                <stop offset="0.5" stop-color="#2BB3C0"/>
+                <stop offset="1" stop-color="#8B7CFF"/>
+              </linearGradient>
+            </defs>
+            <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#mg-mini)"/>
+            <g fill="none" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round">
+              <path d="M15 17 C 24 20, 28 26, 32 34"/>
+              <path d="M32 14 C 32 22, 32 28, 32 34"/>
+              <path d="M49 17 C 40 20, 36 26, 32 34"/>
+              <path d="M32 34 L 32 50"/>
+            </g>
           </svg>
         </span>
-        <h1 class="vue-titre" id="vue-titre">Aperçu</h1>
-        <span class="sync-note"><span class="point-vif" aria-hidden="true"></span> Synchronisé il y a 4 min</span>
+        <h1 class="vue-titre" id="vue-titre">Radar</h1>
+        <span class="sync-note"><span class="point-vif" aria-hidden="true"></span> Base à jour il y a 2 h</span>
         <div class="ticker">
-          <span class="libelle">Solde consolidé</span>
-          <span class="num" id="ticker-solde">184&#8239;320&#8239;€</span>
+          <span class="libelle">Détecté pour vous</span>
+          <span class="num" id="ticker-solde">87&#8239;400&#8239;€</span>
         </div>
       </header>
 
       <main class="contenu" id="contenu">
 
-        <!-- ================= VUE APERÇU ================= -->
-        <section class="vue active" id="vue-apercu" aria-label="Aperçu">
+        <!-- ================= VUE RADAR ================= -->
+        <section class="vue active" id="vue-radar" aria-label="Radar">
           <div class="grille grille-apercu">
 
             <div class="panneau bloc-kpi kpi">
-              <span class="libelle">Solde consolidé</span>
-              <span class="valeur num" id="kpi-solde">184&#8239;320&#8239;€</span>
+              <span class="libelle">Détecté pour vous</span>
+              <span class="valeur num" id="kpi-solde">87&#8239;400&#8239;€</span>
               <span class="tendance pos">
                 <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
-                +12,4&#8239;% vs juin
+                +18&#8239;000&#8239;€ ce mois
               </span>
             </div>
             <div class="panneau bloc-kpi kpi">
-              <span class="libelle">Encaissements 30&#8239;j</span>
-              <span class="valeur num" id="kpi-entrees">64&#8239;180&#8239;€</span>
+              <span class="libelle">Versé cette année</span>
+              <span class="valeur num" id="kpi-entrees">46&#8239;900&#8239;€</span>
               <span class="tendance pos">
                 <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
-                +8,1&#8239;%
+                4 dossiers payés
               </span>
             </div>
             <div class="panneau bloc-kpi kpi">
-              <span class="libelle">Décaissements 30&#8239;j</span>
-              <span class="valeur num">51&#8239;730&#8239;€</span>
+              <span class="libelle">En instruction</span>
+              <span class="valeur num" id="kpi-instruction">43&#8239;200&#8239;€</span>
+              <span class="tendance">2 dossiers déposés</span>
+            </div>
+            <div class="panneau bloc-kpi kpi">
+              <span class="libelle">Prochaine clôture</span>
+              <span class="valeur num">63&#8239;j</span>
               <span class="tendance neg">
-                <svg class="icon" aria-hidden="true"><use href="#i-arrow-down-right"/></svg>
-                +2,9&#8239;%
+                <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
+                Décarbonation ADEME
               </span>
-            </div>
-            <div class="panneau bloc-kpi kpi">
-              <span class="libelle">Autonomie</span>
-              <span class="valeur num">7,4&#8239;mois</span>
-              <span class="tendance">au rythme actuel</span>
             </div>
 
             <div class="panneau bloc-graphe">
               <div class="panneau-tete">
-                <span class="libelle">Trésorerie</span>
+                <span class="libelle">Versements cumulés</span>
                 <div class="chip-groupe" role="group" aria-label="Période du graphique">
-                  <button class="chip" data-periode="30j" aria-pressed="false">30&#8239;j</button>
-                  <button class="chip" data-periode="90j" aria-pressed="false">90&#8239;j</button>
                   <button class="chip" data-periode="6m" aria-pressed="true">6&#8239;mois</button>
+                  <button class="chip" data-periode="12m" aria-pressed="false">12&#8239;mois</button>
+                  <button class="chip" data-periode="tout" aria-pressed="false">Tout</button>
                 </div>
               </div>
               <div class="chart" id="chart-solde">
@@ -169,28 +189,28 @@
 
             <div class="panneau bloc-comptes">
               <div class="panneau-tete">
-                <span class="libelle">Comptes</span>
-                <button class="lien" data-vue-lien="echeances">Échéances</button>
+                <span class="libelle">Dispositifs phares</span>
+                <button class="lien" data-vue-lien="dossiers">Dossiers</button>
               </div>
               <div id="liste-comptes"></div>
               <button class="sync-btn" id="sync-btn">
                 <svg class="icon" aria-hidden="true"><use href="#i-arrows-clockwise"/></svg>
-                Forcer la synchronisation
+                Relancer le scan
               </button>
             </div>
 
             <div class="panneau bloc-ecritures">
               <div class="panneau-tete">
-                <span class="libelle">Dernières écritures</span>
+                <span class="libelle">Journal des versements</span>
               </div>
               <table class="livre">
                 <thead>
                   <tr>
                     <th scope="col">Date</th>
                     <th scope="col">Libellé</th>
-                    <th scope="col" class="col-cat">Catégorie</th>
-                    <th scope="col" style="text-align:right">Débit</th>
-                    <th scope="col" style="text-align:right">Crédit</th>
+                    <th scope="col" class="col-cat">Nature</th>
+                    <th scope="col" style="text-align:right">Frais</th>
+                    <th scope="col" style="text-align:right">Reçu</th>
                   </tr>
                 </thead>
                 <tbody id="livre-corps"></tbody>
@@ -207,52 +227,52 @@
           </div>
         </section>
 
-        <!-- ================= VUE PRÉVISIONNEL ================= -->
-        <section class="vue" id="vue-previsionnel" aria-label="Prévisionnel" hidden>
+        <!-- ================= VUE SIMULATEUR ================= -->
+        <section class="vue" id="vue-simulateur" aria-label="Simulateur" hidden>
           <div class="grille grille-prev">
 
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Hypothèses</span>
+                <span class="libelle">Votre profil</span>
               </div>
-              <div class="scenarios" role="group" aria-label="Scénario">
-                <button class="scenario" data-scenario="prudent" aria-pressed="false">Prudent</button>
-                <button class="scenario" data-scenario="neutre" aria-pressed="true">Neutre</button>
-                <button class="scenario" data-scenario="optimiste" aria-pressed="false">Optimiste</button>
-              </div>
-
-              <div class="curseur">
-                <label for="curseur-delai">Délai d'encaissement moyen
-                  <output id="sortie-delai">31&#8239;jours</output>
-                </label>
-                <input type="range" id="curseur-delai" min="15" max="60" step="1" value="31"
-                  aria-describedby="aide-delai">
-                <p class="provision-note" id="aide-delai">Le délai constaté sur vos 12 derniers mois est de 31 jours.</p>
+              <div class="scenarios" role="group" aria-label="Profil type">
+                <button class="scenario" data-scenario="artisan" aria-pressed="false">Artisan</button>
+                <button class="scenario" data-scenario="scaleup" aria-pressed="true">Scale-up</button>
+                <button class="scenario" data-scenario="industrie" aria-pressed="false">Industrie</button>
               </div>
 
               <div class="curseur">
-                <label for="curseur-ca">Variation du chiffre d'affaires
-                  <output id="sortie-ca">+2&#8239;%</output>
+                <label for="curseur-eff">Effectif
+                  <output id="sortie-eff">38&#8239;salariés</output>
                 </label>
-                <input type="range" id="curseur-ca" min="-10" max="15" step="1" value="2"
-                  aria-describedby="aide-ca">
-                <p class="provision-note" id="aide-ca">Appliquée progressivement sur les 3 prochains mois.</p>
+                <input type="range" id="curseur-eff" min="1" max="250" step="1" value="38"
+                  aria-describedby="aide-eff">
+                <p class="provision-note" id="aide-eff">Beaucoup d'aides à l'embauche et à la formation dépendent de la taille.</p>
+              </div>
+
+              <div class="curseur">
+                <label for="curseur-rd">Budget innovation annuel
+                  <output id="sortie-rd">220&#8239;k€</output>
+                </label>
+                <input type="range" id="curseur-rd" min="0" max="500" step="10" value="220"
+                  aria-describedby="aide-rd">
+                <p class="provision-note" id="aide-rd">R&amp;D, numérique, décarbonation : le levier principal du crédit d'impôt.</p>
               </div>
 
               <div class="verdict">
-                <span class="libelle">Solde projeté au 31 octobre</span>
-                <span class="num" id="verdict-valeur">191&#8239;400&#8239;€</span>
+                <span class="libelle">Éligible estimé sur 12 mois</span>
+                <span class="num" id="verdict-valeur">96&#8239;800&#8239;€</span>
               </div>
 
               <div class="alerte-seuil" id="alerte-seuil" role="status">
                 <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                <span id="alerte-texte">Passage sous votre seuil de 20&#8239;000&#8239;€ prévu mi-septembre.</span>
+                <span id="alerte-texte">Le guichet Décarbonation ADEME ferme le 12 septembre. 24&#8239;000&#8239;€ à la clé pour ce profil.</span>
               </div>
             </div>
 
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Projection à 90 jours</span>
+                <span class="libelle">Récupération projetée</span>
               </div>
               <div class="chart" id="chart-prev">
                 <div class="chart-canvas"></div>
@@ -261,7 +281,7 @@
                 </div>
               </div>
               <div class="legende">
-                <span><span class="trait" aria-hidden="true"></span> Réalisé</span>
+                <span><span class="trait" aria-hidden="true"></span> Versé</span>
                 <span><span class="trait pointille" aria-hidden="true"></span> Projeté</span>
               </div>
             </div>
@@ -269,68 +289,68 @@
           </div>
         </section>
 
-        <!-- ================= VUE RELANCES ================= -->
-        <section class="vue" id="vue-relances" aria-label="Relances" hidden>
+        <!-- ================= VUE DOSSIERS ================= -->
+        <section class="vue" id="vue-dossiers" aria-label="Dossiers" hidden>
           <div class="pipeline-stats">
             <div class="panneau kpi">
-              <span class="libelle">Encours client</span>
-              <span class="valeur num" id="kpi-encours">29&#8239;310&#8239;€</span>
+              <span class="libelle">En instruction</span>
+              <span class="valeur num" id="kpi-encours">43&#8239;200&#8239;€</span>
             </div>
             <div class="panneau kpi">
-              <span class="libelle">Retard moyen</span>
-              <span class="valeur num" id="kpi-retard">8&#8239;j</span>
+              <span class="libelle">Taux de succès</span>
+              <span class="valeur num" id="kpi-retard">84&#8239;%</span>
             </div>
             <div class="panneau kpi">
-              <span class="libelle">Encaissé après relance</span>
-              <span class="valeur num" id="kpi-encaisse">7&#8239;650&#8239;€</span>
+              <span class="libelle">Versé cette année</span>
+              <span class="valeur num" id="kpi-encaisse">46&#8239;900&#8239;€</span>
             </div>
           </div>
 
           <div class="grille grille-relances">
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Factures en cours</span>
+                <span class="libelle">Vos dossiers</span>
               </div>
-              <div id="liste-factures" role="listbox" aria-label="Factures"></div>
+              <div id="liste-factures" role="listbox" aria-label="Dossiers"></div>
             </div>
 
             <div class="panneau panneau-detail" id="panneau-detail">
               <div id="detail-contenu">
                 <p class="detail-vide">
-                  <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
-                  Sélectionnez une facture pour voir sa séquence de relance.
+                  <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+                  Sélectionnez un dossier pour voir son avancement.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- ================= VUE ÉCHÉANCES ================= -->
-        <section class="vue" id="vue-echeances" aria-label="Échéances" hidden>
+        <!-- ================= VUE GUICHETS ================= -->
+        <section class="vue" id="vue-guichets" aria-label="Guichets" hidden>
           <div class="grille grille-echeances">
 
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Provision de TVA, 6 mois</span>
+                <span class="libelle">Montants dont le guichet ferme</span>
               </div>
-              <div class="barres" id="barres-tva" aria-label="Provisions de TVA mensuelles">
-                <div class="barre-col"><div class="barre" data-h="70"><span class="barre-val">6&#8239;240&#8239;€</span></div><span class="barre-mois">Fév</span></div>
-                <div class="barre-col"><div class="barre" data-h="66"><span class="barre-val">5&#8239;910&#8239;€</span></div><span class="barre-mois">Mars</span></div>
-                <div class="barre-col"><div class="barre" data-h="83"><span class="barre-val">7&#8239;430&#8239;€</span></div><span class="barre-mois">Avr</span></div>
-                <div class="barre-col"><div class="barre" data-h="77"><span class="barre-val">6&#8239;870&#8239;€</span></div><span class="barre-mois">Mai</span></div>
-                <div class="barre-col"><div class="barre" data-h="91"><span class="barre-val">8&#8239;120&#8239;€</span></div><span class="barre-mois">Juin</span></div>
-                <div class="barre-col"><div class="barre" data-h="100"><span class="barre-val">8&#8239;940&#8239;€</span></div><span class="barre-mois">Juil</span></div>
+              <div class="barres" id="barres-guichets" aria-label="Montants dont le guichet ferme, par mois">
+                <div class="barre-col"><div class="barre" data-h="24"><span class="barre-val">12&#8239;400&#8239;€</span></div><span class="barre-mois">Juil</span></div>
+                <div class="barre-col"><div class="barre" data-h="47"><span class="barre-val">24&#8239;000&#8239;€</span></div><span class="barre-mois">Août</span></div>
+                <div class="barre-col"><div class="barre" data-h="100"><span class="barre-val">51&#8239;000&#8239;€</span></div><span class="barre-mois">Sept</span></div>
+                <div class="barre-col"><div class="barre" data-h="36"><span class="barre-val">18&#8239;600&#8239;€</span></div><span class="barre-mois">Oct</span></div>
+                <div class="barre-col"><div class="barre" data-h="19"><span class="barre-val">9&#8239;800&#8239;€</span></div><span class="barre-mois">Nov</span></div>
+                <div class="barre-col"><div class="barre" data-h="62"><span class="barre-val">31&#8239;500&#8239;€</span></div><span class="barre-mois">Déc</span></div>
               </div>
               <div class="interrupteur-ligne">
-                <button class="interrupteur" id="interrupteur-provision" role="switch" aria-checked="true" aria-labelledby="provision-libelle"></button>
-                <span id="provision-libelle">Provision automatique hebdomadaire</span>
+                <button class="interrupteur" id="interrupteur-veille" role="switch" aria-checked="true" aria-labelledby="veille-libelle"></button>
+                <span id="veille-libelle">Veille automatique des guichets</span>
               </div>
-              <p class="provision-note" id="provision-note">2&#8239;235&#8239;€ mis de côté chaque lundi. Le 15 du mois, l'argent est déjà là.</p>
+              <p class="provision-note" id="veille-note">Nouveau guichet correspondant à votre profil : alerte sous 24 h.</p>
             </div>
 
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">À régler</span>
+                <span class="libelle">Fenêtres à venir</span>
               </div>
               <div id="liste-echeances"></div>
             </div>
@@ -344,21 +364,21 @@
 
   <!-- Tabbar mobile -->
   <nav class="tabbar" aria-label="Vues principales">
-    <button class="tab" data-vue="apercu" aria-current="page">
-      <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
-      Aperçu
-    </button>
-    <button class="tab" data-vue="previsionnel">
+    <button class="tab" data-vue="radar" aria-current="page">
       <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
-      Prévisionnel
+      Radar
     </button>
-    <button class="tab" data-vue="relances">
-      <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
-      Relances
+    <button class="tab" data-vue="simulateur">
+      <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
+      Simulateur
     </button>
-    <button class="tab" data-vue="echeances">
+    <button class="tab" data-vue="dossiers">
+      <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+      Dossiers
+    </button>
+    <button class="tab" data-vue="guichets">
       <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
-      Échéances
+      Guichets
     </button>
   </nav>
 

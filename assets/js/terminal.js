@@ -1,6 +1,7 @@
-/* Affluent · Le Registre — logique du terminal.
-   État mutable en mémoire : les actions (relancer, encaisser, régler)
-   modifient réellement les chiffres à l'écran. */
+/* Manne · Radar — logique de l'application.
+   État mutable en mémoire : déposer un dossier, le marquer versé ou
+   préparer un guichet change réellement les chiffres à l'écran.
+   Aucune écoute directe du scroll : IntersectionObserver + ResizeObserver. */
 (function () {
   "use strict";
 
@@ -24,122 +25,120 @@
      ============================================================ */
 
   var ENTITES = {
-    conso: { nom: "Consolidé", facteur: 1, comptes: ["qonto", "bnp", "ca"] },
-    sas: { nom: "Maison Bocage SAS", facteur: 0.8555, comptes: ["qonto", "bnp"] },
-    holding: { nom: "Bocage Holding", facteur: 0.1445, comptes: ["ca"] }
-  };
-
-  var COMPTES = {
-    qonto: { nom: "Qonto", solde: 96480, maj: "il y a 4 min" },
-    bnp: { nom: "BNP Paribas", solde: 61210, maj: "il y a 12 min" },
-    ca: { nom: "Crédit Agricole", solde: 26630, maj: "il y a 31 min" }
+    conso: { nom: "Groupe consolidé", facteur: 1 },
+    sas: { nom: "Maison Bocage SAS", facteur: 0.72 },
+    holding: { nom: "Bocage Holding", facteur: 0.28 }
   };
 
   var etat = {
     entite: "conso",
-    solde: 184320,
-    entrees30: 64180,
+    detecte: 87400,
+    verse: 46900,
     periode: "6m",
-    provisionAuto: true,
-    factures: [
+    dispositifs: [
+      { nom: "Crédit d'impôt recherche", score: 91, montant: 31200 },
+      { nom: "Décarbonation ADEME", score: 88, montant: 24000 },
+      { nom: "France Num vague 2", score: 96, montant: 5000 }
+    ],
+    dossiers: [
       {
-        id: "novelli", client: "Novelli & Associés", montant: 4820, retard: 18,
-        tampon: { texte: "Relancée", classe: "relance" }, payee: false,
+        id: "cir", nom: "Crédit d'impôt recherche 2026", montant: 31200,
+        statut: "instruction", tampon: { texte: "En instruction", classe: "relance" },
+        meta: "Déposé le 28 juin",
         seq: [
-          { quand: "12 juin", quoi: "Facture nº2026-118 émise", fait: true },
-          { quand: "27 juin", quoi: "Relance douce envoyée", fait: true },
-          { quand: "10 juil", quoi: "Relance ferme envoyée", fait: true },
-          { quand: "17 juil", quoi: "Mise en demeure programmée", fait: false }
+          { quand: "12 juin", quoi: "Dossier préparé par votre chargé Manne", fait: true },
+          { quand: "28 juin", quoi: "Déposé auprès de la DGFiP", fait: true },
+          { quand: "Avant le 15 sept", quoi: "Attestation expert-comptable attendue", fait: false }
         ]
       },
       {
-        id: "ardoise", client: "Groupe Ardoise", montant: 12400, retard: 9,
-        tampon: { texte: "Programmée", classe: "attente" }, payee: false,
+        id: "ademe", nom: "Décarbonation ADEME", montant: 24000,
+        statut: "a-monter", tampon: { texte: "À monter", classe: "attente" },
+        meta: "Guichet ferme le 12 sept.",
         seq: [
-          { quand: "20 juin", quoi: "Facture nº2026-131 émise", fait: true },
-          { quand: "Demain", quoi: "Relance douce programmée", fait: false }
+          { quand: "8 juil", quoi: "Éligibilité confirmée, score 88", fait: true },
+          { quand: "Avant le 12 sept", quoi: "Dépôt du dossier au guichet", fait: false }
         ]
       },
       {
-        id: "fournier", client: "Fournier & Cie", montant: 9780, retard: 2,
-        tampon: { texte: "En séquence", classe: "attente" }, payee: false,
+        id: "region", nom: "Numérique Région AURA", montant: 12000,
+        statut: "instruction", tampon: { texte: "En instruction", classe: "relance" },
+        meta: "Déposé le 20 juin",
         seq: [
-          { quand: "26 juin", quoi: "Facture nº2026-136 émise", fait: true },
-          { quand: "15 juil", quoi: "Relance douce programmée", fait: false }
+          { quand: "6 juin", quoi: "Dossier préparé par votre chargé Manne", fait: true },
+          { quand: "20 juin", quoi: "Déposé auprès de la Région", fait: true },
+          { quand: "Fin août", quoi: "Passage en commission", fait: false }
         ]
       },
       {
-        id: "palombe", client: "Studio Palombe", montant: 2310, retard: 4,
-        tampon: { texte: "Relancée", classe: "relance" }, payee: false,
+        id: "alternance", nom: "Aide à l'alternance", montant: 6000,
+        statut: "depose", tampon: { texte: "Déposé", classe: "attente" },
+        meta: "Déposé il y a 4 jours",
         seq: [
-          { quand: "18 juin", quoi: "Facture nº2026-127 émise", fait: true },
-          { quand: "8 juil", quoi: "Relance douce envoyée", fait: true },
-          { quand: "22 juil", quoi: "Relance ferme programmée", fait: false }
+          { quand: "2 juil", quoi: "Contrat d'apprentissage joint", fait: true },
+          { quand: "7 juil", quoi: "Déposé auprès de l'ASP", fait: true }
         ]
       },
       {
-        id: "litt", client: "Maison Litt", montant: 7650, retard: 0,
-        tampon: { texte: "Payée", classe: "paye" }, payee: true,
+        id: "francenum", nom: "France Num", montant: 5000,
+        statut: "verse", tampon: { texte: "Versé", classe: "paye" },
+        meta: "Versé le 10 juillet",
         seq: [
-          { quand: "5 juin", quoi: "Facture nº2026-109 émise", fait: true },
-          { quand: "20 juin", quoi: "Relance douce envoyée", fait: true },
-          { quand: "3 juil", quoi: "Règlement reçu, séquence close", fait: true }
+          { quand: "14 mai", quoi: "Dossier déposé", fait: true },
+          { quand: "26 juin", quoi: "Accord de la commission", fait: true },
+          { quand: "10 juil", quoi: "5 000 € versés, dossier clos", fait: true }
         ]
       }
     ],
-    ecritures: [
-      { d: "10 juil", lib: "Règlement Stripe", cat: "Encaissements", credit: 8442 },
-      { d: "9 juil", lib: "OVHcloud", cat: "Logiciels", debit: 180 },
-      { d: "8 juil", lib: "Salaires de juin", cat: "Paie", debit: 38250 },
-      { d: "5 juil", lib: "Loyer Part-Dieu", cat: "Locaux", debit: 3200 },
-      { d: "4 juil", lib: "Acompte Verger & Fils", cat: "Encaissements", credit: 5310 },
-      { d: "2 juil", lib: "URSSAF de juin", cat: "Charges sociales", debit: 11940 }
+    journal: [
+      { d: "10 juil", lib: "Versement France Num", cat: "Subvention", credit: 5000 },
+      { d: "10 juil", lib: "Commission au succès", cat: "Frais", debit: 400 },
+      { d: "26 juin", lib: "Acompte CIR 2025", cat: "Crédit d'impôt", credit: 18600 },
+      { d: "26 juin", lib: "Commission au succès", cat: "Frais", debit: 1488 },
+      { d: "12 juin", lib: "Versement Région AURA", cat: "Subvention", credit: 7300 },
+      { d: "2 juin", lib: "Abonnement Pilote", cat: "Frais", debit: 119 }
     ],
-    echeances: [
-      { id: "urssaf", quoi: "URSSAF", quand: "15 juillet", montant: 12380 },
-      { id: "tva", quoi: "TVA CA3 de juillet", quand: "15 août", montant: 8940 },
-      { id: "is", quoi: "Acompte IS", quand: "15 septembre", montant: 6200 }
+    guichets: [
+      { id: "fn2", quoi: "France Num vague 2", quand: "Clôture le 30 juillet", montant: 5000, dossier: null },
+      { id: "ademe-g", quoi: "Décarbonation ADEME", quand: "Clôture le 12 septembre", montant: 24000, dossier: "ademe" },
+      { id: "innov", quoi: "Innovation Région AURA", quand: "Clôture le 30 novembre", montant: 12000, dossier: null }
     ]
   };
 
   var SERIES = {
     "6m": {
       labels: ["Fév", "Mars", "Avr", "Mai", "Juin", "Juil"],
-      valeurs: [131250, 122480, 149300, 141750, 163900, 184320]
+      valeurs: [12400, 21300, 29800, 38400, 43100, 46900]
     },
-    "90j": {
-      labels: ["15 avr", "1 mai", "15 mai", "1 juin", "15 juin", "1 juil", "10 juil"],
-      valeurs: [149300, 144100, 141750, 152600, 163900, 176800, 184320]
+    "12m": {
+      labels: ["Août", "Oct", "Déc", "Fév", "Avr", "Juin", "Juil"],
+      valeurs: [0, 6200, 12400, 21300, 33600, 43100, 46900]
     },
-    "30j": {
-      labels: ["12 juin", "17 juin", "22 juin", "27 juin", "2 juil", "7 juil", "10 juil"],
-      valeurs: [163900, 159400, 171800, 168200, 176500, 180900, 184320]
+    "tout": {
+      labels: ["S1 24", "S2 24", "S1 25", "S2 25", "S1 26", "Auj."],
+      valeurs: [0, 8400, 19700, 31200, 39400, 46900]
     }
   };
 
-  /* Modèle de projection : recettes, charges saisonnières, effet du délai. */
+  /* Simulateur : montant éligible selon effectif et budget innovation */
   var PREV = {
+    hist: [12400, 21300, 29800, 38400, 46900], // versé cumulé, mars à juillet
     histLabels: ["Mars", "Avr", "Mai", "Juin", "Juil"],
-    hist: [122480, 149300, 141750, 163900, 184320],
-    recette: 62000,
-    charges: [54000, 86000, 47000], // août · septembre (IS + URSSAF) · octobre
-    seuil: 150000,
     presets: {
-      prudent: { delai: 45, ca: -6 },
-      neutre: { delai: 31, ca: 2 },
-      optimiste: { delai: 24, ca: 9 }
+      artisan: { eff: 6, rd: 10 },
+      scaleup: { eff: 38, rd: 220 },
+      industrie: { eff: 120, rd: 340 }
     }
   };
 
-  function projection(delai, ca) {
-    var s = etat.solde;
-    var pts = [];
-    for (var k = 1; k <= 3; k++) {
-      var flux = PREV.recette * (1 + (ca / 100) * (k / 3)) - PREV.charges[k - 1] - (delai - 31) * 900;
-      s += flux;
-      pts.push(Math.round(s));
-    }
-    return pts;
+  function eligible(eff, rd) {
+    return Math.round((18000 + eff * 420 + rd * 280) / 100) * 100;
+  }
+
+  function projection(eff, rd) {
+    var base = etat.verse;
+    var e = eligible(eff, rd);
+    return [0.18, 0.42, 0.65].map(function (f) { return Math.round(base + e * f); });
   }
 
   function facteur() { return ENTITES[etat.entite].facteur; }
@@ -162,7 +161,7 @@
     enCours.set(node, cible);
     var t0 = null, dur = 600, de = depart;
     function pas(t) {
-      if (enCours.get(node) !== cible) return; // une animation plus récente a pris la main
+      if (enCours.get(node) !== cible) return;
       if (!t0) t0 = t;
       var p = Math.min((t - t0) / dur, 1);
       var e = 1 - Math.pow(1 - p, 3);
@@ -173,7 +172,7 @@
   }
 
   /* ============================================================
-     GRAPHE DE FLUX (réalisé + projection, réticule, infobulle)
+     GRAPHE DE FLUX (repris du moteur validé dataviz)
      ============================================================ */
 
   var SVG_NS = "http://www.w3.org/2000/svg";
@@ -278,15 +277,6 @@
         }));
       }
 
-      if (opts.seuil) {
-        var sy = y(opts.seuil);
-        svg.appendChild(svgEl("line", {
-          x1: padX, x2: w - padX, y1: sy, y2: sy,
-          stroke: cssVar("--sienne-data") || "#CE6040",
-          "stroke-width": 1, "stroke-dasharray": "3 5", opacity: "0.7"
-        }));
-      }
-
       var lastI = proj ? total : hist.length - 1;
       var lastV = proj ? proj[proj.length - 1] : hist[hist.length - 1];
       svg.appendChild(svgEl("circle", {
@@ -325,9 +315,12 @@
 
     return {
       setHist: function (v, l) { hist = v.slice(); labels = l ? l.slice() : labels; build(); },
-      setProjection: function (next, nouvellesEtiquettes) {
+      bump: function (delta) {
+        hist[hist.length - 1] += delta;
+        build();
+      },
+      setProjection: function (next) {
         if (!proj) return;
-        if (nouvellesEtiquettes) labels = nouvellesEtiquettes.slice();
         if (reduceMotion.matches) { proj = next.slice(); build(); return; }
         var de = proj.slice(), t0 = null, dur = 300;
         function pas(t) {
@@ -364,24 +357,22 @@
      RENDUS
      ============================================================ */
 
-  function rendComptes() {
+  function rendDispositifs() {
     var zone = document.getElementById("liste-comptes");
-    var ids = ENTITES[etat.entite].comptes;
     zone.innerHTML = "";
-    ids.forEach(function (id) {
-      var c = COMPTES[id];
+    etat.dispositifs.forEach(function (d) {
       var row = el("div", "compte",
-        '<svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>' +
-        '<span><span class="nom">' + c.nom + '</span><br><span class="maj">' + c.maj + "</span></span>" +
-        '<span class="num">' + euro.format(c.solde) + "</span>");
+        '<svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>' +
+        '<span><span class="nom">' + d.nom + '</span><br><span class="maj">score ' + d.score + " / 100</span></span>" +
+        '<span class="num">' + euro.format(d.montant) + "</span>");
       zone.appendChild(row);
     });
   }
 
-  function rendLivre() {
+  function rendJournal() {
     var corps = document.getElementById("livre-corps");
     corps.innerHTML = "";
-    etat.ecritures.slice(0, 6).forEach(function (e) {
+    etat.journal.slice(0, 6).forEach(function (e) {
       var tr = document.createElement("tr");
       tr.innerHTML =
         '<td class="date">' + e.d + "</td>" +
@@ -397,9 +388,9 @@
     var zone = document.getElementById("liste-veille");
     zone.innerHTML = "";
     var items = [
-      { classe: "warn", icone: "bell-ringing", html: "<strong>Groupe Ardoise</strong> dépasse 12&#8239;000&#8239;€ d'encours. Relance programmée demain." },
-      { classe: "alerte", icone: "compass", html: "Creux possible mi-septembre en scénario prudent. <strong>Testez vos hypothèses.</strong>", vue: "previsionnel" },
-      { classe: "ok", icone: "receipt", html: "TVA de juillet <strong>provisionnée à 100&#8239;%</strong>. Prélèvement le 15 août." }
+      { classe: "warn", icone: "bell-ringing", html: "<strong>Décarbonation ADEME</strong> ferme dans 9 semaines. 24&#8239;000&#8239;€ pour votre profil.", vue: "guichets" },
+      { classe: "alerte", icone: "receipt", html: "CIR 2026&nbsp;: attestation expert-comptable attendue avant le 15 septembre. <strong>Voir le dossier.</strong>", vue: "dossiers" },
+      { classe: "ok", icone: "check", html: "France Num&nbsp;: <strong>5&#8239;000&#8239;€ versés</strong> le 10 juillet. Dossier clos." }
     ];
     items.forEach(function (it) {
       var n = el(it.vue ? "button" : "div", "veille-item " + it.classe,
@@ -412,79 +403,89 @@
     });
   }
 
-  function rendFactures() {
+  var selectionne = null;
+  var tamponFrais = null;
+
+  function rendDossiers() {
     var zone = document.getElementById("liste-factures");
     zone.innerHTML = "";
-    etat.factures.forEach(function (f) {
+    etat.dossiers.forEach(function (f) {
       var b = el("button", "facture");
       b.setAttribute("role", "option");
       b.setAttribute("aria-selected", String(selectionne === f.id));
       b.dataset.id = f.id;
       b.innerHTML =
-        '<span class="client">' + f.client + "</span>" +
+        '<span class="client">' + f.nom + "</span>" +
         '<span class="num">' + euro.format(f.montant) + "</span>" +
         '<span class="meta"><span class="tampon ' + f.tampon.classe + '">' + f.tampon.texte + "</span></span>" +
-        '<span class="retard ' + (f.payee ? "neutre" : "") + '">' + (f.payee ? "soldée" : "J+" + f.retard) + "</span>";
+        '<span class="retard ' + (f.statut === "verse" ? "neutre" : "") + '">' + f.meta + "</span>";
       b.addEventListener("click", function () { ouvreDetail(f.id); });
       zone.appendChild(b);
     });
-    var kEnc = document.getElementById("kpi-encours");
-    var kRet = document.getElementById("kpi-retard");
-    var kPay = document.getElementById("kpi-encaisse");
-    var ouvertes = etat.factures.filter(function (f) { return !f.payee; });
-    afficheMontant(kEnc, ouvertes.reduce(function (s, f) { return s + f.montant; }, 0));
-    var retard = ouvertes.length
-      ? Math.round(ouvertes.reduce(function (s, f) { return s + f.retard; }, 0) / ouvertes.length)
-      : 0;
-    kRet.textContent = retard + " j";
-    afficheMontant(kPay, etat.factures.filter(function (f) { return f.payee; })
-      .reduce(function (s, f) { return s + f.montant; }, 0));
+    afficheMontant(document.getElementById("kpi-encours"),
+      etat.dossiers.filter(function (f) { return f.statut === "instruction"; })
+        .reduce(function (s, f) { return s + f.montant; }, 0));
+    afficheMontant(document.getElementById("kpi-instruction"),
+      etat.dossiers.filter(function (f) { return f.statut === "instruction"; })
+        .reduce(function (s, f) { return s + f.montant; }, 0));
+    afficheMontant(document.getElementById("kpi-encaisse"), etat.verse * facteur());
   }
-
-  var selectionne = null;
 
   function rendDetail() {
     var zone = document.getElementById("detail-contenu");
-    var f = etat.factures.find(function (x) { return x.id === selectionne; });
+    var f = etat.dossiers.find(function (x) { return x.id === selectionne; });
     if (!f) {
       zone.innerHTML =
-        '<p class="detail-vide"><svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>' +
-        "Sélectionnez une facture pour voir sa séquence de relance.</p>";
+        '<p class="detail-vide"><svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>' +
+        "Sélectionnez un dossier pour voir son avancement.</p>";
       return;
     }
     var chrono = f.seq.map(function (s) {
       return '<div class="chrono-item ' + (s.fait ? "fait" : "") + '">' +
         '<span class="quand">' + s.quand + "</span>" + s.quoi + "</div>";
     }).join("");
+
+    var actions = "";
+    if (f.statut === "a-monter") {
+      actions =
+        '<button class="btn btn-menthe" id="action-deposer">' +
+        '<svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>Déposer le dossier</button>';
+    } else if (f.statut === "verse") {
+      actions =
+        '<button class="btn btn-menthe" disabled>' +
+        '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Versé, dossier clos</button>';
+    } else {
+      actions =
+        '<button class="btn btn-menthe" id="action-verse">' +
+        '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Marquer versé</button>' +
+        '<button class="btn btn-ligne" id="action-relance">' +
+        '<svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>Relancer l’instructeur</button>';
+    }
+
     zone.innerHTML =
       '<div class="detail-tete"><div>' +
       '<span class="tampon ' + f.tampon.classe + " " + (tamponFrais === f.id ? "applique" : "") + '">' + f.tampon.texte + "</span>" +
-      '<p class="client">' + f.client + '</p><span class="num">' + euro.format(f.montant) + "</span>" +
+      '<p class="client">' + f.nom + '</p><span class="num">' + euro.format(f.montant) + "</span>" +
       "</div>" +
       '<button class="detail-fermer" id="detail-fermer" aria-label="Fermer le détail">' +
       '<svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button></div>' +
       '<div class="chrono">' + chrono + "</div>" +
-      '<div class="actions">' +
-      '<button class="btn btn-menthe" id="action-payee"' + (f.payee ? " disabled" : "") + ">" +
-      '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Marquer payée</button>' +
-      '<button class="btn btn-ligne" id="action-relancer"' + (f.payee ? " disabled" : "") + ">" +
-      '<svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>Relancer maintenant</button>' +
-      "</div>";
+      '<div class="actions">' + actions + "</div>";
     tamponFrais = null;
 
     var fermer = document.getElementById("detail-fermer");
     if (fermer) fermer.addEventListener("click", fermeDetail);
-    var aP = document.getElementById("action-payee");
-    var aR = document.getElementById("action-relancer");
-    if (aP && !f.payee) aP.addEventListener("click", function () { marquePayee(f.id); });
-    if (aR && !f.payee) aR.addEventListener("click", function () { relance(f.id); });
+    var aD = document.getElementById("action-deposer");
+    var aV = document.getElementById("action-verse");
+    var aR = document.getElementById("action-relance");
+    if (aD) aD.addEventListener("click", function () { deposeDossier(f.id); });
+    if (aV) aV.addEventListener("click", function () { marqueVerse(f.id); });
+    if (aR) aR.addEventListener("click", function () { relanceInstructeur(f.id); });
   }
-
-  var tamponFrais = null;
 
   function ouvreDetail(id) {
     selectionne = id;
-    rendFactures();
+    rendDossiers();
     rendDetail();
     var panneau = document.getElementById("panneau-detail");
     var scrim = document.getElementById("scrim");
@@ -504,88 +505,111 @@
     if (!etaitOuvert) return;
     var ancien = selectionne;
     selectionne = null;
-    rendFactures();
+    rendDossiers();
     rendDetail();
     var b = document.querySelector('.facture[data-id="' + ancien + '"]');
     if (b) b.focus();
   }
 
-  function rendEcheances() {
+  function rendGuichets() {
     var zone = document.getElementById("liste-echeances");
     zone.innerHTML = "";
-    if (!etat.echeances.length) {
-      zone.innerHTML = '<p class="detail-vide">Tout est réglé. La prochaine échéance apparaîtra ici.</p>';
+    if (!etat.guichets.length) {
+      zone.innerHTML = '<p class="detail-vide">Aucune fenêtre imminente. La veille tourne pour vous.</p>';
       return;
     }
-    etat.echeances.forEach(function (e) {
+    etat.guichets.forEach(function (g) {
+      var action = g.dossier
+        ? '<button class="regler" data-id="' + g.id + '">Voir le dossier</button>'
+        : '<button class="regler" data-id="' + g.id + '">Préparer le dossier</button>';
       var row = el("div", "echeance",
-        '<svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>' +
-        '<span><span class="quoi">' + e.quoi + '</span><br><span class="quand">' + e.quand + "</span></span>" +
-        '<span class="num">' + euro.format(e.montant) + "</span>" +
-        '<button class="regler" data-id="' + e.id + '">Marquer réglée</button>');
-      row.querySelector(".regler").addEventListener("click", function () { regleEcheance(e.id); });
+        '<svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>' +
+        '<span><span class="quoi">' + g.quoi + '</span><br><span class="quand">' + g.quand + "</span></span>" +
+        '<span class="num">' + euro.format(g.montant) + "</span>" +
+        action);
+      row.querySelector(".regler").addEventListener("click", function () { prepareGuichet(g.id); });
       zone.appendChild(row);
     });
   }
 
   /* ============================================================
-     ACTIONS (elles changent vraiment les chiffres)
+     ACTIONS
      ============================================================ */
 
-  function majSolde(delta) {
-    etat.solde += delta;
-    afficheMontant(document.getElementById("ticker-solde"), etat.solde * facteur());
-    afficheMontant(document.getElementById("kpi-solde"), etat.solde * facteur());
-    majSeries(delta);
-    recalculePrev();
+  function majDetecte(delta) {
+    etat.detecte += delta;
+    afficheMontant(document.getElementById("ticker-solde"), etat.detecte * facteur());
+    afficheMontant(document.getElementById("kpi-solde"), etat.detecte * facteur());
   }
 
-  function majSeries(delta) {
+  function deposeDossier(id) {
+    var f = etat.dossiers.find(function (x) { return x.id === id; });
+    if (!f || f.statut !== "a-monter") return;
+    f.statut = "depose";
+    f.tampon = { texte: "Déposé", classe: "attente" };
+    f.meta = "Déposé aujourd'hui";
+    f.seq.push({ quand: "Aujourd'hui", quoi: "Déposé au guichet par votre chargé Manne", fait: true });
+    tamponFrais = id;
+    rendDossiers();
+    rendDetail();
+    toast("<strong>" + f.nom + "</strong> déposé. L'instructeur a accusé réception.");
+  }
+
+  function relanceInstructeur(id) {
+    var f = etat.dossiers.find(function (x) { return x.id === id; });
+    if (!f) return;
+    f.seq.push({ quand: "Aujourd'hui", quoi: "Relance envoyée à l'instructeur", fait: true });
+    rendDetail();
+    toast("<strong>Relance envoyée</strong> pour " + f.nom + ".");
+  }
+
+  function marqueVerse(id) {
+    var f = etat.dossiers.find(function (x) { return x.id === id; });
+    if (!f || f.statut === "verse" || f.statut === "a-monter") return;
+    f.statut = "verse";
+    f.tampon = { texte: "Versé", classe: "paye" };
+    f.meta = "Versé aujourd'hui";
+    f.seq.push({ quand: "Aujourd'hui", quoi: euro.format(f.montant) + " versés, dossier clos", fait: true });
+    tamponFrais = id;
+    var commission = Math.round(f.montant * 0.08);
+    etat.verse += f.montant;
+    etat.journal.unshift({ d: "Auj.", lib: "Commission au succès", cat: "Frais", debit: commission });
+    etat.journal.unshift({ d: "Auj.", lib: "Versement " + f.nom, cat: "Subvention", credit: f.montant });
     Object.keys(SERIES).forEach(function (k) {
       var v = SERIES[k].valeurs;
-      v[v.length - 1] += delta;
+      v[v.length - 1] += f.montant;
     });
-    if (chartSolde) montrePeriode(etat.periode, true);
-  }
-
-  function relance(id) {
-    var f = etat.factures.find(function (x) { return x.id === id; });
-    if (!f || f.payee) return;
-    f.seq.push({ quand: "Aujourd'hui", quoi: "Relance manuelle envoyée", fait: true });
-    f.tampon = { texte: "Relancée", classe: "relance" };
-    tamponFrais = id;
-    rendFactures();
+    if (chartVersements) montrePeriode(etat.periode, true);
+    afficheMontant(document.getElementById("kpi-entrees"), etat.verse * facteur());
+    rendDossiers();
     rendDetail();
-    toast("<strong>Relance envoyée</strong> à " + f.client + ".");
+    rendJournal();
+    recalculeSim();
+    toast("<strong>" + f.nom + "</strong>&nbsp;: " + euro.format(f.montant) +
+      " versés. Commission " + euro.format(commission) + ", prélevée après coup.");
   }
 
-  function marquePayee(id) {
-    var f = etat.factures.find(function (x) { return x.id === id; });
-    if (!f || f.payee) return;
-    f.payee = true;
-    f.tampon = { texte: "Payée", classe: "paye" };
-    f.seq.push({ quand: "Aujourd'hui", quoi: "Règlement reçu, séquence close", fait: true });
-    tamponFrais = id;
-    etat.entrees30 += f.montant;
-    etat.ecritures.unshift({ d: "Auj.", lib: "Règlement " + f.client, cat: "Encaissements", credit: f.montant });
-    majSolde(f.montant);
-    afficheMontant(document.getElementById("kpi-entrees"), etat.entrees30 * facteur());
-    rendFactures();
-    rendDetail();
-    rendLivre();
-    toast("<strong>" + f.client + "</strong> a réglé " + euro.format(f.montant) + ". Solde mis à jour.");
-  }
-
-  function regleEcheance(id) {
-    var i = etat.echeances.findIndex(function (x) { return x.id === id; });
+  function prepareGuichet(id) {
+    var i = etat.guichets.findIndex(function (x) { return x.id === id; });
     if (i < 0) return;
-    var e = etat.echeances[i];
-    etat.echeances.splice(i, 1);
-    etat.ecritures.unshift({ d: "Auj.", lib: e.quoi, cat: "Charges", debit: e.montant });
-    majSolde(-e.montant);
-    rendEcheances();
-    rendLivre();
-    toast("<strong>" + e.quoi + "</strong> réglée : " + euro.format(e.montant) + " décaissés.");
+    var g = etat.guichets[i];
+    if (g.dossier) {
+      montreVue("dossiers");
+      ouvreDetail(g.dossier);
+      return;
+    }
+    etat.guichets.splice(i, 1);
+    var nid = "g-" + g.id;
+    etat.dossiers.unshift({
+      id: nid, nom: g.quoi, montant: g.montant,
+      statut: "a-monter", tampon: { texte: "À monter", classe: "attente" },
+      meta: g.quand,
+      seq: [{ quand: "Aujourd'hui", quoi: "Ajouté à vos dossiers depuis la veille", fait: true },
+            { quand: g.quand.replace("Clôture", "Avant"), quoi: "Dépôt du dossier au guichet", fait: false }]
+    });
+    rendGuichets();
+    rendDossiers();
+    toast("<strong>" + g.quoi + "</strong> ajouté à vos dossiers.");
   }
 
   /* ============================================================
@@ -593,10 +617,10 @@
      ============================================================ */
 
   var TITRES = {
-    apercu: "Aperçu",
-    previsionnel: "Prévisionnel",
-    relances: "Relances",
-    echeances: "Échéances"
+    radar: "Radar",
+    simulateur: "Simulateur",
+    dossiers: "Dossiers",
+    guichets: "Guichets"
   };
 
   var barresPosees = false;
@@ -605,14 +629,14 @@
     if (barresPosees) return;
     barresPosees = true;
     requestAnimationFrame(function () {
-      document.querySelectorAll("#barres-tva .barre").forEach(function (b) {
+      document.querySelectorAll("#barres-guichets .barre").forEach(function (b) {
         b.style.height = b.getAttribute("data-h") + "%";
       });
     });
   }
 
   function montreVue(nom) {
-    if (!TITRES[nom]) nom = "apercu";
+    if (!TITRES[nom]) nom = "radar";
     document.querySelectorAll(".vue").forEach(function (v) {
       var active = v.id === "vue-" + nom;
       v.classList.toggle("active", active);
@@ -624,7 +648,7 @@
       else b.removeAttribute("aria-current");
     });
     document.getElementById("vue-titre").textContent = TITRES[nom];
-    if (nom === "echeances") poseBarres();
+    if (nom === "guichets") poseBarres();
     fermeDetail();
     if (location.hash !== "#" + nom) {
       try { history.replaceState(null, "", "#" + nom); } catch (e) {}
@@ -646,7 +670,7 @@
      GRAPHES + PÉRIODES + ENTITÉS
      ============================================================ */
 
-  var chartSolde = flowChart("chart-solde", {
+  var chartVersements = flowChart("chart-solde", {
     height: 230,
     hist: SERIES["6m"].valeurs.map(function (v) { return v * facteur(); }),
     labels: SERIES["6m"].labels
@@ -664,7 +688,7 @@
       c.setAttribute("aria-pressed", String(c.dataset.periode === nom));
     });
     var f = facteur();
-    chartSolde.setHist(SERIES[nom].valeurs.map(function (v) { return v * f; }), SERIES[nom].labels);
+    chartVersements.setHist(SERIES[nom].valeurs.map(function (v) { return v * f; }), SERIES[nom].labels);
     if (!silencieux) etiquettes(nom);
   }
 
@@ -698,105 +722,87 @@
       entite.classList.remove("open");
       entiteBtn.setAttribute("aria-expanded", "false");
       var f = facteur();
-      afficheMontant(document.getElementById("ticker-solde"), etat.solde * f);
-      afficheMontant(document.getElementById("kpi-solde"), etat.solde * f);
-      afficheMontant(document.getElementById("kpi-entrees"), etat.entrees30 * f);
-      rendComptes();
+      afficheMontant(document.getElementById("ticker-solde"), etat.detecte * f);
+      afficheMontant(document.getElementById("kpi-solde"), etat.detecte * f);
+      afficheMontant(document.getElementById("kpi-entrees"), etat.verse * f);
+      afficheMontant(document.getElementById("kpi-encaisse"), etat.verse * f);
       montrePeriode(etat.periode, true);
     });
   });
 
   /* ============================================================
-     PRÉVISIONNEL : curseurs + scénarios
+     SIMULATEUR : curseurs + profils
      ============================================================ */
 
-  var curseurDelai = document.getElementById("curseur-delai");
-  var curseurCa = document.getElementById("curseur-ca");
-  var sortieDelai = document.getElementById("sortie-delai");
-  var sortieCa = document.getElementById("sortie-ca");
+  var curseurEff = document.getElementById("curseur-eff");
+  var curseurRd = document.getElementById("curseur-rd");
+  var sortieEff = document.getElementById("sortie-eff");
+  var sortieRd = document.getElementById("sortie-rd");
   var verdict = document.getElementById("verdict-valeur");
   var alerteSeuil = document.getElementById("alerte-seuil");
-  var alerteTexte = document.getElementById("alerte-texte");
 
-  var bandePrudent = null, bandeOptimiste = null, chartPrev = null;
+  var chartSim = null;
 
-  function initPrev() {
-    bandePrudent = projection(PREV.presets.prudent.delai, PREV.presets.prudent.ca);
-    bandeOptimiste = projection(PREV.presets.optimiste.delai, PREV.presets.optimiste.ca);
-    chartPrev = flowChart("chart-prev", {
+  function initSim() {
+    var bas = projection(PREV.presets.artisan.eff, PREV.presets.artisan.rd);
+    var haut = projection(PREV.presets.industrie.eff, PREV.presets.industrie.rd);
+    chartSim = flowChart("chart-prev", {
       height: 300,
       hist: PREV.hist,
-      proj: projection(31, 2),
-      band: { low: bandePrudent, high: bandeOptimiste },
-      domain: [86000, 250000],
-      seuil: PREV.seuil,
+      proj: projection(PREV.presets.scaleup.eff, PREV.presets.scaleup.rd),
+      band: { low: bas, high: haut },
+      domain: [8000, 168000],
       labels: PREV.histLabels.concat(["Août", "Sept", "Oct"])
     });
   }
-  initPrev();
+  initSim();
 
-  var MOIS_PROJ = ["août", "septembre", "octobre"];
-
-  function recalculePrev() {
-    var delai = parseInt(curseurDelai.value, 10);
-    var ca = parseInt(curseurCa.value, 10);
-    sortieDelai.textContent = delai + " jours";
-    sortieCa.textContent = (ca > 0 ? "+" : "") + ca + " %";
-    var pts = projection(delai, ca);
-    chartPrev.setProjection(pts);
-    afficheMontant(verdict, pts[2]);
-
-    var idx = pts.findIndex(function (v) { return v < PREV.seuil; });
-    if (idx >= 0) {
-      var encours = etat.factures.filter(function (f) { return !f.payee; })
-        .reduce(function (s, f) { return s + f.montant; }, 0);
-      alerteTexte.innerHTML = "Passage sous votre seuil de " + euro.format(PREV.seuil) +
-        " prévu en " + MOIS_PROJ[idx] + ". Relancer " + euro.format(encours) +
-        " d'impayés redonnerait de la marge.";
-      alerteSeuil.classList.add("visible");
-    } else {
-      alerteSeuil.classList.remove("visible");
-    }
-
-    // Le scénario reste coché seulement s'il correspond aux curseurs
+  function recalculeSim() {
+    var eff = parseInt(curseurEff.value, 10);
+    var rd = parseInt(curseurRd.value, 10);
+    sortieEff.textContent = eff + (eff > 1 ? " salariés" : " salarié");
+    sortieRd.textContent = rd + " k€";
+    chartSim.setProjection(projection(eff, rd));
+    afficheMontant(verdict, eligible(eff, rd));
+    alerteSeuil.classList.toggle("visible", rd >= 250 || eff >= 90);
     document.querySelectorAll("[data-scenario]").forEach(function (s) {
       var p = PREV.presets[s.dataset.scenario];
-      s.setAttribute("aria-pressed", String(p.delai === delai && p.ca === ca));
+      s.setAttribute("aria-pressed", String(p.eff === eff && p.rd === rd));
     });
   }
 
-  curseurDelai.addEventListener("input", recalculePrev);
-  curseurCa.addEventListener("input", recalculePrev);
+  curseurEff.addEventListener("input", recalculeSim);
+  curseurRd.addEventListener("input", recalculeSim);
 
   document.querySelectorAll("[data-scenario]").forEach(function (s) {
     s.addEventListener("click", function () {
       var p = PREV.presets[s.dataset.scenario];
-      curseurDelai.value = p.delai;
-      curseurCa.value = p.ca;
-      recalculePrev();
+      curseurEff.value = p.eff;
+      curseurRd.value = p.rd;
+      recalculeSim();
     });
   });
 
   /* ============================================================
-     ÉCHÉANCES : interrupteur de provision
+     GUICHETS : interrupteur de veille
      ============================================================ */
 
-  var interrupteur = document.getElementById("interrupteur-provision");
-  var provisionNote = document.getElementById("provision-note");
+  var interrupteur = document.getElementById("interrupteur-veille");
+  var veilleNote = document.getElementById("veille-note");
 
   interrupteur.addEventListener("click", function () {
     var actif = interrupteur.getAttribute("aria-checked") !== "true";
     interrupteur.setAttribute("aria-checked", String(actif));
-    provisionNote.textContent = actif
-      ? "2 235 € mis de côté chaque lundi. Le 15 du mois, l'argent est déjà là."
-      : "Provision suspendue. Il faudra sortir la TVA d'un coup le 15 du mois.";
+    veilleNote.textContent = actif
+      ? "Nouveau guichet correspondant à votre profil : alerte sous 24 h."
+      : "Veille suspendue. Les nouveaux guichets ne seront plus signalés.";
     toast(actif
-      ? "<strong>Provision automatique</strong> réactivée."
-      : "<strong>Provision automatique</strong> suspendue.");
+      ? "<strong>Veille des guichets</strong> réactivée."
+      : "<strong>Veille des guichets</strong> suspendue.");
   });
 
   /* ============================================================
-     Clavier & démarrage
+     Divers & démarrage
      ============================================================ */
 
   document.addEventListener("keydown", function (e) {
@@ -804,28 +810,29 @@
   });
   document.getElementById("scrim").addEventListener("click", fermeDetail);
 
-  /* Synchronisation manuelle des comptes */
   var syncBtn = document.getElementById("sync-btn");
   if (syncBtn) {
     syncBtn.addEventListener("click", function () {
       syncBtn.classList.remove("tourne");
-      void syncBtn.offsetWidth; // relance l'animation
+      void syncBtn.offsetWidth;
       syncBtn.classList.add("tourne");
-      Object.keys(COMPTES).forEach(function (k) { COMPTES[k].maj = "à l'instant"; });
-      rendComptes();
-      document.querySelector(".sync-note").lastChild.textContent = " Synchronisé à l'instant";
-      toast("<strong>Comptes synchronisés.</strong> Soldes à jour.");
+      document.querySelector(".sync-note").lastChild.textContent = " Base à jour à l'instant";
+      majDetecte(2400);
+      etat.dispositifs.unshift({ nom: "Volontariat territorial", score: 82, montant: 2400 });
+      if (etat.dispositifs.length > 3) etat.dispositifs.pop();
+      rendDispositifs();
+      toast("<strong>Scan terminé.</strong> 1 nouveau dispositif : Volontariat territorial, 2&#8239;400&#8239;€.");
     });
   }
 
   if (reduceMotion.matches) poseBarres();
 
-  rendComptes();
-  rendLivre();
+  rendDispositifs();
+  rendJournal();
   rendVeille();
-  rendFactures();
+  rendDossiers();
   rendDetail();
-  rendEcheances();
-  recalculePrev();
-  montreVue((location.hash || "#apercu").replace("#", ""));
+  rendGuichets();
+  recalculeSim();
+  montreVue((location.hash || "#radar").replace("#", ""));
 })();

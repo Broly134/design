@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Affluent · Pilotage de trésorerie pour PME</title>
-  <meta name="description" content="Affluent connecte vos banques, projette votre trésorerie à 90 jours et relance vos impayés. Le pilotage de cash des PME françaises, sans tableur.">
-  <meta property="og:title" content="Affluent · La trésorerie, enfin limpide">
-  <meta property="og:description" content="Connexion bancaire en 4 minutes, prévisionnel à 90 jours, relances automatiques. Essai gratuit de 14 jours.">
+  <title>Manne · L'argent public que votre entreprise laisse filer</title>
+  <meta name="description" content="Manne scanne 2 300 dispositifs d'aides, de subventions et de crédits d'impôt, repère ce qui revient à votre entreprise et monte les dossiers. Vous encaissez.">
+  <meta property="og:title" content="Manne · L'État vous doit de l'argent">
+  <meta property="og:description" content="Scan d'éligibilité en 4 minutes, dossiers montés par des experts, payés au succès. Essai gratuit de 14 jours.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#F5F7F4">
-  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none" stroke="%2314614A" stroke-width="3" stroke-linecap="round"><path d="M5 6 C 11 8, 14 12, 16 17"/><path d="M16 4 C 16 9, 16 13, 16 17"/><path d="M27 6 C 21 8, 18 12, 16 17"/><path d="M16 17 L16 28"/></g></svg>'>
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%233DDC97"/><stop offset=".5" stop-color="%232BB3C0"/><stop offset="1" stop-color="%238B7CFF"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(%23g)"/><g fill="none" stroke="white" stroke-width="5.5" stroke-linecap="round"><path d="M15 17 C 24 20, 28 26, 32 34"/><path d="M32 14 C 32 22, 32 28, 32 34"/><path d="M49 17 C 40 20, 36 26, 32 34"/><path d="M32 34 L 32 50"/></g></svg>'>
   <script>
     (function () {
       var t = null;
-      try { t = localStorage.getItem("affluent-theme"); } catch (e) {}
+      try { t = localStorage.getItem("manne-theme"); } catch (e) {}
       if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       document.documentElement.setAttribute("data-theme", t);
     })();
   </script>
-  <link rel="preload" href="assets/fonts/bricolage-grotesque-500.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/hanken-grotesk-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/gabarito-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/figtree-300.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/fonts.css">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -54,16 +54,26 @@
   <header class="site-header" id="site-header">
     <div class="container">
       <nav class="nav" aria-label="Navigation principale">
-        <a class="brand" href="#" aria-label="Affluent, accueil">
-          <span class="brand-mark" aria-hidden="true">
-            <svg width="26" height="26" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
-              <path d="M5 6 C 11 8, 14 12, 16 17"/>
-              <path d="M16 4 C 16 9, 16 13, 16 17"/>
-              <path d="M27 6 C 21 8, 18 12, 16 17"/>
-              <path d="M16 17 L16 28"/>
+        <a class="brand" href="#" aria-label="Manne, accueil">
+          <span class="brand-logo" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 64 64">
+              <defs>
+                <linearGradient id="mg-nav" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#3DDC97"/>
+                  <stop offset="0.5" stop-color="#2BB3C0"/>
+                  <stop offset="1" stop-color="#8B7CFF"/>
+                </linearGradient>
+              </defs>
+              <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#mg-nav)"/>
+              <g fill="none" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round">
+                <path d="M15 17 C 24 20, 28 26, 32 34"/>
+                <path d="M32 14 C 32 22, 32 28, 32 34"/>
+                <path d="M49 17 C 40 20, 36 26, 32 34"/>
+                <path d="M32 34 L 32 50"/>
+              </g>
             </svg>
           </span>
-          Affluent
+          Manne
         </a>
         <ul class="nav-links">
           <li><a href="#produit">Produit</a></li>
@@ -78,7 +88,7 @@
             <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
           </button>
           <a class="nav-login" href="app.html">Se connecter</a>
-          <a class="btn btn-primary btn-sm" href="#tarifs">Essayer gratuitement</a>
+          <a class="btn btn-primary btn-sm" href="#tarifs">Scanner mon entreprise</a>
           <button class="menu-toggle" id="menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
             <svg class="icon i-list" aria-hidden="true"><use href="#i-list"/></svg>
             <svg class="icon i-x" aria-hidden="true"><use href="#i-x"/></svg>
@@ -97,7 +107,7 @@
       <li><a href="#faq">FAQ</a></li>
       <li><a href="app.html">Se connecter</a></li>
     </ul>
-    <a class="btn btn-primary" href="#tarifs">Essayer gratuitement</a>
+    <a class="btn btn-primary" href="#tarifs">Scanner mon entreprise</a>
   </div>
 
   <main id="contenu">
@@ -106,29 +116,53 @@
     <section class="hero">
       <svg class="hero-flow" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <defs>
-          <linearGradient id="flow-fade" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="currentColor" stop-opacity="0"/>
-            <stop offset="0.45" stop-color="currentColor" stop-opacity="0.1"/>
-            <stop offset="0.75" stop-color="currentColor" stop-opacity="0.8"/>
-            <stop offset="1" stop-color="currentColor" stop-opacity="0.35"/>
+          <linearGradient id="fg1" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#22B57B" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#22B57B" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#22B57B" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#22B57B" stop-opacity="0.4"/>
+          </linearGradient>
+          <linearGradient id="fg2" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#2BB3C0" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#2BB3C0" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#2BB3C0" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#2BB3C0" stop-opacity="0.4"/>
+          </linearGradient>
+          <linearGradient id="fg3" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#8B7CFF" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#8B7CFF" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#8B7CFF" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#8B7CFF" stop-opacity="0.4"/>
+          </linearGradient>
+          <linearGradient id="fg4" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#F08A3C" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#F08A3C" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#F08A3C" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#F08A3C" stop-opacity="0.4"/>
+          </linearGradient>
+          <linearGradient id="fg5" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#F05E7E" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#F05E7E" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#F05E7E" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#F05E7E" stop-opacity="0.4"/>
           </linearGradient>
         </defs>
-        <path d="M -20 80 C 200 120, 380 220, 620 330 S 900 356, 1020 352"/>
-        <path d="M -20 210 C 220 240, 420 280, 620 335 S 900 366, 1020 361"/>
-        <path d="M -20 360 C 220 360, 430 350, 620 340 S 900 375, 1020 370"/>
-        <path d="M -20 500 C 230 470, 430 400, 620 345 S 900 384, 1020 379"/>
-        <path d="M -20 640 C 240 580, 440 450, 620 350 S 900 393, 1020 388"/>
+        <path stroke="url(#fg1)" d="M -20 80 C 200 120, 380 220, 620 330 S 900 356, 1020 352"/>
+        <path stroke="url(#fg2)" d="M -20 210 C 220 240, 420 280, 620 335 S 900 366, 1020 361"/>
+        <path stroke="url(#fg3)" d="M -20 360 C 220 360, 430 350, 620 340 S 900 375, 1020 370"/>
+        <path stroke="url(#fg4)" d="M -20 500 C 230 470, 430 400, 620 345 S 900 384, 1020 379"/>
+        <path stroke="url(#fg5)" d="M -20 640 C 240 580, 440 450, 620 350 S 900 393, 1020 388"/>
       </svg>
 
       <div class="container hero-grid">
         <div class="hero-copy">
           <h1>
-            <span class="hl"><span class="hl-in">La trésorerie,</span></span>
-            <span class="hl"><span class="hl-in">enfin <em>limpide</em>.</span></span>
+            <span class="hl"><span class="hl-in">L’État vous doit</span></span>
+            <span class="hl"><span class="hl-in"><em>de l’argent</em>.</span></span>
           </h1>
-          <p class="hero-sub rise" style="--d: 0.45s">Affluent connecte vos banques, projette votre cash à 90&nbsp;jours et relance vos impayés. Sans tableur, sans surprise.</p>
+          <p class="hero-sub rise" style="--d: 0.45s">Manne scanne 2&#8239;300 dispositifs d’aides, de subventions et crédits d’impôt, repère ce qui vous revient et monte les dossiers.</p>
           <div class="hero-ctas rise" style="--d: 0.6s">
-            <a class="btn btn-primary btn-lg magnetic" href="#tarifs">Essayer gratuitement
+            <a class="btn btn-primary btn-lg magnetic" href="#tarifs">Scanner mon entreprise
               <span class="btn-orb" aria-hidden="true"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
             </a>
             <a class="btn btn-ghost btn-lg" href="#produit">
@@ -141,14 +175,14 @@
         <div class="demo-wrap" data-reveal style="--i:2">
           <div class="demo-card bezel">
             <div class="demo-head">
-              <span class="demo-title">Trésorerie consolidée</span>
-              <span class="chip">6&nbsp;derniers mois</span>
+              <span class="demo-title">Aides détectées</span>
+              <span class="chip">+3 cette semaine</span>
             </div>
             <div class="demo-kpi">
-              <span class="demo-value" id="hero-value" data-count-to="184320">184&#8239;320&#8239;€</span>
+              <span class="demo-value" id="hero-value" data-count-to="87400">87&#8239;400&#8239;€</span>
               <span class="delta up">
                 <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
-                +12,4&#8239;% vs juin
+                +18&#8239;000&#8239;€ ce mois
               </span>
             </div>
             <div class="chart" id="chart-hero">
@@ -159,49 +193,49 @@
             </div>
             <div class="demo-rows">
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
-                <span class="demo-row-name">Qonto</span>
-                <span class="demo-row-val">96&#8239;480&#8239;€</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+                <span class="demo-row-name">Crédit d’impôt recherche</span>
+                <span class="demo-row-val">31&#8239;200&#8239;€</span>
               </div>
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
-                <span class="demo-row-name">BNP Paribas</span>
-                <span class="demo-row-val">61&#8239;210&#8239;€</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+                <span class="demo-row-name">Décarbonation ADEME</span>
+                <span class="demo-row-val">24&#8239;000&#8239;€</span>
               </div>
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
-                <span class="demo-row-name">Crédit Agricole</span>
-                <span class="demo-row-val">26&#8239;630&#8239;€</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+                <span class="demo-row-name">Aide à l’alternance</span>
+                <span class="demo-row-val">6&#8239;000&#8239;€</span>
               </div>
             </div>
             <div class="demo-next">
-              <p class="demo-next-label">À venir</p>
+              <p class="demo-next-label">Guichets qui ferment</p>
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-arrow-down-right"/></svg>
-                <span class="demo-row-name">URSSAF</span>
-                <span class="demo-row-val">12&#8239;380&#8239;€</span>
-                <span class="demo-row-date">15 juil.</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
+                <span class="demo-row-name">France Num</span>
+                <span class="demo-row-val">5&#8239;000&#8239;€</span>
+                <span class="demo-row-date">30 juil.</span>
               </div>
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-arrow-down-right"/></svg>
-                <span class="demo-row-name">TVA CA3</span>
-                <span class="demo-row-val">8&#8239;940&#8239;€</span>
-                <span class="demo-row-date">15 août</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
+                <span class="demo-row-name">Décarbonation ADEME</span>
+                <span class="demo-row-val">24&#8239;000&#8239;€</span>
+                <span class="demo-row-date">12 sept.</span>
               </div>
             </div>
           </div>
           <div class="demo-toast" role="status">
             <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
-            <span><strong>Facture encaissée.</strong> Novelli &amp; Associés a réglé 4&#8239;820&#8239;€.</span>
+            <span><strong>Nouveau dispositif détecté.</strong> France Relance Industrie&nbsp;: 18&#8239;000&#8239;€ potentiels.</span>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ================= LOGOS ================= -->
-    <section class="logos" aria-label="Ils utilisent Affluent">
+    <section class="logos" aria-label="Ils utilisent Manne">
       <div class="container">
-        <p class="logos-title">Ils pilotent leur cash avec Affluent</p>
+        <p class="logos-title">Ils encaissent avec Manne</p>
       </div>
       <div class="marquee">
         <div class="marquee-track" id="marquee-track">
@@ -242,8 +276,8 @@
       <div class="container">
         <div class="section-head" data-reveal>
           <span class="eyebrow">Démo interactive</span>
-          <h2>Votre cash, en clair, à 90&nbsp;jours.</h2>
-          <p>Cliquez, tout est réel. Trois onglets suffisent à piloter l’essentiel&nbsp;: le prévisionnel, les impayés, les échéances.</p>
+          <h2>Votre argent public, en clair.</h2>
+          <p>Cliquez, tout est réel&nbsp;: simulez votre éligibilité, suivez vos dossiers, surveillez les guichets qui ferment.</p>
           <a class="lien-app" href="app.html">Ouvrir l’application complète
             <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
           </a>
@@ -251,28 +285,28 @@
 
         <div class="product-panel bezel" data-reveal style="--bez-r: 24px">
           <div class="tabs" role="tablist" aria-label="Fonctions principales">
-            <button class="tab" id="tab-previsionnel" role="tab" aria-selected="true" aria-controls="panel-previsionnel">Prévisionnel</button>
-            <button class="tab" id="tab-relances" role="tab" aria-selected="false" aria-controls="panel-relances" tabindex="-1">Relances</button>
-            <button class="tab" id="tab-tva" role="tab" aria-selected="false" aria-controls="panel-tva" tabindex="-1">TVA &amp; échéances</button>
+            <button class="tab" id="tab-previsionnel" role="tab" aria-selected="true" aria-controls="panel-previsionnel">Simulation</button>
+            <button class="tab" id="tab-relances" role="tab" aria-selected="false" aria-controls="panel-relances" tabindex="-1">Dossiers</button>
+            <button class="tab" id="tab-tva" role="tab" aria-selected="false" aria-controls="panel-tva" tabindex="-1">Guichets</button>
           </div>
 
-          <!-- Panneau 1 : prévisionnel -->
+          <!-- Panneau 1 : simulation -->
           <div class="panel active" id="panel-previsionnel" role="tabpanel" aria-labelledby="tab-previsionnel" tabindex="0">
             <div class="panel-copy">
-              <h3>Trois scénarios, une décision</h3>
-              <p>Affluent projette votre solde à partir des encaissements attendus, des charges récurrentes et de votre saisonnalité. Changez d’hypothèse, la courbe suit.</p>
-              <div class="scenarios" role="group" aria-label="Choix du scénario">
-                <button class="scenario" data-scenario="prudent" aria-pressed="false">Prudent</button>
-                <button class="scenario" data-scenario="neutre" aria-pressed="true">Neutre</button>
-                <button class="scenario" data-scenario="optimiste" aria-pressed="false">Optimiste</button>
+              <h3>Trois profils, un montant</h3>
+              <p>Le moteur croise votre secteur, votre effectif et vos projets avec les critères de 2&#8239;300 dispositifs. Changez de profil, le total suit.</p>
+              <div class="scenarios" role="group" aria-label="Choix du profil">
+                <button class="scenario" data-scenario="artisan" aria-pressed="false">Artisan</button>
+                <button class="scenario" data-scenario="scaleup" aria-pressed="true">Scale-up</button>
+                <button class="scenario" data-scenario="industrie" aria-pressed="false">Industrie</button>
               </div>
               <div class="proj-stat">
-                <p class="proj-stat-label">Solde projeté au 30 septembre</p>
-                <p class="proj-stat-value" id="proj-value">191&#8239;400&#8239;€</p>
+                <p class="proj-stat-label">Récupérable d’ici octobre</p>
+                <p class="proj-stat-value" id="proj-value">83&#8239;600&#8239;€</p>
               </div>
               <div class="proj-alert" id="proj-alert" role="status">
                 <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                <span>Passage sous 20&#8239;000&#8239;€ prévu le 12 septembre. Affluent suggère de relancer 14&#8239;750&#8239;€ d’impayés.</span>
+                <span>Le guichet Décarbonation ADEME ferme le 12 septembre. 24&#8239;000&#8239;€ à la clé pour ce profil.</span>
               </div>
             </div>
             <div class="big-chart">
@@ -282,84 +316,84 @@
                   <span>Mars</span><span>Avr</span><span>Mai</span><span>Juin</span><span>Juil</span><span>Août</span><span>Sept</span><span>Oct</span>
                 </div>
               </div>
-              <div class="legend-note">
-                <span><span class="legend-swatch"></span> Réalisé</span>
+              <div class="legende-note legend-note">
+                <span><span class="legend-swatch"></span> Versé</span>
                 <span><span class="legend-swatch dashed"></span> Projeté</span>
               </div>
             </div>
           </div>
 
-          <!-- Panneau 2 : relances -->
+          <!-- Panneau 2 : dossiers -->
           <div class="panel" id="panel-relances" role="tabpanel" aria-labelledby="tab-relances" tabindex="0" hidden>
             <div class="panel-copy">
-              <h3>Les impayés se relancent seuls</h3>
-              <p>Chaque facture en retard entre dans une séquence à votre ton. Les relances partent au bon moment et s’arrêtent dès l’encaissement.</p>
+              <h3>Des dossiers montés pour vous</h3>
+              <p>Nos chargés de dossiers remplissent, déposent et relancent l’instructeur. Vous signez, vous encaissez.</p>
               <div class="mini-stat">
-                <p class="mini-stat-value">13&nbsp;jours</p>
-                <p class="mini-stat-label">de délai moyen de paiement chez nos clients, au lieu de 31 avant Affluent.</p>
+                <p class="mini-stat-value">84&#8239;%</p>
+                <p class="mini-stat-label">de dossiers acceptés quand Manne les monte, contre 51&#8239;% en moyenne en autonomie.</p>
               </div>
               <div class="seq-chips">
-                <span class="chip">Relance douce</span>
-                <span class="chip">Relance ferme</span>
-                <span class="chip">Mise en demeure</span>
+                <span class="chip">Pièces pré-remplies</span>
+                <span class="chip">Relances instructeur</span>
+                <span class="chip">Suivi temps réel</span>
               </div>
             </div>
             <div>
               <div class="invoice-list">
                 <div class="invoice">
-                  <span class="invoice-name">Novelli &amp; Associés</span>
-                  <span class="invoice-amount">4&#8239;820&#8239;€</span>
-                  <span class="invoice-late">J+18</span>
-                  <span class="status sent">Relancée ce matin</span>
+                  <span class="invoice-name">Crédit d’impôt recherche 2026</span>
+                  <span class="invoice-amount">31&#8239;200&#8239;€</span>
+                  <span class="invoice-late">J+12</span>
+                  <span class="status planned">En instruction</span>
                 </div>
                 <div class="invoice">
-                  <span class="invoice-name">Groupe Ardoise</span>
-                  <span class="invoice-amount">12&#8239;400&#8239;€</span>
-                  <span class="invoice-late">J+9</span>
-                  <span class="status planned">Programmée demain</span>
+                  <span class="invoice-name">France Num</span>
+                  <span class="invoice-amount">5&#8239;000&#8239;€</span>
+                  <span class="invoice-late">Versé</span>
+                  <span class="status paid">Payé le 10 juil.</span>
                 </div>
                 <div class="invoice">
-                  <span class="invoice-name">Studio Palombe</span>
-                  <span class="invoice-amount">2&#8239;310&#8239;€</span>
+                  <span class="invoice-name">Aide à l’alternance</span>
+                  <span class="invoice-amount">6&#8239;000&#8239;€</span>
                   <span class="invoice-late">J+4</span>
-                  <span class="status sent">Première relance envoyée</span>
+                  <span class="status sent">Déposé</span>
                 </div>
                 <div class="invoice">
-                  <span class="invoice-name">Maison Litt</span>
-                  <span class="invoice-amount">7&#8239;650&#8239;€</span>
-                  <span class="invoice-late">Soldée</span>
-                  <span class="status paid">Payée après relance</span>
+                  <span class="invoice-name">Décarbonation ADEME</span>
+                  <span class="invoice-amount">24&#8239;000&#8239;€</span>
+                  <span class="invoice-late">12 sept.</span>
+                  <span class="status sent">À signer</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Panneau 3 : TVA -->
+          <!-- Panneau 3 : guichets -->
           <div class="panel" id="panel-tva" role="tabpanel" aria-labelledby="tab-tva" tabindex="0" hidden>
             <div class="panel-copy">
-              <h3>La TVA cesse d’être une embuscade</h3>
-              <p>Affluent calcule la TVA due au fil de l’eau et la met de côté chaque semaine. Le 15 du mois, l’argent est déjà là.</p>
+              <h3>Les dates limites ne surprennent plus</h3>
+              <p>Chaque dispositif a sa fenêtre. Manne surveille les clôtures et vous alerte six semaines avant, pas après.</p>
               <div class="due-card">
-                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+                <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
                 <div>
-                  <p class="due-title">TVA CA3 de juillet</p>
-                  <p class="due-sub">Prélèvement le 15 août</p>
+                  <p class="due-title">Décarbonation ADEME</p>
+                  <p class="due-sub">Clôture le 12 septembre</p>
                 </div>
-                <span class="due-amount">8&#8239;940&#8239;€</span>
+                <span class="due-amount">24&#8239;000&#8239;€</span>
               </div>
               <div class="switch-row">
                 <button class="switch" id="provision-switch" role="switch" aria-checked="true" aria-labelledby="provision-label"></button>
-                <span id="provision-label">Provision automatique hebdomadaire</span>
+                <span id="provision-label">Veille automatique des guichets</span>
               </div>
             </div>
             <div>
-              <div class="bars" id="tva-bars" aria-label="Provisions de TVA des six derniers mois">
-                <div class="bar-col"><div class="bar" data-h="70"><span class="bar-value">6&#8239;240&#8239;€</span></div><span class="bar-label">Fév</span></div>
-                <div class="bar-col"><div class="bar" data-h="66"><span class="bar-value">5&#8239;910&#8239;€</span></div><span class="bar-label">Mars</span></div>
-                <div class="bar-col"><div class="bar" data-h="83"><span class="bar-value">7&#8239;430&#8239;€</span></div><span class="bar-label">Avr</span></div>
-                <div class="bar-col"><div class="bar" data-h="77"><span class="bar-value">6&#8239;870&#8239;€</span></div><span class="bar-label">Mai</span></div>
-                <div class="bar-col"><div class="bar" data-h="91"><span class="bar-value">8&#8239;120&#8239;€</span></div><span class="bar-label">Juin</span></div>
-                <div class="bar-col"><div class="bar" data-h="100"><span class="bar-value">8&#8239;940&#8239;€</span></div><span class="bar-label">Juil</span></div>
+              <div class="bars" id="tva-bars" aria-label="Montants dont le guichet ferme, par mois">
+                <div class="bar-col"><div class="bar" data-h="24"><span class="bar-value">12&#8239;400&#8239;€</span></div><span class="bar-label">Juil</span></div>
+                <div class="bar-col"><div class="bar" data-h="47"><span class="bar-value">24&#8239;000&#8239;€</span></div><span class="bar-label">Août</span></div>
+                <div class="bar-col"><div class="bar" data-h="100"><span class="bar-value">51&#8239;000&#8239;€</span></div><span class="bar-label">Sept</span></div>
+                <div class="bar-col"><div class="bar" data-h="36"><span class="bar-value">18&#8239;600&#8239;€</span></div><span class="bar-label">Oct</span></div>
+                <div class="bar-col"><div class="bar" data-h="19"><span class="bar-value">9&#8239;800&#8239;€</span></div><span class="bar-label">Nov</span></div>
+                <div class="bar-col"><div class="bar" data-h="62"><span class="bar-value">31&#8239;500&#8239;€</span></div><span class="bar-label">Déc</span></div>
               </div>
             </div>
           </div>
@@ -372,75 +406,84 @@
       <div class="container">
         <div class="section-head" data-reveal>
           <h2>Tout ce qui compte, rien qui distrait.</h2>
-          <p>Cinq briques pensées pour les dirigeants de PME, pas pour les contrôleurs de gestion de multinationales.</p>
+          <p>Cinq briques pensées pour les dirigeants qui veulent l’argent, pas la paperasse.</p>
         </div>
 
         <div class="bento">
           <article class="cell cell-sync" data-reveal>
+            <div class="cell-icon" aria-hidden="true">
+              <svg class="icon" aria-hidden="true"><use href="#i-arrows-clockwise"/></svg>
+            </div>
             <div class="sync-visual" aria-hidden="true">
               <div class="sync-line">
                 <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
-                Qonto <span class="val">96&#8239;480&#8239;€</span>
+                Europe et État <span class="val">1&#8239;462 dispositifs</span>
               </div>
               <div class="sync-line">
-                <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
-                BNP Paribas <span class="val">61&#8239;210&#8239;€</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-buildings"/></svg>
+                Régions et métropoles <span class="val">714 dispositifs</span>
               </div>
               <div class="sync-line">
-                <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
-                Crédit Agricole <span class="val">26&#8239;630&#8239;€</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+                BPI, ADEME, URSSAF <span class="val">164 dispositifs</span>
               </div>
-              <span class="sync-status"><span class="pulse"></span> Synchronisé il y a 4&nbsp;minutes</span>
+              <span class="sync-status"><span class="pulse"></span> Base mise à jour il y a 2&nbsp;heures</span>
             </div>
-            <h3>Synchronisation bancaire continue</h3>
-            <p>Plus de 300 banques françaises et européennes, connectées en lecture seule via DSP2. Vos soldes se rafraîchissent toutes les quatre heures.</p>
+            <h3>Veille sur 2&#8239;300 dispositifs</h3>
+            <p>Chaque guichet est suivi, chaque changement de critère détecté. Quand un dispositif s’ouvre pour votre profil, vous le savez le jour même.</p>
           </article>
 
           <article class="cell cell-secure" data-reveal style="--i:1">
             <div class="cell-icon" aria-hidden="true">
               <svg class="icon" aria-hidden="true"><use href="#i-shield-check"/></svg>
             </div>
-            <h3>Vos données restent vos données</h3>
-            <p>Chiffrement de bout en bout, accès strictement en lecture. Jamais revendues, jamais partagées.</p>
+            <h3>Vos données restent vôtres</h3>
+            <p>Votre profil sert au scan, à rien d’autre. Jamais revendu, jamais partagé avec les administrations sans votre accord.</p>
             <div class="badge-row">
-              <span class="chip">DSP2</span>
-              <span class="chip">AES-256</span>
+              <span class="chip">RGPD</span>
               <span class="chip">Hébergé en UE</span>
+              <span class="chip">Chiffré</span>
             </div>
           </article>
 
           <article class="cell cell-multi" data-reveal>
             <img class="cell-bg" src="assets/img/bento-vallee.jpg" alt="" loading="lazy" width="900" height="1100">
-            <h3>Multi-entités, vision unique</h3>
-            <p>Filiales, holding, SCI&nbsp;: tous vos flux convergent dans un seul tableau consolidé.</p>
+            <h3>Multi-entités, vision groupe</h3>
+            <p>Filiales, holding&nbsp;: les aides se cumulent et Manne consolide les plafonds de minimis.</p>
           </article>
 
           <article class="cell cell-alerts" data-reveal style="--i:1">
+            <div class="cell-icon" aria-hidden="true">
+              <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
+            </div>
             <div class="alert-stack" aria-hidden="true">
               <div class="alert-item">
                 <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                Creux prévu le 12 sept.
-              </div>
-              <div class="alert-item">
-                <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
-                Facture Novelli encaissée
+                ADEME ferme dans 6 sem.
               </div>
               <div class="alert-item">
                 <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-                TVA provisionnée
+                CIR&nbsp;: pièce manquante
+              </div>
+              <div class="alert-item">
+                <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+                5&#8239;000&#8239;€ versés
               </div>
             </div>
-            <h3>Des alertes qui précèdent les ennuis</h3>
-            <p>Découvert probable, retard client, échéance sociale&nbsp;: prévenu avant, pas après.</p>
+            <h3>Alertes avant la clôture</h3>
+            <p>Guichet qui ferme, pièce qui manque, versement qui arrive&nbsp;: prévenu avant, pas après.</p>
           </article>
 
           <article class="cell cell-expert" data-reveal style="--i:2">
-            <div class="expert-visual" aria-hidden="true">
-              <span class="avatar avatar-b">EC</span>
-              <span class="chip">Accès invité gratuit</span>
+            <div class="cell-icon" aria-hidden="true">
+              <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
             </div>
-            <h3>Votre expert-comptable à bord</h3>
-            <p>Un accès dédié en lecture et l’export FEC en un clic. Fini les allers-retours de fichiers.</p>
+            <div class="expert-visual" aria-hidden="true">
+              <span class="avatar avatar-b">CD</span>
+              <span class="chip">8&#8239;% au succès</span>
+            </div>
+            <h3>Un expert payé au résultat</h3>
+            <p>Un chargé de dossiers dédié, rémunéré comme nous&nbsp;: seulement quand l’argent arrive sur votre compte.</p>
           </article>
         </div>
       </div>
@@ -450,38 +493,38 @@
     <section class="section" id="methode">
       <div class="container methode-grid">
         <div class="methode-intro" data-reveal>
-          <h2>Trois gestes, zéro tableur.</h2>
-          <p>Affluent remplace la collecte, la saisie et les formules fragiles. Il ne vous reste que les décisions.</p>
+          <h2>Trois gestes, zéro paperasse.</h2>
+          <p>Manne remplace la veille, les formulaires et les relances. Il ne vous reste que la signature.</p>
         </div>
         <div class="steps">
           <div class="step" data-reveal>
             <div class="step-icon" aria-hidden="true">
-              <svg class="icon" aria-hidden="true"><use href="#i-plugs-connected"/></svg>
+              <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
             </div>
             <div>
-              <h3>Connectez</h3>
-              <p>Vos banques se synchronisent en lecture seule, sans mandat ni RIB à envoyer. Quatre minutes, montre en main.</p>
-              <p class="step-meta">Historique de 12 mois importé automatiquement</p>
+              <h3>Scannez</h3>
+              <p>Quatre minutes pour décrire votre activité. Le moteur fait le tri dans 2&#8239;300 dispositifs et affiche votre montant.</p>
+              <p class="step-meta">Score d'éligibilité expliqué, critère par critère</p>
             </div>
           </div>
           <div class="step" data-reveal style="--i:1">
             <div class="step-icon" aria-hidden="true">
-              <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
+              <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
             </div>
             <div>
-              <h3>Pilotez</h3>
-              <p>Chaque mouvement est catégorisé tout seul. Solde consolidé, marge, impayés&nbsp;: tout est à jour, en permanence.</p>
-              <p class="step-meta">Catégorisation fiable dès la première heure</p>
+              <h3>Choisissez</h3>
+              <p>Chaque aide est classée par montant, effort et délai de versement. Vous décidez en connaissance de cause.</p>
+              <p class="step-meta">Montant, effort et délai affichés avant de démarrer</p>
             </div>
           </div>
           <div class="step" data-reveal style="--i:2">
             <div class="step-icon" aria-hidden="true">
-              <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
+              <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
             </div>
             <div>
-              <h3>Anticipez</h3>
-              <p>Trois scénarios projettent votre cash à 90&nbsp;jours. Vous êtes alerté six semaines avant le creux, jamais après.</p>
-              <p class="step-meta">Alertes par courriel, mobile ou Slack</p>
+              <h3>Encaissez</h3>
+              <p>Manne monte le dossier, relance l’instructeur et suit le versement jusqu’à votre compte en banque.</p>
+              <p class="step-meta">Vous ne payez le succès que si l'argent arrive</p>
             </div>
           </div>
         </div>
@@ -493,37 +536,37 @@
       <div class="container">
         <div class="section-head" data-reveal>
           <span class="eyebrow">Clients</span>
-          <h2>Des dirigeants qui dorment mieux.</h2>
+          <h2>Des dirigeants qui ont réclamé leur dû.</h2>
         </div>
         <div class="quotes-grid">
           <figure class="quote-featured bezel" data-reveal>
-            <blockquote>«&nbsp;Nous sommes passés de trois tableurs à un écran unique. Le prévisionnel m’a évité deux découverts cette année.&nbsp;»</blockquote>
+            <blockquote>«&nbsp;Nous avons récupéré 64&#8239;000&#8239;€ la première année, dont un crédit d’impôt que notre comptable pensait hors de portée.&nbsp;»</blockquote>
             <figcaption class="quote-author">
-              <span class="avatar avatar-a" aria-hidden="true">ML</span>
+              <span class="avatar avatar-a" aria-hidden="true">EV</span>
               <span>
-                <span class="name">Margaux Lelièvre</span><br>
-                <span class="role">Directrice financière, Maison Bocage</span>
+                <span class="name">Élodie Vasseur</span><br>
+                <span class="role">Directrice générale, Maison Bocage</span>
               </span>
             </figcaption>
           </figure>
           <div class="quote-side">
             <figure class="quote-card" data-reveal style="--i:1">
-              <blockquote>«&nbsp;Les relances automatiques ont ramené nos délais de paiement de 31 à 13&nbsp;jours. Sans fâcher personne.&nbsp;»</blockquote>
+              <blockquote>«&nbsp;Le dossier ADEME est parti en trois jours. Seule, j’y aurais passé un mois, et je l’aurais sans doute raté.&nbsp;»</blockquote>
+              <figcaption class="quote-author">
+                <span class="avatar avatar-b" aria-hidden="true">IR</span>
+                <span>
+                  <span class="name">Inès Rocher</span><br>
+                  <span class="role">Gérante, Verger &amp; Fils</span>
+                </span>
+              </figcaption>
+            </figure>
+            <figure class="quote-card" data-reveal style="--i:2">
+              <blockquote>«&nbsp;On payait un cabinet 4&#8239;000&#8239;€ par dossier. Manne se paie toute seule, au succès.&nbsp;»</blockquote>
               <figcaption class="quote-author">
                 <span class="avatar avatar-c" aria-hidden="true">TS</span>
                 <span>
                   <span class="name">Thibault Séguier</span><br>
                   <span class="role">Cofondateur, Atelier Nord</span>
-                </span>
-              </figcaption>
-            </figure>
-            <figure class="quote-card" data-reveal style="--i:2">
-              <blockquote>«&nbsp;Je vois la TVA arriver douze semaines avant l’échéance. Je dors mieux, c’est aussi simple que ça.&nbsp;»</blockquote>
-              <figcaption class="quote-author">
-                <span class="avatar avatar-b" aria-hidden="true">AC</span>
-                <span>
-                  <span class="name">Anne Casteran</span><br>
-                  <span class="role">Gérante, Verger &amp; Fils</span>
                 </span>
               </figcaption>
             </figure>
@@ -536,16 +579,16 @@
     <section class="stats">
       <div class="container stats-grid">
         <div class="stat" data-reveal>
-          <p class="stat-value"><span data-count-to="1.2" data-decimals="1">1,2</span>&#8239;Md€</p>
-          <p class="stat-label">de flux suivis chaque année</p>
+          <p class="stat-value"><span data-count-to="84">84</span>&#8239;M€</p>
+          <p class="stat-label">récupérés pour nos clients</p>
         </div>
         <div class="stat" data-reveal style="--i:1">
-          <p class="stat-value"><span data-count-to="4216">4&#8239;216</span></p>
-          <p class="stat-label">entreprises pilotées avec Affluent</p>
+          <p class="stat-value"><span data-count-to="2340">2&#8239;340</span></p>
+          <p class="stat-label">dispositifs suivis en continu</p>
         </div>
         <div class="stat" data-reveal style="--i:2">
-          <p class="stat-value"><span data-count-to="38">38</span>&#8239;min</p>
-          <p class="stat-label">gagnées chaque jour en moyenne</p>
+          <p class="stat-value"><span data-count-to="11700">11&#8239;700</span>&#8239;€</p>
+          <p class="stat-label">de versement médian par dossier</p>
         </div>
         <div class="stat" data-reveal style="--i:3">
           <p class="stat-value"><span data-count-to="4.9" data-decimals="1">4,9</span>/5</p>
@@ -558,8 +601,8 @@
     <section class="section" id="tarifs">
       <div class="container">
         <div class="section-head pricing-head" data-reveal>
-          <h2>Un prix simple, qui se rembourse vite.</h2>
-          <p>Quatorze jours d’essai complet sur tous les plans, sans carte bancaire.</p>
+          <h2>Un abonnement qui se rembourse au premier dossier.</h2>
+          <p>Quatorze jours d’essai complet, scan compris, sans carte bancaire.</p>
           <div class="billing-toggle" role="group" aria-label="Périodicité de facturation">
             <button id="bill-monthly" aria-pressed="false">Mensuel</button>
             <button id="bill-yearly" aria-pressed="true"><span class="chip">&#8722;20&#8239;%</span>Annuel</button>
@@ -568,62 +611,62 @@
 
         <div class="plans">
           <article class="plan" data-reveal>
-            <h3 class="plan-name">Indépendant</h3>
-            <p class="plan-for">Freelances et très petites structures</p>
+            <h3 class="plan-name">Radar</h3>
+            <p class="plan-for">Indépendants et TPE</p>
             <div class="plan-price">
-              <span class="plan-amount" data-monthly="29" data-yearly="23">23</span>
+              <span class="plan-amount" data-monthly="39" data-yearly="31">31</span>
               <span class="plan-period">€&#8239;HT / mois</span>
             </div>
-            <p class="plan-note" data-note-yearly="Facturé 276&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 276&#8239;€ par an</p>
+            <p class="plan-note" data-note-yearly="Facturé 372&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 372&#8239;€ par an</p>
             <ul>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 1 entité, 2 comptes bancaires</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Prévisionnel à 30 jours</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Relances manuelles en un clic</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Export comptable mensuel</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Scan complet et score détaillé</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Alertes de guichets</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 1 entité</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Dossiers en autonomie guidée</li>
             </ul>
-            <a class="btn btn-ghost" href="#">Essayer gratuitement</a>
+            <a class="btn btn-ghost" href="app.html">Scanner mon entreprise</a>
           </article>
 
           <article class="plan plan-hot bezel" data-reveal style="--i:1">
-            <span class="plan-badge">Le plus choisi</span>
-            <h3 class="plan-name">PME</h3>
-            <p class="plan-for">De 5 à 100 salariés</p>
+            <span class="plan-badge">Le plus rentable</span>
+            <h3 class="plan-name">Pilote</h3>
+            <p class="plan-for">PME de 5 à 100 salariés</p>
             <div class="plan-price">
-              <span class="plan-amount" data-monthly="79" data-yearly="63">63</span>
+              <span class="plan-amount" data-monthly="119" data-yearly="95">95</span>
               <span class="plan-period">€&#8239;HT / mois</span>
             </div>
-            <p class="plan-note" data-note-yearly="Facturé 756&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 756&#8239;€ par an</p>
+            <p class="plan-note" data-note-yearly="Facturé 1&#8239;140&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 1&#8239;140&#8239;€ par an</p>
             <ul>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Dossiers montés par nos experts</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 3 dossiers inclus par an</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 8&#8239;% au succès au-delà</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Relances instructeur</li>
               <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 3 entités consolidées</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Comptes bancaires illimités</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Prévisionnel 90 jours et scénarios</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Relances automatiques</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> TVA et échéances sociales</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Accès expert-comptable</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Chargé de dossiers dédié</li>
             </ul>
-            <a class="btn btn-primary" href="#">Essayer gratuitement</a>
+            <a class="btn btn-primary" href="app.html">Scanner mon entreprise</a>
           </article>
 
           <article class="plan" data-reveal style="--i:2">
-            <h3 class="plan-name">Groupe</h3>
-            <p class="plan-for">Multi-sociétés et holdings</p>
+            <h3 class="plan-name">Cabinet</h3>
+            <p class="plan-for">Groupes et experts-comptables</p>
             <div class="plan-price">
-              <span class="plan-amount" data-monthly="189" data-yearly="151">151</span>
+              <span class="plan-amount" data-monthly="290" data-yearly="232">232</span>
               <span class="plan-period">€&#8239;HT / mois</span>
             </div>
-            <p class="plan-note" data-note-yearly="Facturé 1&#8239;812&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 1&#8239;812&#8239;€ par an</p>
+            <p class="plan-note" data-note-yearly="Facturé 2&#8239;784&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 2&#8239;784&#8239;€ par an</p>
             <ul>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Dossiers illimités</li>
               <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Entités illimitées</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Consolidation multi-devises</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> SSO et rôles avancés</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> API et exports programmés</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Accompagnement dédié</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> API et exports</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Marque blanche</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Revue trimestrielle dédiée</li>
             </ul>
             <a class="btn btn-ghost" href="#">Parler à l’équipe</a>
           </article>
         </div>
 
-        <p class="pricing-foot">Sans engagement. Vos données restent exportables à tout moment, même après résiliation.</p>
+        <p class="pricing-foot">Sans engagement. Le succès n’est facturé qu’après versement effectif sur votre compte.</p>
       </div>
     </section>
 
@@ -636,45 +679,45 @@
         <div class="faq-wrap" data-reveal>
           <details class="faq-item">
             <summary>
-              Mes données bancaires sont-elles en sécurité&nbsp;?
+              Comment le score d’éligibilité est-il calculé&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Oui. La connexion passe par un agrégateur agréé par l’ACPR, en lecture seule&nbsp;: personne ne peut initier un paiement depuis Affluent. Les données sont chiffrées en AES-256 et hébergées en Union européenne.</p>
+            <p class="faq-body">Le moteur compare votre profil aux critères officiels de chaque dispositif&nbsp;: secteur, effectif, ancienneté, localisation, nature des projets. Chaque score est expliqué critère par critère, avec ce qui manque pour devenir éligible.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Combien de temps prend la mise en place&nbsp;?
+              Que veut dire «&nbsp;8&#8239;% au succès&nbsp;»&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Quatre minutes pour connecter vos comptes. Affluent importe ensuite douze mois d’historique et catégorise tout automatiquement. Votre premier prévisionnel est prêt dans l’heure.</p>
+            <p class="faq-body">Aucune avance, aucun forfait caché. La commission n’est prélevée qu’après le versement effectif de l’aide sur votre compte. Dossier refusé, rien à payer&nbsp;: nous portons le risque avec vous.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Puis-je inviter mon expert-comptable&nbsp;?
+              Les aides sont-elles cumulables&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Oui, gratuitement et sans limite. Il dispose d’un accès en lecture, peut annoter les mouvements et exporter le FEC ou des extraits au format de son outil de production.</p>
+            <p class="faq-body">Souvent, dans la limite des plafonds européens dits de minimis. Manne suit vos cumuls en temps réel, y compris entre entités d’un même groupe, pour rester dans les clous sans laisser d’argent sur la table.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Quelles banques sont compatibles&nbsp;?
+              Et si mon dossier est refusé&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Plus de 300 établissements français et européens, dont Qonto, BNP Paribas, Crédit Agricole, Société Générale, Banque Populaire, Shine et Revolut Business. La liste complète est vérifiable pendant l’essai.</p>
+            <p class="faq-body">Vous ne payez rien. Le chargé de dossiers analyse le motif, corrige ce qui peut l’être et dépose un recours ou représente le dossier à la fenêtre suivante quand c’est pertinent.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Y a-t-il un engagement&nbsp;?
+              D’où viennent vos données&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Aucun. Les plans sont résiliables en un clic depuis les réglages. Vous conservez l’accès jusqu’à la fin de la période payée et vos données restent exportables à tout moment.</p>
+            <p class="faq-body">Des sources officielles uniquement&nbsp;: journaux officiels, plateformes de l’État, des régions, de la BPI et de l’ADEME. La base est revue quotidiennement par notre équipe de veille.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Que se passe-t-il à la fin de l’essai&nbsp;?
+              Puis-je essayer sans engagement&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Nous ne demandons pas de carte bancaire&nbsp;: rien ne peut être prélevé. Trois jours avant la fin, vous recevez un rappel. Vous choisissez alors un plan, ou votre compte passe simplement en pause.</p>
+            <p class="faq-body">Oui. Quatorze jours d’essai complet, scan et score compris, sans carte bancaire. À la fin, vous gardez le rapport d’éligibilité, même si vous ne continuez pas.</p>
           </details>
         </div>
       </div>
@@ -685,9 +728,9 @@
       <div class="container">
         <div class="cta-panel" data-reveal>
           <img class="cta-bg" src="assets/img/cta-cascade.jpg" alt="" loading="lazy" width="1600" height="900">
-          <h2>Reprenez la main sur votre cash.</h2>
-          <p>Quatorze jours d’essai complet, sans carte bancaire. Vos comptes connectés en quatre minutes, votre premier prévisionnel dans l’heure.</p>
-          <a class="btn btn-primary btn-lg magnetic" href="#tarifs">Essayer gratuitement
+          <h2>Allez chercher ce qui vous revient.</h2>
+          <p>Le scan prend quatre minutes et affiche votre montant récupérable. Sans carte bancaire, sans engagement.</p>
+          <a class="btn btn-primary btn-lg magnetic" href="app.html">Scanner mon entreprise
             <span class="btn-orb" aria-hidden="true"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
           </a>
         </div>
@@ -700,20 +743,30 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a class="brand" href="#" aria-label="Affluent, accueil">
-            <span class="brand-mark" aria-hidden="true">
-              <svg width="26" height="26" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
-                <path d="M5 6 C 11 8, 14 12, 16 17"/>
-                <path d="M16 4 C 16 9, 16 13, 16 17"/>
-                <path d="M27 6 C 21 8, 18 12, 16 17"/>
-                <path d="M16 17 L16 28"/>
+          <a class="brand" href="#" aria-label="Manne, accueil">
+            <span class="brand-logo" aria-hidden="true">
+              <svg width="30" height="30" viewBox="0 0 64 64">
+                <defs>
+                  <linearGradient id="mg-foot" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#3DDC97"/>
+                    <stop offset="0.5" stop-color="#2BB3C0"/>
+                    <stop offset="1" stop-color="#8B7CFF"/>
+                  </linearGradient>
+                </defs>
+                <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#mg-foot)"/>
+                <g fill="none" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round">
+                  <path d="M15 17 C 24 20, 28 26, 32 34"/>
+                  <path d="M32 14 C 32 22, 32 28, 32 34"/>
+                  <path d="M49 17 C 40 20, 36 26, 32 34"/>
+                  <path d="M32 34 L 32 50"/>
+                </g>
               </svg>
             </span>
-            Affluent
+            Manne
           </a>
-          <p>Le pilotage de trésorerie des PME françaises. Connectez, pilotez, anticipez.</p>
+          <p>L’argent public, enfin réclamé. Scannez, choisissez, encaissez.</p>
           <form class="newsletter" id="newsletter" novalidate>
-            <label for="nl-email">La lettre trésorerie, une fois par mois</label>
+            <label for="nl-email">La lettre des guichets, deux fois par mois</label>
             <div class="newsletter-row">
               <input type="email" id="nl-email" name="email" placeholder="prenom@entreprise.fr" autocomplete="email" required>
               <button class="btn btn-primary btn-sm" type="submit">S’abonner</button>
@@ -727,14 +780,14 @@
             <li><a href="#fonctionnalites">Fonctionnalités</a></li>
             <li><a href="#tarifs">Tarifs</a></li>
             <li><a href="#faq">Sécurité</a></li>
-            <li><a href="#faq">Banques compatibles</a></li>
+            <li><a href="#faq">Dispositifs suivis</a></li>
           </ul>
         </nav>
         <nav class="footer-col" aria-label="Ressources">
           <h4>Ressources</h4>
           <ul>
-            <li><a href="#">Guide de trésorerie</a></li>
-            <li><a href="#">Modèles de relance</a></li>
+            <li><a href="#">Guide des aides 2026</a></li>
+            <li><a href="#">Simulateur de CIR</a></li>
             <li><a href="#">Centre d’aide</a></li>
             <li><a href="#">Statut du service</a></li>
           </ul>
@@ -759,7 +812,7 @@
         </nav>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Affluent SAS. Tous droits réservés.</span>
+        <span>© 2026 Manne SAS. Tous droits réservés.</span>
         <span>69002 Lyon, France</span>
       </div>
     </div>
