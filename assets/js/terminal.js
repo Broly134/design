@@ -1,6 +1,6 @@
-/* Manne · Radar — logique de l'application.
-   État mutable en mémoire : déposer un dossier, le marquer versé ou
-   préparer un guichet change réellement les chiffres à l'écran.
+/* Percer · Studio — logique de l'application.
+   État mutable en mémoire : envoyer un devis, marquer un deal payé ou
+   programmer un post change réellement les chiffres à l'écran.
    Aucune écoute directe du scroll : IntersectionObserver + ResizeObserver. */
 (function () {
   "use strict";
@@ -25,120 +25,114 @@
      ============================================================ */
 
   var ENTITES = {
-    conso: { nom: "Groupe consolidé", facteur: 1 },
-    sas: { nom: "Maison Bocage SAS", facteur: 0.72 },
-    holding: { nom: "Bocage Holding", facteur: 0.28 }
+    conso: { nom: "Toutes les chaînes", facteur: 1 },
+    sas: { nom: "Chaîne principale", facteur: 0.78 },
+    holding: { nom: "Chaîne gaming", facteur: 0.22 }
   };
+
+  var nombre = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+  function fmtAbonnes(v) { return nombre.format(Math.round(v)); }
 
   var etat = {
     entite: "conso",
-    detecte: 87400,
-    verse: 46900,
+    detecte: 128400,
+    verse: 19300,
+    revenusMois: 3180,
     periode: "6m",
     dispositifs: [
-      { nom: "Crédit d'impôt recherche", score: 91, montant: 31200 },
-      { nom: "Décarbonation ADEME", score: 88, montant: 24000 },
-      { nom: "France Num vague 2", score: 96, montant: 5000 }
+      { nom: "TikTok", maj: "il y a 4 min", montant: 84200 },
+      { nom: "YouTube", maj: "il y a 12 min", montant: 31700 },
+      { nom: "Twitch", maj: "il y a 31 min", montant: 12500 }
     ],
     dossiers: [
       {
-        id: "cir", nom: "Crédit d'impôt recherche 2026", montant: 31200,
-        statut: "instruction", tampon: { texte: "En instruction", classe: "relance" },
-        meta: "Déposé le 28 juin",
+        id: "kavo", nom: "Kavo Energy", montant: 5000,
+        statut: "instruction", tampon: { texte: "En négo", classe: "relance" },
+        meta: "2 vidéos, devis envoyé il y a 3 j",
         seq: [
-          { quand: "12 juin", quoi: "Dossier préparé par votre chargé Manne", fait: true },
-          { quand: "28 juin", quoi: "Déposé auprès de la DGFiP", fait: true },
-          { quand: "Avant le 15 sept", quoi: "Attestation expert-comptable attendue", fait: false }
+          { quand: "5 juil", quoi: "Brief reçu : 2 vidéos + 1 short", fait: true },
+          { quand: "7 juil", quoi: "Devis envoyé depuis Percer", fait: true },
+          { quand: "En attente", quoi: "Signature de la marque", fait: false }
         ]
       },
       {
-        id: "ademe", nom: "Décarbonation ADEME", montant: 24000,
-        statut: "a-monter", tampon: { texte: "À monter", classe: "attente" },
-        meta: "Guichet ferme le 12 sept.",
+        id: "wear", nom: "Studio Wear", montant: 3500,
+        statut: "a-monter", tampon: { texte: "À chiffrer", classe: "attente" },
+        meta: "Collection capsule, brief reçu hier",
         seq: [
-          { quand: "8 juil", quoi: "Éligibilité confirmée, score 88", fait: true },
-          { quand: "Avant le 12 sept", quoi: "Dépôt du dossier au guichet", fait: false }
+          { quand: "9 juil", quoi: "Brief reçu : collection capsule", fait: true },
+          { quand: "À toi", quoi: "Envoyer le devis avec tes vraies stats", fait: false }
         ]
       },
       {
-        id: "region", nom: "Numérique Région AURA", montant: 12000,
-        statut: "instruction", tampon: { texte: "En instruction", classe: "relance" },
-        meta: "Déposé le 20 juin",
+        id: "nolt", nom: "Nolt Cosmétiques", montant: 2400,
+        statut: "depose", tampon: { texte: "Devis envoyé", classe: "attente" },
+        meta: "1 short, envoyé il y a 5 j",
         seq: [
-          { quand: "6 juin", quoi: "Dossier préparé par votre chargé Manne", fait: true },
-          { quand: "20 juin", quoi: "Déposé auprès de la Région", fait: true },
-          { quand: "Fin août", quoi: "Passage en commission", fait: false }
+          { quand: "2 juil", quoi: "Brief reçu : 1 short routine", fait: true },
+          { quand: "6 juil", quoi: "Devis envoyé depuis Percer", fait: true }
         ]
       },
       {
-        id: "alternance", nom: "Aide à l'alternance", montant: 6000,
-        statut: "depose", tampon: { texte: "Déposé", classe: "attente" },
-        meta: "Déposé il y a 4 jours",
+        id: "lingua", nom: "Appli Lingua", montant: 1200,
+        statut: "verse", tampon: { texte: "Payé", classe: "paye" },
+        meta: "Payé le 8 juillet",
         seq: [
-          { quand: "2 juil", quoi: "Contrat d'apprentissage joint", fait: true },
-          { quand: "7 juil", quoi: "Déposé auprès de l'ASP", fait: true }
-        ]
-      },
-      {
-        id: "francenum", nom: "France Num", montant: 5000,
-        statut: "verse", tampon: { texte: "Versé", classe: "paye" },
-        meta: "Versé le 10 juillet",
-        seq: [
-          { quand: "14 mai", quoi: "Dossier déposé", fait: true },
-          { quand: "26 juin", quoi: "Accord de la commission", fait: true },
-          { quand: "10 juil", quoi: "5 000 € versés, dossier clos", fait: true }
+          { quand: "12 juin", quoi: "Devis signé en ligne", fait: true },
+          { quand: "24 juin", quoi: "Intégration publiée", fait: true },
+          { quand: "8 juil", quoi: "1 200 € reçus, deal clos", fait: true }
         ]
       }
     ],
     journal: [
-      { d: "10 juil", lib: "Versement France Num", cat: "Subvention", credit: 5000 },
-      { d: "10 juil", lib: "Commission au succès", cat: "Frais", debit: 400 },
-      { d: "26 juin", lib: "Acompte CIR 2025", cat: "Crédit d'impôt", credit: 18600 },
-      { d: "26 juin", lib: "Commission au succès", cat: "Frais", debit: 1488 },
-      { d: "12 juin", lib: "Versement Région AURA", cat: "Subvention", credit: 7300 },
-      { d: "2 juin", lib: "Abonnement Pilote", cat: "Frais", debit: 119 }
+      { d: "10 juil", lib: "AdSense YouTube", cat: "Pub", credit: 842 },
+      { d: "8 juil", lib: "Deal Appli Lingua", cat: "Marque", credit: 1200 },
+      { d: "8 juil", lib: "Abonnement Créateur", cat: "Percer", debit: 9 },
+      { d: "5 juil", lib: "Subs et bits Twitch", cat: "Twitch", credit: 312 },
+      { d: "28 juin", lib: "Deal Nolt, juin", cat: "Marque", credit: 2400 },
+      { d: "21 juin", lib: "Fonds créateurs TikTok", cat: "TikTok", credit: 186 }
     ],
     guichets: [
-      { id: "fn2", quoi: "France Num vague 2", quand: "Clôture le 30 juillet", montant: 5000, dossier: null },
-      { id: "ademe-g", quoi: "Décarbonation ADEME", quand: "Clôture le 12 septembre", montant: 24000, dossier: "ademe" },
-      { id: "innov", quoi: "Innovation Région AURA", quand: "Clôture le 30 novembre", montant: 12000, dossier: null }
+      { id: "short", quoi: "Short « Backstage »", quand: "Jeudi 18 h 30", info: "Créneau optimal" },
+      { id: "live", quoi: "Live spécial 100k", quand: "Dimanche 20 h", info: "Annonce jeudi" },
+      { id: "collab", quoi: "Collab Studio Nova", quand: "24 juillet", info: "2 formats" }
     ]
   };
 
   var SERIES = {
     "6m": {
       labels: ["Fév", "Mars", "Avr", "Mai", "Juin", "Juil"],
-      valeurs: [12400, 21300, 29800, 38400, 43100, 46900]
+      valeurs: [96400, 103100, 108900, 114700, 121300, 128400]
     },
     "12m": {
       labels: ["Août", "Oct", "Déc", "Fév", "Avr", "Juin", "Juil"],
-      valeurs: [0, 6200, 12400, 21300, 33600, 43100, 46900]
+      valeurs: [78200, 84500, 90300, 96400, 108900, 121300, 128400]
     },
     "tout": {
       labels: ["S1 24", "S2 24", "S1 25", "S2 25", "S1 26", "Auj."],
-      valeurs: [0, 8400, 19700, 31200, 39400, 46900]
+      valeurs: [12400, 28700, 47300, 71800, 103100, 128400]
     }
   };
 
-  /* Simulateur : montant éligible selon effectif et budget innovation */
+  /* Simulateur : revenus selon rythme de publication et engagement */
   var PREV = {
-    hist: [12400, 21300, 29800, 38400, 46900], // versé cumulé, mars à juillet
+    hist: [4300, 7900, 11600, 15800, 19300], // encaissé cumulé, mars à juillet
     histLabels: ["Mars", "Avr", "Mai", "Juin", "Juil"],
     presets: {
-      artisan: { eff: 6, rd: 10 },
-      scaleup: { eff: 38, rd: 220 },
-      industrie: { eff: 120, rd: 340 }
+      debutant: { eff: 2, rd: 3 },
+      croissance: { eff: 4, rd: 5 },
+      viral: { eff: 7, rd: 9 }
     }
   };
 
-  function eligible(eff, rd) {
-    return Math.round((18000 + eff * 420 + rd * 280) / 100) * 100;
+  function eligible(posts, eng) {
+    return Math.round(((40 + posts * 85 + eng * 260) * 12) / 100) * 100;
   }
 
-  function projection(eff, rd) {
-    var base = etat.verse;
-    var e = eligible(eff, rd);
-    return [0.18, 0.42, 0.65].map(function (f) { return Math.round(base + e * f); });
+  function projection(posts, eng) {
+    var base = PREV.hist[PREV.hist.length - 1];
+    var mensuel = eligible(posts, eng) / 12;
+    return [1, 2, 3].map(function (k) { return Math.round(base + mensuel * k); });
   }
 
   function facteur() { return ENTITES[etat.entite].facteur; }
@@ -149,10 +143,11 @@
 
   var enCours = new WeakMap();
 
-  function afficheMontant(node, valeur) {
+  function afficheMontant(node, valeur, formate) {
     if (!node) return;
+    formate = formate || euro.format;
     var cible = Math.round(valeur);
-    if (reduceMotion.matches) { node.textContent = euro.format(cible); return; }
+    if (reduceMotion.matches) { node.textContent = formate(cible); return; }
     var depart = enCours.get(node);
     if (depart == null) {
       var brut = parseInt(node.textContent.replace(/[^\d-]/g, ""), 10);
@@ -165,7 +160,7 @@
       if (!t0) t0 = t;
       var p = Math.min((t - t0) / dur, 1);
       var e = 1 - Math.pow(1 - p, 3);
-      node.textContent = euro.format(Math.round(de + (cible - de) * e));
+      node.textContent = formate(Math.round(de + (cible - de) * e));
       if (p < 1) requestAnimationFrame(pas);
     }
     requestAnimationFrame(pas);
@@ -198,6 +193,7 @@
     var band = opts.band || null;
     var labels = opts.labels.slice();
     var domaine = opts.domain || null;
+    var fmt = opts.fmt || euro.format;
 
     var hair = el("div", "chart-hair");
     var dot = el("div", "chart-dot");
@@ -299,7 +295,7 @@
       var px = geom.x(idx), py = geom.y(vals[idx]);
       hair.style.left = px + "px"; hair.style.opacity = "1";
       dot.style.left = px + "px"; dot.style.top = py + "px"; dot.style.opacity = "1";
-      tip.textContent = labels[idx] + " : " + euro.format(vals[idx]);
+      tip.textContent = labels[idx] + " : " + fmt(vals[idx]);
       tip.style.left = Math.max(56, Math.min(geom.w - 56, px)) + "px";
       tip.style.top = py + "px";
       tip.style.opacity = "1";
@@ -362,9 +358,9 @@
     zone.innerHTML = "";
     etat.dispositifs.forEach(function (d) {
       var row = el("div", "compte",
-        '<svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>' +
-        '<span><span class="nom">' + d.nom + '</span><br><span class="maj">score ' + d.score + " / 100</span></span>" +
-        '<span class="num">' + euro.format(d.montant) + "</span>");
+        '<svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>' +
+        '<span><span class="nom">' + d.nom + '</span><br><span class="maj">' + d.maj + "</span></span>" +
+        '<span class="num">' + fmtAbonnes(d.montant) + "</span>");
       zone.appendChild(row);
     });
   }
@@ -388,9 +384,9 @@
     var zone = document.getElementById("liste-veille");
     zone.innerHTML = "";
     var items = [
-      { classe: "warn", icone: "bell-ringing", html: "<strong>Décarbonation ADEME</strong> ferme dans 9 semaines. 24&#8239;000&#8239;€ pour votre profil.", vue: "guichets" },
-      { classe: "alerte", icone: "receipt", html: "CIR 2026&nbsp;: attestation expert-comptable attendue avant le 15 septembre. <strong>Voir le dossier.</strong>", vue: "dossiers" },
-      { classe: "ok", icone: "check", html: "France Num&nbsp;: <strong>5&#8239;000&#8239;€ versés</strong> le 10 juillet. Dossier clos." }
+      { classe: "warn", icone: "arrow-up-right", html: "«&nbsp;Studio tour&nbsp;» fait <strong>3× tes vues moyennes</strong>. Programme un follow-up.", vue: "calendrier" },
+      { classe: "alerte", icone: "envelope-simple", html: "<strong>Kavo Energy</strong> attend ta réponse depuis 3 jours. <strong>Voir le deal.</strong>", vue: "deals" },
+      { classe: "ok", icone: "check", html: "Palier des <strong>100&#8239;000 abonnés TikTok</strong> franchi cette nuit." }
     ];
     items.forEach(function (it) {
       var n = el(it.vue ? "button" : "div", "veille-item " + it.classe,
@@ -422,13 +418,11 @@
       b.addEventListener("click", function () { ouvreDetail(f.id); });
       zone.appendChild(b);
     });
-    afficheMontant(document.getElementById("kpi-encours"),
-      etat.dossiers.filter(function (f) { return f.statut === "instruction"; })
-        .reduce(function (s, f) { return s + f.montant; }, 0));
-    afficheMontant(document.getElementById("kpi-instruction"),
-      etat.dossiers.filter(function (f) { return f.statut === "instruction"; })
-        .reduce(function (s, f) { return s + f.montant; }, 0));
-    afficheMontant(document.getElementById("kpi-encaisse"), etat.verse * facteur());
+    var enCoursTotal = etat.dossiers.filter(function (f) { return f.statut !== "verse"; })
+      .reduce(function (s, f) { return s + f.montant; }, 0);
+    afficheMontant(document.getElementById("kpi-encours"), enCoursTotal);
+    afficheMontant(document.getElementById("kpi-instruction"), enCoursTotal);
+    afficheMontant(document.getElementById("kpi-encaisse"), etat.verse);
   }
 
   function rendDetail() {
@@ -437,7 +431,7 @@
     if (!f) {
       zone.innerHTML =
         '<p class="detail-vide"><svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>' +
-        "Sélectionnez un dossier pour voir son avancement.</p>";
+        "Sélectionne un deal pour voir où il en est.</p>";
       return;
     }
     var chrono = f.seq.map(function (s) {
@@ -449,17 +443,17 @@
     if (f.statut === "a-monter") {
       actions =
         '<button class="btn btn-menthe" id="action-deposer">' +
-        '<svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>Déposer le dossier</button>';
+        '<svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>Envoyer le devis</button>';
     } else if (f.statut === "verse") {
       actions =
         '<button class="btn btn-menthe" disabled>' +
-        '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Versé, dossier clos</button>';
+        '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Payé, deal clos</button>';
     } else {
       actions =
         '<button class="btn btn-menthe" id="action-verse">' +
-        '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Marquer versé</button>' +
+        '<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Marquer payé</button>' +
         '<button class="btn btn-ligne" id="action-relance">' +
-        '<svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>Relancer l’instructeur</button>';
+        '<svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>Relancer la marque</button>';
     }
 
     zone.innerHTML =
@@ -515,18 +509,15 @@
     var zone = document.getElementById("liste-echeances");
     zone.innerHTML = "";
     if (!etat.guichets.length) {
-      zone.innerHTML = '<p class="detail-vide">Aucune fenêtre imminente. La veille tourne pour vous.</p>';
+      zone.innerHTML = '<p class="detail-vide">Tout est programmé. Le prochain créneau optimal apparaîtra ici.</p>';
       return;
     }
     etat.guichets.forEach(function (g) {
-      var action = g.dossier
-        ? '<button class="regler" data-id="' + g.id + '">Voir le dossier</button>'
-        : '<button class="regler" data-id="' + g.id + '">Préparer le dossier</button>';
       var row = el("div", "echeance",
         '<svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>' +
         '<span><span class="quoi">' + g.quoi + '</span><br><span class="quand">' + g.quand + "</span></span>" +
-        '<span class="num">' + euro.format(g.montant) + "</span>" +
-        action);
+        '<span class="num" style="font-size:0.8rem">' + g.info + "</span>" +
+        '<button class="regler" data-id="' + g.id + '">Programmer</button>');
       row.querySelector(".regler").addEventListener("click", function () { prepareGuichet(g.id); });
       zone.appendChild(row);
     });
@@ -538,78 +529,57 @@
 
   function majDetecte(delta) {
     etat.detecte += delta;
-    afficheMontant(document.getElementById("ticker-solde"), etat.detecte * facteur());
-    afficheMontant(document.getElementById("kpi-solde"), etat.detecte * facteur());
+    afficheMontant(document.getElementById("ticker-solde"), etat.detecte * facteur(), fmtAbonnes);
+    afficheMontant(document.getElementById("kpi-solde"), etat.detecte * facteur(), fmtAbonnes);
   }
 
   function deposeDossier(id) {
     var f = etat.dossiers.find(function (x) { return x.id === id; });
     if (!f || f.statut !== "a-monter") return;
     f.statut = "depose";
-    f.tampon = { texte: "Déposé", classe: "attente" };
-    f.meta = "Déposé aujourd'hui";
-    f.seq.push({ quand: "Aujourd'hui", quoi: "Déposé au guichet par votre chargé Manne", fait: true });
+    f.tampon = { texte: "Devis envoyé", classe: "attente" };
+    f.meta = "Devis envoyé aujourd'hui";
+    f.seq.push({ quand: "Aujourd'hui", quoi: "Devis envoyé avec tes stats à jour", fait: true });
     tamponFrais = id;
     rendDossiers();
     rendDetail();
-    toast("<strong>" + f.nom + "</strong> déposé. L'instructeur a accusé réception.");
+    toast("<strong>Devis envoyé</strong> à " + f.nom + ", avec tes stats du jour.");
   }
 
   function relanceInstructeur(id) {
     var f = etat.dossiers.find(function (x) { return x.id === id; });
     if (!f) return;
-    f.seq.push({ quand: "Aujourd'hui", quoi: "Relance envoyée à l'instructeur", fait: true });
+    f.seq.push({ quand: "Aujourd'hui", quoi: "Relance envoyée à la marque", fait: true });
     rendDetail();
-    toast("<strong>Relance envoyée</strong> pour " + f.nom + ".");
+    toast("<strong>Relance envoyée</strong> à " + f.nom + ".");
   }
 
   function marqueVerse(id) {
     var f = etat.dossiers.find(function (x) { return x.id === id; });
     if (!f || f.statut === "verse" || f.statut === "a-monter") return;
     f.statut = "verse";
-    f.tampon = { texte: "Versé", classe: "paye" };
-    f.meta = "Versé aujourd'hui";
-    f.seq.push({ quand: "Aujourd'hui", quoi: euro.format(f.montant) + " versés, dossier clos", fait: true });
+    f.tampon = { texte: "Payé", classe: "paye" };
+    f.meta = "Payé aujourd'hui";
+    f.seq.push({ quand: "Aujourd'hui", quoi: euro.format(f.montant) + " reçus, deal clos", fait: true });
     tamponFrais = id;
-    var commission = Math.round(f.montant * 0.08);
     etat.verse += f.montant;
-    etat.journal.unshift({ d: "Auj.", lib: "Commission au succès", cat: "Frais", debit: commission });
-    etat.journal.unshift({ d: "Auj.", lib: "Versement " + f.nom, cat: "Subvention", credit: f.montant });
-    Object.keys(SERIES).forEach(function (k) {
-      var v = SERIES[k].valeurs;
-      v[v.length - 1] += f.montant;
-    });
-    if (chartVersements) montrePeriode(etat.periode, true);
-    afficheMontant(document.getElementById("kpi-entrees"), etat.verse * facteur());
+    etat.revenusMois += f.montant;
+    etat.journal.unshift({ d: "Auj.", lib: "Deal " + f.nom, cat: "Marque", credit: f.montant });
+    afficheMontant(document.getElementById("kpi-entrees"), etat.revenusMois);
     rendDossiers();
     rendDetail();
     rendJournal();
-    recalculeSim();
     toast("<strong>" + f.nom + "</strong>&nbsp;: " + euro.format(f.montant) +
-      " versés. Commission " + euro.format(commission) + ", prélevée après coup.");
+      " encaissés. 0&#8239;% de commission, tout est pour toi.");
   }
 
   function prepareGuichet(id) {
     var i = etat.guichets.findIndex(function (x) { return x.id === id; });
     if (i < 0) return;
     var g = etat.guichets[i];
-    if (g.dossier) {
-      montreVue("dossiers");
-      ouvreDetail(g.dossier);
-      return;
-    }
     etat.guichets.splice(i, 1);
-    var nid = "g-" + g.id;
-    etat.dossiers.unshift({
-      id: nid, nom: g.quoi, montant: g.montant,
-      statut: "a-monter", tampon: { texte: "À monter", classe: "attente" },
-      meta: g.quand,
-      seq: [{ quand: "Aujourd'hui", quoi: "Ajouté à vos dossiers depuis la veille", fait: true },
-            { quand: g.quand.replace("Clôture", "Avant"), quoi: "Dépôt du dossier au guichet", fait: false }]
-    });
     rendGuichets();
-    rendDossiers();
-    toast("<strong>" + g.quoi + "</strong> ajouté à vos dossiers.");
+    toast("<strong>" + g.quoi + "</strong> programmé, " + g.quand.toLowerCase() + ".");
   }
 
   /* ============================================================
@@ -617,10 +587,10 @@
      ============================================================ */
 
   var TITRES = {
-    radar: "Radar",
+    studio: "Studio",
     simulateur: "Simulateur",
-    dossiers: "Dossiers",
-    guichets: "Guichets"
+    deals: "Deals",
+    calendrier: "Calendrier"
   };
 
   var barresPosees = false;
@@ -629,14 +599,14 @@
     if (barresPosees) return;
     barresPosees = true;
     requestAnimationFrame(function () {
-      document.querySelectorAll("#barres-guichets .barre").forEach(function (b) {
+      document.querySelectorAll("#barres-calendrier .barre").forEach(function (b) {
         b.style.height = b.getAttribute("data-h") + "%";
       });
     });
   }
 
   function montreVue(nom) {
-    if (!TITRES[nom]) nom = "radar";
+    if (!TITRES[nom]) nom = "studio";
     document.querySelectorAll(".vue").forEach(function (v) {
       var active = v.id === "vue-" + nom;
       v.classList.toggle("active", active);
@@ -648,7 +618,7 @@
       else b.removeAttribute("aria-current");
     });
     document.getElementById("vue-titre").textContent = TITRES[nom];
-    if (nom === "guichets") poseBarres();
+    if (nom === "calendrier") poseBarres();
     fermeDetail();
     if (location.hash !== "#" + nom) {
       try { history.replaceState(null, "", "#" + nom); } catch (e) {}
@@ -673,7 +643,8 @@
   var chartVersements = flowChart("chart-solde", {
     height: 230,
     hist: SERIES["6m"].valeurs.map(function (v) { return v * facteur(); }),
-    labels: SERIES["6m"].labels
+    labels: SERIES["6m"].labels,
+    fmt: function (v) { return fmtAbonnes(v) + " abonnés"; }
   });
 
   function etiquettes(nom) {
@@ -722,9 +693,9 @@
       entite.classList.remove("open");
       entiteBtn.setAttribute("aria-expanded", "false");
       var f = facteur();
-      afficheMontant(document.getElementById("ticker-solde"), etat.detecte * f);
-      afficheMontant(document.getElementById("kpi-solde"), etat.detecte * f);
-      afficheMontant(document.getElementById("kpi-entrees"), etat.verse * f);
+      afficheMontant(document.getElementById("ticker-solde"), etat.detecte * f, fmtAbonnes);
+      afficheMontant(document.getElementById("kpi-solde"), etat.detecte * f, fmtAbonnes);
+      afficheMontant(document.getElementById("kpi-entrees"), etat.revenusMois * f);
       afficheMontant(document.getElementById("kpi-encaisse"), etat.verse * f);
       montrePeriode(etat.periode, true);
     });
@@ -744,14 +715,14 @@
   var chartSim = null;
 
   function initSim() {
-    var bas = projection(PREV.presets.artisan.eff, PREV.presets.artisan.rd);
-    var haut = projection(PREV.presets.industrie.eff, PREV.presets.industrie.rd);
+    var bas = projection(PREV.presets.debutant.eff, PREV.presets.debutant.rd);
+    var haut = projection(PREV.presets.viral.eff, PREV.presets.viral.rd);
     chartSim = flowChart("chart-prev", {
       height: 300,
       hist: PREV.hist,
-      proj: projection(PREV.presets.scaleup.eff, PREV.presets.scaleup.rd),
+      proj: projection(PREV.presets.croissance.eff, PREV.presets.croissance.rd),
       band: { low: bas, high: haut },
-      domain: [8000, 168000],
+      domain: [3800, 31000],
       labels: PREV.histLabels.concat(["Août", "Sept", "Oct"])
     });
   }
@@ -760,11 +731,11 @@
   function recalculeSim() {
     var eff = parseInt(curseurEff.value, 10);
     var rd = parseInt(curseurRd.value, 10);
-    sortieEff.textContent = eff + (eff > 1 ? " salariés" : " salarié");
-    sortieRd.textContent = rd + " k€";
+    sortieEff.textContent = eff + (eff > 1 ? " posts" : " post");
+    sortieRd.textContent = rd + " %";
     chartSim.setProjection(projection(eff, rd));
     afficheMontant(verdict, eligible(eff, rd));
-    alerteSeuil.classList.toggle("visible", rd >= 250 || eff >= 90);
+    alerteSeuil.classList.toggle("visible", eff >= 6 || rd >= 8);
     document.querySelectorAll("[data-scenario]").forEach(function (s) {
       var p = PREV.presets[s.dataset.scenario];
       s.setAttribute("aria-pressed", String(p.eff === eff && p.rd === rd));
@@ -794,11 +765,11 @@
     var actif = interrupteur.getAttribute("aria-checked") !== "true";
     interrupteur.setAttribute("aria-checked", String(actif));
     veilleNote.textContent = actif
-      ? "Nouveau guichet correspondant à votre profil : alerte sous 24 h."
-      : "Veille suspendue. Les nouveaux guichets ne seront plus signalés.";
+      ? "Percer poste au meilleur créneau calculé pour ton audience."
+      : "Publication en pause. Tes brouillons restent prêts.";
     toast(actif
-      ? "<strong>Veille des guichets</strong> réactivée."
-      : "<strong>Veille des guichets</strong> suspendue.");
+      ? "<strong>Publication automatique</strong> réactivée."
+      : "<strong>Publication automatique</strong> en pause.");
   });
 
   /* ============================================================
@@ -816,12 +787,12 @@
       syncBtn.classList.remove("tourne");
       void syncBtn.offsetWidth;
       syncBtn.classList.add("tourne");
-      document.querySelector(".sync-note").lastChild.textContent = " Base à jour à l'instant";
-      majDetecte(2400);
-      etat.dispositifs.unshift({ nom: "Volontariat territorial", score: 82, montant: 2400 });
-      if (etat.dispositifs.length > 3) etat.dispositifs.pop();
+      document.querySelector(".sync-note").lastChild.textContent = " Synchronisé à l'instant";
+      majDetecte(240);
+      etat.dispositifs[0].montant += 240;
+      etat.dispositifs.forEach(function (d) { d.maj = "à l'instant"; });
       rendDispositifs();
-      toast("<strong>Scan terminé.</strong> 1 nouveau dispositif : Volontariat territorial, 2&#8239;400&#8239;€.");
+      toast("<strong>Stats à jour.</strong> TikTok : +240 abonnés depuis ce matin.");
     });
   }
 
@@ -834,5 +805,5 @@
   rendDetail();
   rendGuichets();
   recalculeSim();
-  montreVue((location.hash || "#radar").replace("#", ""));
+  montreVue((location.hash || "#studio").replace("#", ""));
 })();

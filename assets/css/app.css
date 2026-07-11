@@ -1,5 +1,5 @@
 /* ============================================================
-   MANNE · RADAR — pilotage des aides publiques
+   PERCER · STUDIO — cockpit des créateurs
    Thème sombre unique, assumé (écran d'opérations, OLED).
    Rayons : panneaux 16px · tuiles 10px · pilules pour l'interactif.
    Données de graphe validées (dataviz, surface #0D1310) :
@@ -12,10 +12,10 @@
   --font-data: "Spline Sans Mono", ui-monospace, monospace;
 
   /* Teintes iOS par vue */
-  --tint-radar: #3DDC97;
+  --tint-studio: #22D3EE;
   --tint-simulateur: #8B7CFF;
-  --tint-dossiers: #FFA05C;
-  --tint-guichets: #FF6B8B;
+  --tint-deals: #FF5E8A;
+  --tint-calendrier: #FFB13D;
 
   --encre: #0A0F0C;
   --encre-2: #0D1310;
@@ -200,10 +200,10 @@ body::before {
   background: var(--menthe-voile);
   color: var(--menthe);
 }
-.nav-item[data-vue="radar"][aria-current="page"] { color: var(--tint-radar); background: color-mix(in srgb, var(--tint-radar) 13%, transparent); }
+.nav-item[data-vue="studio"][aria-current="page"] { color: var(--tint-studio); background: color-mix(in srgb, var(--tint-studio) 13%, transparent); }
 .nav-item[data-vue="simulateur"][aria-current="page"] { color: var(--tint-simulateur); background: color-mix(in srgb, var(--tint-simulateur) 14%, transparent); }
-.nav-item[data-vue="dossiers"][aria-current="page"] { color: var(--tint-dossiers); background: color-mix(in srgb, var(--tint-dossiers) 13%, transparent); }
-.nav-item[data-vue="guichets"][aria-current="page"] { color: var(--tint-guichets); background: color-mix(in srgb, var(--tint-guichets) 13%, transparent); }
+.nav-item[data-vue="deals"][aria-current="page"] { color: var(--tint-deals); background: color-mix(in srgb, var(--tint-deals) 13%, transparent); }
+.nav-item[data-vue="calendrier"][aria-current="page"] { color: var(--tint-calendrier); background: color-mix(in srgb, var(--tint-calendrier) 13%, transparent); }
 
 .nav-item .icon { width: 1.2rem; height: 1.2rem; }
 
@@ -236,7 +236,7 @@ body::before {
   border-radius: 9px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #2FBE83, #2BB3C0 55%, #8B7CFF);
+  background: linear-gradient(135deg, #FF5E8A, #8B5CF6 55%, #22D3EE);
   color: #FFFFFF;
   font-family: var(--font-data);
   font-size: 0.7rem;
@@ -423,10 +423,10 @@ body::before {
 
 /* ---------- KPI ---------- */
 
-.grille-apercu .bloc-kpi:nth-child(1) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-radar) 13%, var(--registre)) 0%, var(--registre) 62%); }
+.grille-apercu .bloc-kpi:nth-child(1) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-studio) 13%, var(--registre)) 0%, var(--registre) 62%); }
 .grille-apercu .bloc-kpi:nth-child(2) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-simulateur) 13%, var(--registre)) 0%, var(--registre) 62%); }
-.grille-apercu .bloc-kpi:nth-child(3) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-dossiers) 12%, var(--registre)) 0%, var(--registre) 62%); }
-.grille-apercu .bloc-kpi:nth-child(4) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-guichets) 12%, var(--registre)) 0%, var(--registre) 62%); }
+.grille-apercu .bloc-kpi:nth-child(3) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-deals) 12%, var(--registre)) 0%, var(--registre) 62%); }
+.grille-apercu .bloc-kpi:nth-child(4) { background: linear-gradient(140deg, color-mix(in srgb, var(--tint-calendrier) 12%, var(--registre)) 0%, var(--registre) 62%); }
 
 .kpi .libelle { display: block; margin-bottom: 0.45rem; }
 
@@ -1053,10 +1053,10 @@ input[type="range"]::-moz-range-thumb {
 }
 .tab .icon { width: 1.3rem; height: 1.3rem; }
 .tab[aria-current="page"] { color: var(--menthe); background: var(--menthe-voile); }
-.tab[data-vue="radar"][aria-current="page"] { color: var(--tint-radar); background: color-mix(in srgb, var(--tint-radar) 13%, transparent); }
+.tab[data-vue="studio"][aria-current="page"] { color: var(--tint-studio); background: color-mix(in srgb, var(--tint-studio) 13%, transparent); }
 .tab[data-vue="simulateur"][aria-current="page"] { color: var(--tint-simulateur); background: color-mix(in srgb, var(--tint-simulateur) 14%, transparent); }
-.tab[data-vue="dossiers"][aria-current="page"] { color: var(--tint-dossiers); background: color-mix(in srgb, var(--tint-dossiers) 13%, transparent); }
-.tab[data-vue="guichets"][aria-current="page"] { color: var(--tint-guichets); background: color-mix(in srgb, var(--tint-guichets) 13%, transparent); }
+.tab[data-vue="deals"][aria-current="page"] { color: var(--tint-deals); background: color-mix(in srgb, var(--tint-deals) 13%, transparent); }
+.tab[data-vue="calendrier"][aria-current="page"] { color: var(--tint-calendrier); background: color-mix(in srgb, var(--tint-calendrier) 13%, transparent); }
 .tab:active { transform: scale(0.96); }
 
 /* ---------- Toasts ---------- */

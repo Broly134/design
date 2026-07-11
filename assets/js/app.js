@@ -25,7 +25,7 @@
     themeToggle.addEventListener("click", function () {
       var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
       root.setAttribute("data-theme", next);
-      try { localStorage.setItem("manne-theme", next); } catch (e) {}
+      try { localStorage.setItem("percer-theme", next); } catch (e) {}
       applyThemeColor();
       document.dispatchEvent(new CustomEvent("themechange"));
     });
@@ -99,7 +99,7 @@
   function animateCount(el) {
     var target = parseFloat(el.getAttribute("data-count-to"));
     var decimals = parseInt(el.getAttribute("data-decimals") || "0", 10);
-    var isEuro = el.id === "hero-value";
+    var isEuro = false;
     if (reduceMotion.matches) return; // le HTML contient déjà la valeur finale
     var t0 = null;
     var dur = 1100;
@@ -168,6 +168,7 @@
     var proj = opts.proj ? opts.proj.slice() : null;
     var band = opts.band || null;
     var labels = opts.labels;
+    var fmt = opts.fmt || euroFmt.format;
 
     var hair = document.createElement("div");
     hair.className = "chart-hair";
@@ -325,7 +326,7 @@
       dot.style.left = px + "px";
       dot.style.top = py + "px";
       dot.style.opacity = "1";
-      tip.textContent = labels[idx] + " : " + euroFmt.format(vals[idx]);
+      tip.textContent = labels[idx] + " : " + fmt(vals[idx]);
       tip.style.left = Math.max(52, Math.min(geom.w - 52, px)) + "px";
       tip.style.top = py + "px";
       tip.style.opacity = "1";
@@ -390,22 +391,23 @@
 
   var heroChart = flowChart("chart-hero", {
     height: 150,
-    hist: [31400, 38200, 52700, 61900, 74300, 87400],
-    labels: ["Février", "Mars", "Avril", "Mai", "Juin", "Juillet"]
+    hist: [96400, 103100, 108900, 114700, 121300, 128400],
+    labels: ["Février", "Mars", "Avril", "Mai", "Juin", "Juillet"],
+    fmt: function (v) { return formatNumber(v, 0) + " abonnés"; }
   });
 
   var SCENARIOS = {
-    artisan:   [52400, 55100, 58300],
-    scaleup:   [58900, 71200, 83600],
-    industrie: [61800, 86200, 97400]
+    debutant:   [20300, 21300, 22300],
+    croissance: [21000, 22700, 24300],
+    viral:      [22300, 25300, 28200]
   };
 
   var projChart = flowChart("chart-proj", {
     height: 260,
-    hist: [21300, 29800, 38400, 43100, 46900],
-    proj: SCENARIOS.scaleup.slice(),
-    band: { low: SCENARIOS.artisan, high: SCENARIOS.industrie },
-    domain: [19000, 106000],
+    hist: [4300, 7900, 11600, 15800, 19300],
+    proj: SCENARIOS.croissance.slice(),
+    band: { low: SCENARIOS.debutant, high: SCENARIOS.viral },
+    domain: [3800, 31000],
     labels: ["Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre"]
   });
 
@@ -446,7 +448,7 @@
       var data = SCENARIOS[name];
       if (projChart) projChart.setProjection(data);
       if (projValue) projValue.textContent = euroFmt.format(data[data.length - 1]);
-      if (projAlert) projAlert.classList.toggle("visible", name === "industrie");
+      if (projAlert) projAlert.classList.toggle("visible", name === "viral");
     });
   });
 

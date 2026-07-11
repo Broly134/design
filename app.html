@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Manne · Radar des aides</title>
-  <meta name="description" content="Le Radar Manne : aides détectées, simulateur d'éligibilité, dossiers suivis et guichets surveillés. Tout est réel, tout se manipule.">
+  <title>Percer · Studio</title>
+  <meta name="description" content="Le Studio Percer : audience, revenus, deals de marques et calendrier de posts. Tout est réel, tout se manipule.">
   <meta name="theme-color" content="#0A0F0C">
-  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%233DDC97"/><stop offset=".5" stop-color="%232BB3C0"/><stop offset="1" stop-color="%238B7CFF"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(%23g)"/><g fill="none" stroke="white" stroke-width="5.5" stroke-linecap="round"><path d="M15 17 C 24 20, 28 26, 32 34"/><path d="M32 14 C 32 22, 32 28, 32 34"/><path d="M49 17 C 40 20, 36 26, 32 34"/><path d="M32 34 L 32 50"/></g></svg>'>
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%23FF5E8A"/><stop offset=".5" stop-color="%238B5CF6"/><stop offset="1" stop-color="%2322D3EE"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(%23g)"/><g fill="none" stroke="white" stroke-width="5.5" stroke-linecap="round"><path d="M15 17 C 24 20, 28 26, 32 34"/><path d="M32 14 C 32 22, 32 28, 32 34"/><path d="M49 17 C 40 20, 36 26, 32 34"/><path d="M32 34 L 32 50"/></g></svg>'>
   <link rel="preload" href="assets/fonts/spline-sans-mono-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/figtree-300.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="assets/css/fonts.css">
@@ -43,13 +43,13 @@
 
     <!-- ===== Rail (desktop) ===== -->
     <aside class="rail">
-      <a class="brand" href="index.html" aria-label="Manne, retour au site">
+      <a class="brand" href="index.html" aria-label="Percer, retour au site">
         <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
           <defs>
             <linearGradient id="mg-rail" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#3DDC97"/>
-              <stop offset="0.5" stop-color="#2BB3C0"/>
-              <stop offset="1" stop-color="#8B7CFF"/>
+              <stop offset="0" stop-color="#FF5E8A"/>
+              <stop offset="0.5" stop-color="#8B5CF6"/>
+              <stop offset="1" stop-color="#22D3EE"/>
             </linearGradient>
           </defs>
           <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#mg-rail)"/>
@@ -60,47 +60,47 @@
             <path d="M32 34 L 32 50"/>
           </g>
         </svg>
-        <span>Manne<small>Radar</small></span>
+        <span>Percer<small>Studio</small></span>
       </a>
 
       <nav class="rail-nav" aria-label="Vues principales">
-        <button class="nav-item" data-vue="radar" aria-current="page">
+        <button class="nav-item" data-vue="studio" aria-current="page">
           <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
-          Radar
+          Studio
         </button>
         <button class="nav-item" data-vue="simulateur">
           <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
           Simulateur
         </button>
-        <button class="nav-item" data-vue="dossiers">
+        <button class="nav-item" data-vue="deals">
           <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-          Dossiers
+          Deals
         </button>
-        <button class="nav-item" data-vue="guichets">
+        <button class="nav-item" data-vue="calendrier">
           <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
-          Guichets
+          Calendrier
         </button>
       </nav>
 
       <div class="rail-foot">
         <div class="entite" id="entite">
           <button class="entite-btn" id="entite-btn" aria-haspopup="listbox" aria-expanded="false">
-            <span class="pastille" aria-hidden="true">MB</span>
+            <span class="pastille" aria-hidden="true">LB</span>
             <span>
-              <span class="nom" id="entite-nom">Groupe consolidé</span><br>
-              <span class="role">3 entités</span>
+              <span class="nom" id="entite-nom">Toutes les chaînes</span><br>
+              <span class="role">4 plateformes</span>
             </span>
             <svg class="icon" aria-hidden="true"><use href="#i-caret-down"/></svg>
           </button>
           <div class="entite-menu" role="listbox" aria-label="Choisir l'entité" id="entite-menu">
             <button role="option" data-entite="conso" aria-selected="true">
-              Groupe consolidé <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+              Toutes les chaînes <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
             </button>
             <button role="option" data-entite="sas" aria-selected="false">
-              Maison Bocage SAS <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+              Chaîne principale <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
             </button>
             <button role="option" data-entite="holding" aria-selected="false">
-              Bocage Holding <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
+              Chaîne gaming <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
             </button>
           </div>
         </div>
@@ -114,9 +114,9 @@
           <svg width="26" height="26" viewBox="0 0 64 64">
             <defs>
               <linearGradient id="mg-mini" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#3DDC97"/>
-                <stop offset="0.5" stop-color="#2BB3C0"/>
-                <stop offset="1" stop-color="#8B7CFF"/>
+                <stop offset="0" stop-color="#FF5E8A"/>
+                <stop offset="0.5" stop-color="#8B5CF6"/>
+                <stop offset="1" stop-color="#22D3EE"/>
               </linearGradient>
             </defs>
             <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#mg-mini)"/>
@@ -128,53 +128,53 @@
             </g>
           </svg>
         </span>
-        <h1 class="vue-titre" id="vue-titre">Radar</h1>
-        <span class="sync-note"><span class="point-vif" aria-hidden="true"></span> Base à jour il y a 2 h</span>
+        <h1 class="vue-titre" id="vue-titre">Studio</h1>
+        <span class="sync-note"><span class="point-vif" aria-hidden="true"></span> Synchronisé il y a 4 min</span>
         <div class="ticker">
-          <span class="libelle">Détecté pour vous</span>
-          <span class="num" id="ticker-solde">87&#8239;400&#8239;€</span>
+          <span class="libelle">Audience totale</span>
+          <span class="num" id="ticker-solde">128&#8239;400</span>
         </div>
       </header>
 
       <main class="contenu" id="contenu">
 
         <!-- ================= VUE RADAR ================= -->
-        <section class="vue active" id="vue-radar" aria-label="Radar">
+        <section class="vue active" id="vue-studio" aria-label="Studio">
           <div class="grille grille-apercu">
 
             <div class="panneau bloc-kpi kpi">
-              <span class="libelle">Détecté pour vous</span>
-              <span class="valeur num" id="kpi-solde">87&#8239;400&#8239;€</span>
+              <span class="libelle">Audience totale</span>
+              <span class="valeur num" id="kpi-solde">128&#8239;400</span>
               <span class="tendance pos">
                 <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
-                +18&#8239;000&#8239;€ ce mois
+                +8&#8239;200 ce mois
               </span>
             </div>
             <div class="panneau bloc-kpi kpi">
-              <span class="libelle">Versé cette année</span>
-              <span class="valeur num" id="kpi-entrees">46&#8239;900&#8239;€</span>
+              <span class="libelle">Revenus du mois</span>
+              <span class="valeur num" id="kpi-entrees">3&#8239;180&#8239;€</span>
               <span class="tendance pos">
                 <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
-                4 dossiers payés
+                2 deals payés
               </span>
             </div>
             <div class="panneau bloc-kpi kpi">
-              <span class="libelle">En instruction</span>
-              <span class="valeur num" id="kpi-instruction">43&#8239;200&#8239;€</span>
-              <span class="tendance">2 dossiers déposés</span>
+              <span class="libelle">En négociation</span>
+              <span class="valeur num" id="kpi-instruction">10&#8239;900&#8239;€</span>
+              <span class="tendance">3 deals en cours</span>
             </div>
             <div class="panneau bloc-kpi kpi">
-              <span class="libelle">Prochaine clôture</span>
-              <span class="valeur num">63&#8239;j</span>
-              <span class="tendance neg">
-                <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                Décarbonation ADEME
+              <span class="libelle">Prochain post</span>
+              <span class="valeur num">Jeu 18:30</span>
+              <span class="tendance">
+                <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
+                Short «&#8239;Backstage&#8239;»
               </span>
             </div>
 
             <div class="panneau bloc-graphe">
               <div class="panneau-tete">
-                <span class="libelle">Versements cumulés</span>
+                <span class="libelle">Audience cumulée</span>
                 <div class="chip-groupe" role="group" aria-label="Période du graphique">
                   <button class="chip" data-periode="6m" aria-pressed="true">6&#8239;mois</button>
                   <button class="chip" data-periode="12m" aria-pressed="false">12&#8239;mois</button>
@@ -189,27 +189,27 @@
 
             <div class="panneau bloc-comptes">
               <div class="panneau-tete">
-                <span class="libelle">Dispositifs phares</span>
-                <button class="lien" data-vue-lien="dossiers">Dossiers</button>
+                <span class="libelle">Plateformes</span>
+                <button class="lien" data-vue-lien="deals">Deals</button>
               </div>
               <div id="liste-comptes"></div>
               <button class="sync-btn" id="sync-btn">
                 <svg class="icon" aria-hidden="true"><use href="#i-arrows-clockwise"/></svg>
-                Relancer le scan
+                Rafraîchir les stats
               </button>
             </div>
 
             <div class="panneau bloc-ecritures">
               <div class="panneau-tete">
-                <span class="libelle">Journal des versements</span>
+                <span class="libelle">Journal des revenus</span>
               </div>
               <table class="livre">
                 <thead>
                   <tr>
                     <th scope="col">Date</th>
                     <th scope="col">Libellé</th>
-                    <th scope="col" class="col-cat">Nature</th>
-                    <th scope="col" style="text-align:right">Frais</th>
+                    <th scope="col" class="col-cat">Source</th>
+                    <th scope="col" style="text-align:right">Sorti</th>
                     <th scope="col" style="text-align:right">Reçu</th>
                   </tr>
                 </thead>
@@ -233,46 +233,46 @@
 
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Votre profil</span>
+                <span class="libelle">Ton rythme</span>
               </div>
               <div class="scenarios" role="group" aria-label="Profil type">
-                <button class="scenario" data-scenario="artisan" aria-pressed="false">Artisan</button>
-                <button class="scenario" data-scenario="scaleup" aria-pressed="true">Scale-up</button>
-                <button class="scenario" data-scenario="industrie" aria-pressed="false">Industrie</button>
+                <button class="scenario" data-scenario="debutant" aria-pressed="false">Débutant</button>
+                <button class="scenario" data-scenario="croissance" aria-pressed="true">En croissance</button>
+                <button class="scenario" data-scenario="viral" aria-pressed="false">Viral</button>
               </div>
 
               <div class="curseur">
-                <label for="curseur-eff">Effectif
-                  <output id="sortie-eff">38&#8239;salariés</output>
+                <label for="curseur-eff">Posts par semaine
+                  <output id="sortie-eff">4&#8239;posts</output>
                 </label>
-                <input type="range" id="curseur-eff" min="1" max="250" step="1" value="38"
+                <input type="range" id="curseur-eff" min="1" max="14" step="1" value="4"
                   aria-describedby="aide-eff">
-                <p class="provision-note" id="aide-eff">Beaucoup d'aides à l'embauche et à la formation dépendent de la taille.</p>
+                <p class="provision-note" id="aide-eff">La régularité pèse plus que les coups d'éclat dans les algorithmes.</p>
               </div>
 
               <div class="curseur">
-                <label for="curseur-rd">Budget innovation annuel
-                  <output id="sortie-rd">220&#8239;k€</output>
+                <label for="curseur-rd">Taux d'engagement
+                  <output id="sortie-rd">5&#8239;%</output>
                 </label>
-                <input type="range" id="curseur-rd" min="0" max="500" step="10" value="220"
+                <input type="range" id="curseur-rd" min="1" max="12" step="1" value="5"
                   aria-describedby="aide-rd">
-                <p class="provision-note" id="aide-rd">R&amp;D, numérique, décarbonation : le levier principal du crédit d'impôt.</p>
+                <p class="provision-note" id="aide-rd">Likes, commentaires, partages : c'est lui qui attire les marques.</p>
               </div>
 
               <div class="verdict">
-                <span class="libelle">Éligible estimé sur 12 mois</span>
-                <span class="num" id="verdict-valeur">96&#8239;800&#8239;€</span>
+                <span class="libelle">Revenus estimés sur 12 mois</span>
+                <span class="num" id="verdict-valeur">20&#8239;200&#8239;€</span>
               </div>
 
               <div class="alerte-seuil" id="alerte-seuil" role="status">
                 <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                <span id="alerte-texte">Le guichet Décarbonation ADEME ferme le 12 septembre. 24&#8239;000&#8239;€ à la clé pour ce profil.</span>
+                <span id="alerte-texte">À ce rythme, la monétisation YouTube tombe en septembre&#8239;: le seuil des 4&#8239;000 heures est atteint.</span>
               </div>
             </div>
 
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Récupération projetée</span>
+                <span class="libelle">Revenus projetés</span>
               </div>
               <div class="chart" id="chart-prev">
                 <div class="chart-canvas"></div>
@@ -281,7 +281,7 @@
                 </div>
               </div>
               <div class="legende">
-                <span><span class="trait" aria-hidden="true"></span> Versé</span>
+                <span><span class="trait" aria-hidden="true"></span> Encaissé</span>
                 <span><span class="trait pointille" aria-hidden="true"></span> Projeté</span>
               </div>
             </div>
@@ -290,35 +290,35 @@
         </section>
 
         <!-- ================= VUE DOSSIERS ================= -->
-        <section class="vue" id="vue-dossiers" aria-label="Dossiers" hidden>
+        <section class="vue" id="vue-deals" aria-label="Deals" hidden>
           <div class="pipeline-stats">
             <div class="panneau kpi">
-              <span class="libelle">En instruction</span>
-              <span class="valeur num" id="kpi-encours">43&#8239;200&#8239;€</span>
+              <span class="libelle">En négociation</span>
+              <span class="valeur num" id="kpi-encours">10&#8239;900&#8239;€</span>
             </div>
             <div class="panneau kpi">
-              <span class="libelle">Taux de succès</span>
-              <span class="valeur num" id="kpi-retard">84&#8239;%</span>
+              <span class="libelle">Taux de signature</span>
+              <span class="valeur num" id="kpi-retard">78&#8239;%</span>
             </div>
             <div class="panneau kpi">
-              <span class="libelle">Versé cette année</span>
-              <span class="valeur num" id="kpi-encaisse">46&#8239;900&#8239;€</span>
+              <span class="libelle">Encaissé cette année</span>
+              <span class="valeur num" id="kpi-encaisse">19&#8239;300&#8239;€</span>
             </div>
           </div>
 
           <div class="grille grille-relances">
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Vos dossiers</span>
+                <span class="libelle">Tes deals</span>
               </div>
-              <div id="liste-factures" role="listbox" aria-label="Dossiers"></div>
+              <div id="liste-factures" role="listbox" aria-label="Deals"></div>
             </div>
 
             <div class="panneau panneau-detail" id="panneau-detail">
               <div id="detail-contenu">
                 <p class="detail-vide">
                   <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-                  Sélectionnez un dossier pour voir son avancement.
+                  Sélectionne un deal pour voir où il en est.
                 </p>
               </div>
             </div>
@@ -326,31 +326,31 @@
         </section>
 
         <!-- ================= VUE GUICHETS ================= -->
-        <section class="vue" id="vue-guichets" aria-label="Guichets" hidden>
+        <section class="vue" id="vue-calendrier" aria-label="Calendrier" hidden>
           <div class="grille grille-echeances">
 
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Montants dont le guichet ferme</span>
+                <span class="libelle">Vues projetées, par mois</span>
               </div>
-              <div class="barres" id="barres-guichets" aria-label="Montants dont le guichet ferme, par mois">
-                <div class="barre-col"><div class="barre" data-h="24"><span class="barre-val">12&#8239;400&#8239;€</span></div><span class="barre-mois">Juil</span></div>
-                <div class="barre-col"><div class="barre" data-h="47"><span class="barre-val">24&#8239;000&#8239;€</span></div><span class="barre-mois">Août</span></div>
-                <div class="barre-col"><div class="barre" data-h="100"><span class="barre-val">51&#8239;000&#8239;€</span></div><span class="barre-mois">Sept</span></div>
-                <div class="barre-col"><div class="barre" data-h="36"><span class="barre-val">18&#8239;600&#8239;€</span></div><span class="barre-mois">Oct</span></div>
-                <div class="barre-col"><div class="barre" data-h="19"><span class="barre-val">9&#8239;800&#8239;€</span></div><span class="barre-mois">Nov</span></div>
-                <div class="barre-col"><div class="barre" data-h="62"><span class="barre-val">31&#8239;500&#8239;€</span></div><span class="barre-mois">Déc</span></div>
+              <div class="barres" id="barres-calendrier" aria-label="Vues projetées par mois">
+                <div class="barre-col"><div class="barre" data-h="38"><span class="barre-val">840&#8239;k</span></div><span class="barre-mois">Juil</span></div>
+                <div class="barre-col"><div class="barre" data-h="47"><span class="barre-val">1,0&#8239;M</span></div><span class="barre-mois">Août</span></div>
+                <div class="barre-col"><div class="barre" data-h="61"><span class="barre-val">1,4&#8239;M</span></div><span class="barre-mois">Sept</span></div>
+                <div class="barre-col"><div class="barre" data-h="72"><span class="barre-val">1,6&#8239;M</span></div><span class="barre-mois">Oct</span></div>
+                <div class="barre-col"><div class="barre" data-h="84"><span class="barre-val">1,9&#8239;M</span></div><span class="barre-mois">Nov</span></div>
+                <div class="barre-col"><div class="barre" data-h="100"><span class="barre-val">2,2&#8239;M</span></div><span class="barre-mois">Déc</span></div>
               </div>
               <div class="interrupteur-ligne">
                 <button class="interrupteur" id="interrupteur-veille" role="switch" aria-checked="true" aria-labelledby="veille-libelle"></button>
-                <span id="veille-libelle">Veille automatique des guichets</span>
+                <span id="veille-libelle">Publication automatique</span>
               </div>
-              <p class="provision-note" id="veille-note">Nouveau guichet correspondant à votre profil : alerte sous 24 h.</p>
+              <p class="provision-note" id="veille-note">Percer poste au meilleur créneau calculé pour ton audience.</p>
             </div>
 
             <div class="panneau">
               <div class="panneau-tete">
-                <span class="libelle">Fenêtres à venir</span>
+                <span class="libelle">À programmer</span>
               </div>
               <div id="liste-echeances"></div>
             </div>
@@ -364,21 +364,21 @@
 
   <!-- Tabbar mobile -->
   <nav class="tabbar" aria-label="Vues principales">
-    <button class="tab" data-vue="radar" aria-current="page">
+    <button class="tab" data-vue="studio" aria-current="page">
       <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
-      Radar
+      Studio
     </button>
     <button class="tab" data-vue="simulateur">
       <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
       Simulateur
     </button>
-    <button class="tab" data-vue="dossiers">
+    <button class="tab" data-vue="deals">
       <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-      Dossiers
+      Deals
     </button>
-    <button class="tab" data-vue="guichets">
+    <button class="tab" data-vue="calendrier">
       <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
-      Guichets
+      Calendrier
     </button>
   </nav>
 

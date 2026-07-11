@@ -1,5 +1,5 @@
 /* ============================================================
-   MANNE · Aides, subventions et crédits d'impôt pour PME
+   PERCER · Le cockpit des créateurs (newgen)
    Système : thème clair par défaut, [data-theme="dark"] sur <html>.
    Rayons : boutons/puces = pill · cartes = 20px · tuiles/champs = 12px.
    Accent unique : vert profond. Graphiques validés (dataviz) :
@@ -13,10 +13,10 @@
 
   /* Teintes iOS par domaine (chrome uniquement, les données restent validées) */
   --t-menthe: #3DDC97;
-  --t-cyan: #2BB3C0;
+  --t-cyan: #22D3EE;
   --t-indigo: #8B7CFF;
-  --t-abricot: #FFA05C;
-  --t-rose: #FF6B8B;
+  --t-abricot: #FFB13D;
+  --t-rose: #FF5E8A;
 
   --bg: #F5F7F4;
   --bg-soft: #ECF0EA;
@@ -27,11 +27,11 @@
   --ink-2: #4A5751;
   --ink-3: #66746C;
 
-  --accent: #14614A;
-  --accent-hover: #0F5240;
-  --accent-ink: #F6FBF9;
-  --accent-soft: #DFEDE5;
-  --accent-soft-ink: #11503D;
+  --accent: #6D28D9;
+  --accent-hover: #5B21B6;
+  --accent-ink: #F8F6FE;
+  --accent-soft: #EDE9FE;
+  --accent-soft-ink: #5B21B6;
 
   --chart: #0F8A62;
   --chart-fill: rgba(15, 138, 98, 0.16);
@@ -60,11 +60,11 @@
   --ink-2: #A9B6AE;
   --ink-3: #7E8B84;
 
-  --accent: #2FAE81;
-  --accent-hover: #3DBE90;
-  --accent-ink: #06130D;
-  --accent-soft: #16241D;
-  --accent-soft-ink: #6FCFAB;
+  --accent: #A78BFA;
+  --accent-hover: #B9A3FC;
+  --accent-ink: #190E38;
+  --accent-soft: #241A3D;
+  --accent-soft-ink: #C4B0FF;
 
   --chart: #31A87D;
   --chart-fill: rgba(49, 168, 125, 0.14);
@@ -241,7 +241,7 @@ body::after {
 .btn-primary {
   background: var(--accent);
   color: var(--accent-ink);
-  box-shadow: 0 10px 24px -12px rgba(18, 76, 57, 0.55);
+  box-shadow: 0 10px 24px -12px rgba(91, 33, 182, 0.5);
 }
 .btn-primary:hover { background: var(--accent-hover); }
 
@@ -358,7 +358,7 @@ body::after {
   text-decoration: none;
 }
 
-.brand-logo svg { display: block; filter: drop-shadow(0 3px 9px rgba(43, 179, 192, 0.35)); }
+.brand-logo svg { display: block; filter: drop-shadow(0 3px 9px rgba(139, 92, 246, 0.35)); }
 
 .nav-links {
   display: flex;
@@ -549,14 +549,14 @@ body.menu-open { overflow: hidden; }
   font-style: italic;
   line-height: 1.1;
   padding-bottom: 0.06em;
-  background: linear-gradient(94deg, #0F8A62 0%, var(--t-cyan) 52%, #6E5BE8 100%);
+  background: linear-gradient(94deg, #E0447C 0%, #7C3AED 52%, #0EA5C4 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 [data-theme="dark"] .hero-copy h1 em {
-  background: linear-gradient(94deg, var(--t-menthe) 0%, #55C8D6 52%, var(--t-indigo) 100%);
+  background: linear-gradient(94deg, #FF6E96 0%, var(--t-indigo) 52%, #3ADBF2 100%);
   -webkit-background-clip: text;
   background-clip: text;
 }
@@ -1239,12 +1239,12 @@ body.menu-open { overflow: hidden; }
 .cell-secure .cell-icon { background: rgba(255, 255, 255, 0.12); }
 .cell-icon .icon { width: 1.35rem; height: 1.35rem; }
 
-.cell-sync .cell-icon { background: color-mix(in srgb, var(--t-menthe) 20%, transparent); color: #0C7A52; }
+.cell-sync .cell-icon { background: color-mix(in srgb, var(--t-cyan) 22%, transparent); color: #0A7E93; }
 .cell-alerts .cell-icon { background: color-mix(in srgb, var(--t-indigo) 20%, transparent); color: #5B4BD6; }
-.cell-expert .cell-icon { background: color-mix(in srgb, var(--t-abricot) 24%, transparent); color: #BC5F14; }
-[data-theme="dark"] .cell-sync .cell-icon { color: var(--t-menthe); }
+.cell-expert .cell-icon { background: color-mix(in srgb, var(--t-rose) 20%, transparent); color: #C22A5B; }
+[data-theme="dark"] .cell-sync .cell-icon { color: var(--t-cyan); }
 [data-theme="dark"] .cell-alerts .cell-icon { color: var(--t-indigo); }
-[data-theme="dark"] .cell-expert .cell-icon { color: var(--t-abricot); }
+[data-theme="dark"] .cell-expert .cell-icon { color: var(--t-rose); }
 
 .badge-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; }
 .cell-secure .badge-row .chip {
@@ -1703,8 +1703,8 @@ body.menu-open { overflow: hidden; }
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(25deg, rgba(139, 124, 255, 0.28) 0%, transparent 45%),
-    linear-gradient(200deg, rgba(21, 94, 99, 0.5) 0%, rgba(7, 22, 15, 0.9) 85%);
+    linear-gradient(25deg, rgba(255, 94, 138, 0.3) 0%, transparent 45%),
+    linear-gradient(200deg, rgba(88, 48, 176, 0.5) 0%, rgba(12, 8, 24, 0.9) 85%);
 }
 
 .cta-panel h2 {

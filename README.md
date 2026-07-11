@@ -1,9 +1,9 @@
-# Manne · SaaS d'aides publiques
+# Percer · Le cockpit des créateurs
 
-Produit fictif complet : **Manne** détecte les aides, subventions et crédits
-d'impôt (2 300 dispositifs) auxquels une entreprise a droit, monte les dossiers
-et se rémunère au succès. Landing marketing + application « Radar » entièrement
-interactive, en HTML/CSS/JS sans dépendance ni build.
+Produit fictif complet pour la newgen : **Percer** réunit TikTok, YouTube,
+Twitch et Insta dans un seul cockpit : audience, revenus, deals de marques
+(0 % de commission) et calendrier de posts. Landing marketing + application
+« Studio » entièrement interactive, en HTML/CSS/JS sans dépendance ni build.
 
 ## Ouvrir
 
@@ -13,21 +13,21 @@ python3 -m http.server 8123   # puis http://localhost:8123 (landing) et /app.htm
 
 ## Identité
 
-- **Logo** : squircle iOS en dégradé menthe, cyan, indigo, glyphe « confluence »
-  blanc (plusieurs sources d'aides convergent vers vous).
+- **Logo** : squircle iOS en dégradé rose, violet, cyan, glyphe « confluence »
+  blanc (toutes tes plateformes convergent vers toi).
 - **Polices** : Gabarito (titres), Figtree (interface), Spline Sans Mono (chiffres),
   auto-hébergées en woff2 variable.
-- **Couleurs** : teintes iOS par domaine (Radar menthe, Simulateur indigo,
-  Dossiers abricot, Guichets rose) ; couleurs de graphe validées par le
-  validateur dataviz (bande de luminance OKLCH, CVD, contraste).
+- **Couleurs** : accent violet électrique, teintes iOS par vue (Studio cyan,
+  Simulateur violet, Deals rose, Calendrier ambre) ; couleurs de graphe
+  validées par le validateur dataviz (luminance OKLCH, CVD, contraste).
 
-## L'application Radar (`app.html`)
+## L'application Studio (`app.html`)
 
-Quatre vues teintées, tout est manipulable : marquer un dossier « versé »
-crédite les versements et écrit la commission au journal ; « Préparer » un
-guichet crée un dossier ; le simulateur recalcule l'éligible selon l'effectif
-et le budget innovation ; le scan ajoute un dispositif détecté. Rail desktop,
-tab bar mobile avec safe-area, tiroir de détail, toasts, reduced-motion.
+Quatre vues teintées, tout est manipulable : marquer un deal « payé » crédite
+les revenus au journal (0 % de commission) ; « Programmer » un post depuis le
+calendrier ; le simulateur recalcule les revenus selon le rythme de posts et
+l'engagement ; « Rafraîchir » ajoute des abonnés. Rail desktop, tab bar mobile
+avec safe-area, tiroir de détail, toasts, reduced-motion.
 
 ## Crédits
 

@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Manne · L'argent public que votre entreprise laisse filer</title>
-  <meta name="description" content="Manne scanne 2 300 dispositifs d'aides, de subventions et de crédits d'impôt, repère ce qui revient à votre entreprise et monte les dossiers. Vous encaissez.">
-  <meta property="og:title" content="Manne · L'État vous doit de l'argent">
-  <meta property="og:description" content="Scan d'éligibilité en 4 minutes, dossiers montés par des experts, payés au succès. Essai gratuit de 14 jours.">
+  <title>Percer · Le cockpit des créateurs</title>
+  <meta name="description" content="Percer réunit TikTok, YouTube, Twitch et Insta dans un seul cockpit : audience, revenus, deals de marques et calendrier. Gratuit pour commencer.">
+  <meta property="og:title" content="Percer · Percer, c'est un métier">
+  <meta property="og:description" content="Toutes tes plateformes, tes revenus et tes deals de marques dans un seul cockpit. Gratuit pour commencer.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#F5F7F4">
-  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%233DDC97"/><stop offset=".5" stop-color="%232BB3C0"/><stop offset="1" stop-color="%238B7CFF"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(%23g)"/><g fill="none" stroke="white" stroke-width="5.5" stroke-linecap="round"><path d="M15 17 C 24 20, 28 26, 32 34"/><path d="M32 14 C 32 22, 32 28, 32 34"/><path d="M49 17 C 40 20, 36 26, 32 34"/><path d="M32 34 L 32 50"/></g></svg>'>
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="%23FF5E8A"/><stop offset=".5" stop-color="%238B5CF6"/><stop offset="1" stop-color="%2322D3EE"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(%23g)"/><g fill="none" stroke="white" stroke-width="5.5" stroke-linecap="round"><path d="M15 17 C 24 20, 28 26, 32 34"/><path d="M32 14 C 32 22, 32 28, 32 34"/><path d="M49 17 C 40 20, 36 26, 32 34"/><path d="M32 34 L 32 50"/></g></svg>'>
   <script>
     (function () {
       var t = null;
-      try { t = localStorage.getItem("manne-theme"); } catch (e) {}
+      try { t = localStorage.getItem("percer-theme"); } catch (e) {}
       if (!t) t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       document.documentElement.setAttribute("data-theme", t);
     })();
@@ -54,17 +54,17 @@
   <header class="site-header" id="site-header">
     <div class="container">
       <nav class="nav" aria-label="Navigation principale">
-        <a class="brand" href="#" aria-label="Manne, accueil">
+        <a class="brand" href="#" aria-label="Percer, accueil">
           <span class="brand-logo" aria-hidden="true">
             <svg width="30" height="30" viewBox="0 0 64 64">
               <defs>
-                <linearGradient id="mg-nav" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#3DDC97"/>
-                  <stop offset="0.5" stop-color="#2BB3C0"/>
-                  <stop offset="1" stop-color="#8B7CFF"/>
+                <linearGradient id="pg-nav" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#FF5E8A"/>
+                  <stop offset="0.5" stop-color="#8B5CF6"/>
+                  <stop offset="1" stop-color="#22D3EE"/>
                 </linearGradient>
               </defs>
-              <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#mg-nav)"/>
+              <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#pg-nav)"/>
               <g fill="none" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round">
                 <path d="M15 17 C 24 20, 28 26, 32 34"/>
                 <path d="M32 14 C 32 22, 32 28, 32 34"/>
@@ -73,7 +73,7 @@
               </g>
             </svg>
           </span>
-          Manne
+          Percer
         </a>
         <ul class="nav-links">
           <li><a href="#produit">Produit</a></li>
@@ -88,7 +88,7 @@
             <svg class="icon i-moon" aria-hidden="true"><use href="#i-moon"/></svg>
           </button>
           <a class="nav-login" href="app.html">Se connecter</a>
-          <a class="btn btn-primary btn-sm" href="#tarifs">Scanner mon entreprise</a>
+          <a class="btn btn-primary btn-sm" href="#tarifs">Créer mon cockpit</a>
           <button class="menu-toggle" id="menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
             <svg class="icon i-list" aria-hidden="true"><use href="#i-list"/></svg>
             <svg class="icon i-x" aria-hidden="true"><use href="#i-x"/></svg>
@@ -107,7 +107,7 @@
       <li><a href="#faq">FAQ</a></li>
       <li><a href="app.html">Se connecter</a></li>
     </ul>
-    <a class="btn btn-primary" href="#tarifs">Scanner mon entreprise</a>
+    <a class="btn btn-primary" href="#tarifs">Créer mon cockpit</a>
   </div>
 
   <main id="contenu">
@@ -117,34 +117,34 @@
       <svg class="hero-flow" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <defs>
           <linearGradient id="fg1" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#22B57B" stop-opacity="0"/>
-            <stop offset="0.45" stop-color="#22B57B" stop-opacity="0.25"/>
-            <stop offset="0.78" stop-color="#22B57B" stop-opacity="0.95"/>
-            <stop offset="1" stop-color="#22B57B" stop-opacity="0.4"/>
+            <stop offset="0" stop-color="#FF5E8A" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#FF5E8A" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#FF5E8A" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#FF5E8A" stop-opacity="0.4"/>
           </linearGradient>
           <linearGradient id="fg2" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#2BB3C0" stop-opacity="0"/>
-            <stop offset="0.45" stop-color="#2BB3C0" stop-opacity="0.25"/>
-            <stop offset="0.78" stop-color="#2BB3C0" stop-opacity="0.95"/>
-            <stop offset="1" stop-color="#2BB3C0" stop-opacity="0.4"/>
+            <stop offset="0" stop-color="#8B5CF6" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#8B5CF6" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#8B5CF6" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#8B5CF6" stop-opacity="0.4"/>
           </linearGradient>
           <linearGradient id="fg3" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#8B7CFF" stop-opacity="0"/>
-            <stop offset="0.45" stop-color="#8B7CFF" stop-opacity="0.25"/>
-            <stop offset="0.78" stop-color="#8B7CFF" stop-opacity="0.95"/>
-            <stop offset="1" stop-color="#8B7CFF" stop-opacity="0.4"/>
+            <stop offset="0" stop-color="#22D3EE" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#22D3EE" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#22D3EE" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#22D3EE" stop-opacity="0.4"/>
           </linearGradient>
           <linearGradient id="fg4" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#F08A3C" stop-opacity="0"/>
-            <stop offset="0.45" stop-color="#F08A3C" stop-opacity="0.25"/>
-            <stop offset="0.78" stop-color="#F08A3C" stop-opacity="0.95"/>
-            <stop offset="1" stop-color="#F08A3C" stop-opacity="0.4"/>
+            <stop offset="0" stop-color="#FFB13D" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#FFB13D" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#FFB13D" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#FFB13D" stop-opacity="0.4"/>
           </linearGradient>
           <linearGradient id="fg5" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#F05E7E" stop-opacity="0"/>
-            <stop offset="0.45" stop-color="#F05E7E" stop-opacity="0.25"/>
-            <stop offset="0.78" stop-color="#F05E7E" stop-opacity="0.95"/>
-            <stop offset="1" stop-color="#F05E7E" stop-opacity="0.4"/>
+            <stop offset="0" stop-color="#3DDC97" stop-opacity="0"/>
+            <stop offset="0.45" stop-color="#3DDC97" stop-opacity="0.25"/>
+            <stop offset="0.78" stop-color="#3DDC97" stop-opacity="0.95"/>
+            <stop offset="1" stop-color="#3DDC97" stop-opacity="0.4"/>
           </linearGradient>
         </defs>
         <path stroke="url(#fg1)" d="M -20 80 C 200 120, 380 220, 620 330 S 900 356, 1020 352"/>
@@ -157,12 +157,12 @@
       <div class="container hero-grid">
         <div class="hero-copy">
           <h1>
-            <span class="hl"><span class="hl-in">L’État vous doit</span></span>
-            <span class="hl"><span class="hl-in"><em>de l’argent</em>.</span></span>
+            <span class="hl"><span class="hl-in">Percer, c’est</span></span>
+            <span class="hl"><span class="hl-in"><em>un métier</em>.</span></span>
           </h1>
-          <p class="hero-sub rise" style="--d: 0.45s">Manne scanne 2&#8239;300 dispositifs d’aides, de subventions et crédits d’impôt, repère ce qui vous revient et monte les dossiers.</p>
+          <p class="hero-sub rise" style="--d: 0.45s">Percer réunit TikTok, YouTube, Twitch et Insta dans un seul cockpit&nbsp;: audience, revenus, deals de marques et calendrier.</p>
           <div class="hero-ctas rise" style="--d: 0.6s">
-            <a class="btn btn-primary btn-lg magnetic" href="#tarifs">Scanner mon entreprise
+            <a class="btn btn-primary btn-lg magnetic" href="#tarifs">Créer mon cockpit
               <span class="btn-orb" aria-hidden="true"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
             </a>
             <a class="btn btn-ghost btn-lg" href="#produit">
@@ -175,14 +175,14 @@
         <div class="demo-wrap" data-reveal style="--i:2">
           <div class="demo-card bezel">
             <div class="demo-head">
-              <span class="demo-title">Aides détectées</span>
-              <span class="chip">+3 cette semaine</span>
+              <span class="demo-title">Audience totale</span>
+              <span class="chip">4 plateformes</span>
             </div>
             <div class="demo-kpi">
-              <span class="demo-value" id="hero-value" data-count-to="87400">87&#8239;400&#8239;€</span>
+              <span class="demo-value" id="hero-value" data-count-to="128400">128&#8239;400</span>
               <span class="delta up">
                 <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
-                +18&#8239;000&#8239;€ ce mois
+                +8&#8239;200 ce mois
               </span>
             </div>
             <div class="chart" id="chart-hero">
@@ -193,79 +193,77 @@
             </div>
             <div class="demo-rows">
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-                <span class="demo-row-name">Crédit d’impôt recherche</span>
-                <span class="demo-row-val">31&#8239;200&#8239;€</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+                <span class="demo-row-name">TikTok</span>
+                <span class="demo-row-val">84&#8239;200</span>
               </div>
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-                <span class="demo-row-name">Décarbonation ADEME</span>
-                <span class="demo-row-val">24&#8239;000&#8239;€</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+                <span class="demo-row-name">YouTube</span>
+                <span class="demo-row-val">31&#8239;700</span>
               </div>
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-                <span class="demo-row-name">Aide à l’alternance</span>
-                <span class="demo-row-val">6&#8239;000&#8239;€</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+                <span class="demo-row-name">Twitch</span>
+                <span class="demo-row-val">12&#8239;500</span>
               </div>
             </div>
             <div class="demo-next">
-              <p class="demo-next-label">Guichets qui ferment</p>
+              <p class="demo-next-label">À poster cette semaine</p>
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                <span class="demo-row-name">France Num</span>
-                <span class="demo-row-val">5&#8239;000&#8239;€</span>
-                <span class="demo-row-date">30 juil.</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
+                <span class="demo-row-name">Short «&nbsp;Backstage&nbsp;»</span>
+                <span class="demo-row-date">Jeudi 18&#8239;h&#8239;30</span>
               </div>
               <div class="demo-row">
-                <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                <span class="demo-row-name">Décarbonation ADEME</span>
-                <span class="demo-row-val">24&#8239;000&#8239;€</span>
-                <span class="demo-row-date">12 sept.</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
+                <span class="demo-row-name">Live spécial 100k</span>
+                <span class="demo-row-date">Dimanche 20&#8239;h</span>
               </div>
             </div>
           </div>
           <div class="demo-toast" role="status">
             <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
-            <span><strong>Nouveau dispositif détecté.</strong> France Relance Industrie&nbsp;: 18&#8239;000&#8239;€ potentiels.</span>
+            <span><strong>Ça décolle.</strong> «&nbsp;Studio tour&nbsp;» vient de passer les 100&#8239;000 vues.</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ================= LOGOS ================= -->
-    <section class="logos" aria-label="Ils utilisent Manne">
+    <!-- ================= CRÉATEURS ================= -->
+    <section class="logos" aria-label="Ils utilisent Percer">
       <div class="container">
-        <p class="logos-title">Ils encaissent avec Manne</p>
+        <p class="logos-title">Ils percent avec Percer</p>
       </div>
       <div class="marquee">
         <div class="marquee-track" id="marquee-track">
           <span class="client">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16"/></svg>
-            Maison Bocage
+            @lena.brssrt
           </span>
           <span class="client">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 19 20 12 16 5 20Z"/></svg>
-            Atelier Nord
+            MaxPlay
           </span>
           <span class="client">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13.5" r="6.5"/><path d="M12 7c0-2 1.5-3.5 3-3.5"/></svg>
-            Verger &amp; Fils
+            Studio Nova
           </span>
           <span class="client">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16"/><path d="M6 12h12" opacity="0.65"/><path d="M8 16h8" opacity="0.35"/></svg>
-            Brume Studio
+            @cuisine.2min
           </span>
           <span class="client">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="7" width="14" height="11" rx="1.5"/><path d="M9.5 7v11M14.5 7v11"/></svg>
-            Cargo Logistique
+            Kino Frères
           </span>
           <span class="client">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M6.5 12h11"/></svg>
-            Ligne Claire
+            @salle.204
           </span>
           <span class="client">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4.5" y="4.5" width="15" height="15" rx="3.5"/><circle cx="12" cy="12" r="3.2"/></svg>
-            Halle Neuf
+            Néon Prod
           </span>
         </div>
       </div>
@@ -276,8 +274,8 @@
       <div class="container">
         <div class="section-head" data-reveal>
           <span class="eyebrow">Démo interactive</span>
-          <h2>Votre argent public, en clair.</h2>
-          <p>Cliquez, tout est réel&nbsp;: simulez votre éligibilité, suivez vos dossiers, surveillez les guichets qui ferment.</p>
+          <h2>Ton contenu, tes chiffres, ton argent.</h2>
+          <p>Clique, tout est réel&nbsp;: simule tes revenus, suis tes deals de marques, programme tes posts au bon créneau.</p>
           <a class="lien-app" href="app.html">Ouvrir l’application complète
             <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
           </a>
@@ -285,28 +283,28 @@
 
         <div class="product-panel bezel" data-reveal style="--bez-r: 24px">
           <div class="tabs" role="tablist" aria-label="Fonctions principales">
-            <button class="tab" id="tab-previsionnel" role="tab" aria-selected="true" aria-controls="panel-previsionnel">Simulation</button>
-            <button class="tab" id="tab-relances" role="tab" aria-selected="false" aria-controls="panel-relances" tabindex="-1">Dossiers</button>
-            <button class="tab" id="tab-tva" role="tab" aria-selected="false" aria-controls="panel-tva" tabindex="-1">Guichets</button>
+            <button class="tab" id="tab-previsionnel" role="tab" aria-selected="true" aria-controls="panel-previsionnel">Simulateur</button>
+            <button class="tab" id="tab-relances" role="tab" aria-selected="false" aria-controls="panel-relances" tabindex="-1">Deals</button>
+            <button class="tab" id="tab-tva" role="tab" aria-selected="false" aria-controls="panel-tva" tabindex="-1">Calendrier</button>
           </div>
 
-          <!-- Panneau 1 : simulation -->
+          <!-- Panneau 1 : simulateur -->
           <div class="panel active" id="panel-previsionnel" role="tabpanel" aria-labelledby="tab-previsionnel" tabindex="0">
             <div class="panel-copy">
-              <h3>Trois profils, un montant</h3>
-              <p>Le moteur croise votre secteur, votre effectif et vos projets avec les critères de 2&#8239;300 dispositifs. Changez de profil, le total suit.</p>
+              <h3>Trois rythmes, un revenu</h3>
+              <p>Le simulateur croise ton rythme de publication, ton engagement et tes formats pour estimer ce que ça rapporte. Change de profil, la courbe suit.</p>
               <div class="scenarios" role="group" aria-label="Choix du profil">
-                <button class="scenario" data-scenario="artisan" aria-pressed="false">Artisan</button>
-                <button class="scenario" data-scenario="scaleup" aria-pressed="true">Scale-up</button>
-                <button class="scenario" data-scenario="industrie" aria-pressed="false">Industrie</button>
+                <button class="scenario" data-scenario="debutant" aria-pressed="false">Débutant</button>
+                <button class="scenario" data-scenario="croissance" aria-pressed="true">En croissance</button>
+                <button class="scenario" data-scenario="viral" aria-pressed="false">Viral</button>
               </div>
               <div class="proj-stat">
-                <p class="proj-stat-label">Récupérable d’ici octobre</p>
-                <p class="proj-stat-value" id="proj-value">83&#8239;600&#8239;€</p>
+                <p class="proj-stat-label">Revenus estimés d’ici octobre</p>
+                <p class="proj-stat-value" id="proj-value">24&#8239;300&#8239;€</p>
               </div>
               <div class="proj-alert" id="proj-alert" role="status">
                 <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                <span>Le guichet Décarbonation ADEME ferme le 12 septembre. 24&#8239;000&#8239;€ à la clé pour ce profil.</span>
+                <span>À ce rythme, la monétisation YouTube tombe en septembre&nbsp;: le seuil des 4&#8239;000 heures est atteint.</span>
               </div>
             </div>
             <div class="big-chart">
@@ -316,84 +314,84 @@
                   <span>Mars</span><span>Avr</span><span>Mai</span><span>Juin</span><span>Juil</span><span>Août</span><span>Sept</span><span>Oct</span>
                 </div>
               </div>
-              <div class="legende-note legend-note">
-                <span><span class="legend-swatch"></span> Versé</span>
+              <div class="legend-note">
+                <span><span class="legend-swatch"></span> Encaissé</span>
                 <span><span class="legend-swatch dashed"></span> Projeté</span>
               </div>
             </div>
           </div>
 
-          <!-- Panneau 2 : dossiers -->
+          <!-- Panneau 2 : deals -->
           <div class="panel" id="panel-relances" role="tabpanel" aria-labelledby="tab-relances" tabindex="0" hidden>
             <div class="panel-copy">
-              <h3>Des dossiers montés pour vous</h3>
-              <p>Nos chargés de dossiers remplissent, déposent et relancent l’instructeur. Vous signez, vous encaissez.</p>
+              <h3>Tes deals sortent des DM</h3>
+              <p>Devis en un clic, relances automatiques, paiement suivi. Les marques te prennent au sérieux, et tu gardes 100&#8239;% du deal.</p>
               <div class="mini-stat">
-                <p class="mini-stat-value">84&#8239;%</p>
-                <p class="mini-stat-label">de dossiers acceptés quand Manne les monte, contre 51&#8239;% en moyenne en autonomie.</p>
+                <p class="mini-stat-value">78&#8239;%</p>
+                <p class="mini-stat-label">des deals signés plus vite quand le devis part de Percer plutôt que des messages privés.</p>
               </div>
               <div class="seq-chips">
-                <span class="chip">Pièces pré-remplies</span>
-                <span class="chip">Relances instructeur</span>
-                <span class="chip">Suivi temps réel</span>
+                <span class="chip">Devis en 1 clic</span>
+                <span class="chip">Relances auto</span>
+                <span class="chip">Paiement suivi</span>
               </div>
             </div>
             <div>
               <div class="invoice-list">
                 <div class="invoice">
-                  <span class="invoice-name">Crédit d’impôt recherche 2026</span>
-                  <span class="invoice-amount">31&#8239;200&#8239;€</span>
-                  <span class="invoice-late">J+12</span>
-                  <span class="status planned">En instruction</span>
-                </div>
-                <div class="invoice">
-                  <span class="invoice-name">France Num</span>
+                  <span class="invoice-name">Kavo Energy</span>
                   <span class="invoice-amount">5&#8239;000&#8239;€</span>
-                  <span class="invoice-late">Versé</span>
-                  <span class="status paid">Payé le 10 juil.</span>
+                  <span class="invoice-late">2 vidéos</span>
+                  <span class="status planned">En négo</span>
                 </div>
                 <div class="invoice">
-                  <span class="invoice-name">Aide à l’alternance</span>
-                  <span class="invoice-amount">6&#8239;000&#8239;€</span>
-                  <span class="invoice-late">J+4</span>
-                  <span class="status sent">Déposé</span>
+                  <span class="invoice-name">Nolt Cosmétiques</span>
+                  <span class="invoice-amount">2&#8239;400&#8239;€</span>
+                  <span class="invoice-late">1 short</span>
+                  <span class="status sent">Devis envoyé</span>
                 </div>
                 <div class="invoice">
-                  <span class="invoice-name">Décarbonation ADEME</span>
-                  <span class="invoice-amount">24&#8239;000&#8239;€</span>
-                  <span class="invoice-late">12 sept.</span>
+                  <span class="invoice-name">Appli Lingua</span>
+                  <span class="invoice-amount">1&#8239;200&#8239;€</span>
+                  <span class="invoice-late">1 intégration</span>
+                  <span class="status paid">Payé</span>
+                </div>
+                <div class="invoice">
+                  <span class="invoice-name">Studio Wear</span>
+                  <span class="invoice-amount">3&#8239;500&#8239;€</span>
+                  <span class="invoice-late">Collection capsule</span>
                   <span class="status sent">À signer</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Panneau 3 : guichets -->
+          <!-- Panneau 3 : calendrier -->
           <div class="panel" id="panel-tva" role="tabpanel" aria-labelledby="tab-tva" tabindex="0" hidden>
             <div class="panel-copy">
-              <h3>Les dates limites ne surprennent plus</h3>
-              <p>Chaque dispositif a sa fenêtre. Manne surveille les clôtures et vous alerte six semaines avant, pas après.</p>
+              <h3>Poste au bon moment, à chaque fois</h3>
+              <p>Percer calcule tes meilleurs créneaux d’après ton audience réelle et programme tes posts. Fini les publications à minuit pour rien.</p>
               <div class="due-card">
                 <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
                 <div>
-                  <p class="due-title">Décarbonation ADEME</p>
-                  <p class="due-sub">Clôture le 12 septembre</p>
+                  <p class="due-title">Live spécial 100k</p>
+                  <p class="due-sub">Dimanche 20&#8239;h, annonce jeudi</p>
                 </div>
-                <span class="due-amount">24&#8239;000&#8239;€</span>
+                <span class="due-amount">100k</span>
               </div>
               <div class="switch-row">
                 <button class="switch" id="provision-switch" role="switch" aria-checked="true" aria-labelledby="provision-label"></button>
-                <span id="provision-label">Veille automatique des guichets</span>
+                <span id="provision-label">Publication automatique au meilleur créneau</span>
               </div>
             </div>
             <div>
-              <div class="bars" id="tva-bars" aria-label="Montants dont le guichet ferme, par mois">
-                <div class="bar-col"><div class="bar" data-h="24"><span class="bar-value">12&#8239;400&#8239;€</span></div><span class="bar-label">Juil</span></div>
-                <div class="bar-col"><div class="bar" data-h="47"><span class="bar-value">24&#8239;000&#8239;€</span></div><span class="bar-label">Août</span></div>
-                <div class="bar-col"><div class="bar" data-h="100"><span class="bar-value">51&#8239;000&#8239;€</span></div><span class="bar-label">Sept</span></div>
-                <div class="bar-col"><div class="bar" data-h="36"><span class="bar-value">18&#8239;600&#8239;€</span></div><span class="bar-label">Oct</span></div>
-                <div class="bar-col"><div class="bar" data-h="19"><span class="bar-value">9&#8239;800&#8239;€</span></div><span class="bar-label">Nov</span></div>
-                <div class="bar-col"><div class="bar" data-h="62"><span class="bar-value">31&#8239;500&#8239;€</span></div><span class="bar-label">Déc</span></div>
+              <div class="bars" id="tva-bars" aria-label="Vues projetées par mois, en milliers">
+                <div class="bar-col"><div class="bar" data-h="38"><span class="bar-value">840&#8239;k vues</span></div><span class="bar-label">Juil</span></div>
+                <div class="bar-col"><div class="bar" data-h="47"><span class="bar-value">1,0&#8239;M</span></div><span class="bar-label">Août</span></div>
+                <div class="bar-col"><div class="bar" data-h="61"><span class="bar-value">1,4&#8239;M</span></div><span class="bar-label">Sept</span></div>
+                <div class="bar-col"><div class="bar" data-h="72"><span class="bar-value">1,6&#8239;M</span></div><span class="bar-label">Oct</span></div>
+                <div class="bar-col"><div class="bar" data-h="84"><span class="bar-value">1,9&#8239;M</span></div><span class="bar-label">Nov</span></div>
+                <div class="bar-col"><div class="bar" data-h="100"><span class="bar-value">2,2&#8239;M</span></div><span class="bar-label">Déc</span></div>
               </div>
             </div>
           </div>
@@ -406,7 +404,7 @@
       <div class="container">
         <div class="section-head" data-reveal>
           <h2>Tout ce qui compte, rien qui distrait.</h2>
-          <p>Cinq briques pensées pour les dirigeants qui veulent l’argent, pas la paperasse.</p>
+          <p>Cinq briques pensées pour les créateurs qui veulent vivre de leur contenu, pas remplir des tableurs.</p>
         </div>
 
         <div class="bento">
@@ -416,40 +414,40 @@
             </div>
             <div class="sync-visual" aria-hidden="true">
               <div class="sync-line">
-                <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
-                Europe et État <span class="val">1&#8239;462 dispositifs</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+                TikTok <span class="val">84&#8239;200 abonnés</span>
               </div>
               <div class="sync-line">
-                <svg class="icon" aria-hidden="true"><use href="#i-buildings"/></svg>
-                Régions et métropoles <span class="val">714 dispositifs</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+                YouTube <span class="val">31&#8239;700 abonnés</span>
               </div>
               <div class="sync-line">
-                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-                BPI, ADEME, URSSAF <span class="val">164 dispositifs</span>
+                <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+                Twitch <span class="val">12&#8239;500 followers</span>
               </div>
-              <span class="sync-status"><span class="pulse"></span> Base mise à jour il y a 2&nbsp;heures</span>
+              <span class="sync-status"><span class="pulse"></span> Synchronisé il y a 4&nbsp;minutes</span>
             </div>
-            <h3>Veille sur 2&#8239;300 dispositifs</h3>
-            <p>Chaque guichet est suivi, chaque changement de critère détecté. Quand un dispositif s’ouvre pour votre profil, vous le savez le jour même.</p>
+            <h3>Toutes tes plateformes, un seul flux</h3>
+            <p>TikTok, YouTube, Twitch, Insta&nbsp;: connectées en lecture seule, rafraîchies en continu. Ton vrai total, pas quatre applis ouvertes.</p>
           </article>
 
           <article class="cell cell-secure" data-reveal style="--i:1">
             <div class="cell-icon" aria-hidden="true">
               <svg class="icon" aria-hidden="true"><use href="#i-shield-check"/></svg>
             </div>
-            <h3>Vos données restent vôtres</h3>
-            <p>Votre profil sert au scan, à rien d’autre. Jamais revendu, jamais partagé avec les administrations sans votre accord.</p>
+            <h3>Tes données, tes règles</h3>
+            <p>Connexions officielles, révocables en un clic. Tes stats ne sont jamais revendues, ni montrées aux marques sans ton accord.</p>
             <div class="badge-row">
               <span class="chip">RGPD</span>
               <span class="chip">Hébergé en UE</span>
-              <span class="chip">Chiffré</span>
+              <span class="chip">Révocable</span>
             </div>
           </article>
 
           <article class="cell cell-multi" data-reveal>
             <img class="cell-bg" src="assets/img/bento-vallee.jpg" alt="" loading="lazy" width="900" height="1100">
-            <h3>Multi-entités, vision groupe</h3>
-            <p>Filiales, holding&nbsp;: les aides se cumulent et Manne consolide les plafonds de minimis.</p>
+            <h3>Ton équipe voit tout, toi aussi</h3>
+            <p>Monteur, manager, marque invitée&nbsp;: chacun son accès, toi seul décides.</p>
           </article>
 
           <article class="cell cell-alerts" data-reveal style="--i:1">
@@ -458,32 +456,32 @@
             </div>
             <div class="alert-stack" aria-hidden="true">
               <div class="alert-item">
-                <svg class="icon" aria-hidden="true"><use href="#i-bell-ringing"/></svg>
-                ADEME ferme dans 6 sem.
+                <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
+                «&nbsp;Studio tour&nbsp;» fait 3× tes vues
               </div>
               <div class="alert-item">
-                <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
-                CIR&nbsp;: pièce manquante
+                <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
+                Kavo Energy attend ton devis
               </div>
               <div class="alert-item">
                 <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>
-                5&#8239;000&#8239;€ versés
+                Palier des 100k franchi
               </div>
             </div>
-            <h3>Alertes avant la clôture</h3>
-            <p>Guichet qui ferme, pièce qui manque, versement qui arrive&nbsp;: prévenu avant, pas après.</p>
+            <h3>Des alertes qui font percer</h3>
+            <p>Vidéo qui décolle, deal qui attend, palier franchi&nbsp;: prévenu au bon moment, pas trois jours après.</p>
           </article>
 
           <article class="cell cell-expert" data-reveal style="--i:2">
             <div class="cell-icon" aria-hidden="true">
-              <svg class="icon" aria-hidden="true"><use href="#i-envelope-simple"/></svg>
+              <svg class="icon" aria-hidden="true"><use href="#i-calendar-check"/></svg>
             </div>
             <div class="expert-visual" aria-hidden="true">
-              <span class="avatar avatar-b">CD</span>
-              <span class="chip">8&#8239;% au succès</span>
+              <span class="avatar avatar-b">18h</span>
+              <span class="chip">Jeudi 18&#8239;h&#8239;30</span>
             </div>
-            <h3>Un expert payé au résultat</h3>
-            <p>Un chargé de dossiers dédié, rémunéré comme nous&nbsp;: seulement quand l’argent arrive sur votre compte.</p>
+            <h3>Le bon créneau, calculé</h3>
+            <p>Ton audience a ses habitudes. Percer les apprend et te dit quand poster pour toucher le maximum de monde.</p>
           </article>
         </div>
       </div>
@@ -493,38 +491,38 @@
     <section class="section" id="methode">
       <div class="container methode-grid">
         <div class="methode-intro" data-reveal>
-          <h2>Trois gestes, zéro paperasse.</h2>
-          <p>Manne remplace la veille, les formulaires et les relances. Il ne vous reste que la signature.</p>
+          <h2>Trois gestes, zéro tableur.</h2>
+          <p>Percer remplace les captures d’écran, les DM qui traînent et les tableurs de vues. Il te reste le contenu.</p>
         </div>
         <div class="steps">
           <div class="step" data-reveal>
             <div class="step-icon" aria-hidden="true">
-              <svg class="icon" aria-hidden="true"><use href="#i-compass"/></svg>
+              <svg class="icon" aria-hidden="true"><use href="#i-plugs-connected"/></svg>
             </div>
             <div>
-              <h3>Scannez</h3>
-              <p>Quatre minutes pour décrire votre activité. Le moteur fait le tri dans 2&#8239;300 dispositifs et affiche votre montant.</p>
-              <p class="step-meta">Score d'éligibilité expliqué, critère par critère</p>
+              <h3>Connecte</h3>
+              <p>Brancher TikTok, YouTube, Twitch et Insta prend deux minutes. Lecture seule, connexions révocables quand tu veux.</p>
+              <p class="step-meta">Deux minutes, montre en main</p>
             </div>
           </div>
           <div class="step" data-reveal style="--i:1">
             <div class="step-icon" aria-hidden="true">
-              <svg class="icon" aria-hidden="true"><use href="#i-receipt"/></svg>
+              <svg class="icon" aria-hidden="true"><use href="#i-chart-line-up"/></svg>
             </div>
             <div>
-              <h3>Choisissez</h3>
-              <p>Chaque aide est classée par montant, effort et délai de versement. Vous décidez en connaissance de cause.</p>
-              <p class="step-meta">Montant, effort et délai affichés avant de démarrer</p>
+              <h3>Comprends</h3>
+              <p>Audience, vues, revenus, formats qui paient&nbsp;: un seul écran, des chiffres qui veulent enfin dire quelque chose.</p>
+              <p class="step-meta">Quel format paie, quel créneau performe</p>
             </div>
           </div>
           <div class="step" data-reveal style="--i:2">
             <div class="step-icon" aria-hidden="true">
-              <svg class="icon" aria-hidden="true"><use href="#i-bank"/></svg>
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
             </div>
             <div>
-              <h3>Encaissez</h3>
-              <p>Manne monte le dossier, relance l’instructeur et suit le versement jusqu’à votre compte en banque.</p>
-              <p class="step-meta">Vous ne payez le succès que si l'argent arrive</p>
+              <h3>Décolle</h3>
+              <p>Deals suivis jusqu’au paiement, posts programmés au bon créneau, revenus qui tombent. Le reste, c’est ton talent.</p>
+              <p class="step-meta">Tu gardes 100&#8239;% de tes deals</p>
             </div>
           </div>
         </div>
@@ -535,38 +533,38 @@
     <section class="section" id="temoignages">
       <div class="container">
         <div class="section-head" data-reveal>
-          <span class="eyebrow">Clients</span>
-          <h2>Des dirigeants qui ont réclamé leur dû.</h2>
+          <span class="eyebrow">Créateurs</span>
+          <h2>Ils en ont fait un métier.</h2>
         </div>
         <div class="quotes-grid">
           <figure class="quote-featured bezel" data-reveal>
-            <blockquote>«&nbsp;Nous avons récupéré 64&#8239;000&#8239;€ la première année, dont un crédit d’impôt que notre comptable pensait hors de portée.&nbsp;»</blockquote>
+            <blockquote>«&nbsp;Je gérais mes deals dans mes DM. Le premier devis parti de Percer m’a fait gagner 2&#8239;400&#8239;€ sur un seul contrat.&nbsp;»</blockquote>
             <figcaption class="quote-author">
-              <span class="avatar avatar-a" aria-hidden="true">EV</span>
+              <span class="avatar avatar-a" aria-hidden="true">LB</span>
               <span>
-                <span class="name">Élodie Vasseur</span><br>
-                <span class="role">Directrice générale, Maison Bocage</span>
+                <span class="name">Léna Brassart</span><br>
+                <span class="role">Lifestyle, 210&#8239;k abonnés</span>
               </span>
             </figcaption>
           </figure>
           <div class="quote-side">
             <figure class="quote-card" data-reveal style="--i:1">
-              <blockquote>«&nbsp;Le dossier ADEME est parti en trois jours. Seule, j’y aurais passé un mois, et je l’aurais sans doute raté.&nbsp;»</blockquote>
+              <blockquote>«&nbsp;Le simulateur m’a décidé à passer à trois posts par semaine. Deux mois après, la monétisation tombait.&nbsp;»</blockquote>
               <figcaption class="quote-author">
-                <span class="avatar avatar-b" aria-hidden="true">IR</span>
+                <span class="avatar avatar-c" aria-hidden="true">MA</span>
                 <span>
-                  <span class="name">Inès Rocher</span><br>
-                  <span class="role">Gérante, Verger &amp; Fils</span>
+                  <span class="name">Maxime Aouali</span><br>
+                  <span class="role">Gaming, 96&#8239;k abonnés</span>
                 </span>
               </figcaption>
             </figure>
             <figure class="quote-card" data-reveal style="--i:2">
-              <blockquote>«&nbsp;On payait un cabinet 4&#8239;000&#8239;€ par dossier. Manne se paie toute seule, au succès.&nbsp;»</blockquote>
+              <blockquote>«&nbsp;On voit enfin quel format paie. Les shorts, pas les vlogs. Ça a changé tout notre calendrier.&nbsp;»</blockquote>
               <figcaption class="quote-author">
-                <span class="avatar avatar-c" aria-hidden="true">TS</span>
+                <span class="avatar avatar-b" aria-hidden="true">SN</span>
                 <span>
-                  <span class="name">Thibault Séguier</span><br>
-                  <span class="role">Cofondateur, Atelier Nord</span>
+                  <span class="name">Salomé et Nils</span><br>
+                  <span class="role">Studio Nova, duo vidéo</span>
                 </span>
               </figcaption>
             </figure>
@@ -579,16 +577,16 @@
     <section class="stats">
       <div class="container stats-grid">
         <div class="stat" data-reveal>
-          <p class="stat-value"><span data-count-to="84">84</span>&#8239;M€</p>
-          <p class="stat-label">récupérés pour nos clients</p>
+          <p class="stat-value"><span data-count-to="42">42</span>&#8239;M</p>
+          <p class="stat-label">de vues suivies chaque jour</p>
         </div>
         <div class="stat" data-reveal style="--i:1">
-          <p class="stat-value"><span data-count-to="2340">2&#8239;340</span></p>
-          <p class="stat-label">dispositifs suivis en continu</p>
+          <p class="stat-value"><span data-count-to="18300">18&#8239;300</span></p>
+          <p class="stat-label">créateurs à bord</p>
         </div>
         <div class="stat" data-reveal style="--i:2">
-          <p class="stat-value"><span data-count-to="11700">11&#8239;700</span>&#8239;€</p>
-          <p class="stat-label">de versement médian par dossier</p>
+          <p class="stat-value"><span data-count-to="130">130</span>&#8239;min</p>
+          <p class="stat-label">gagnées chaque semaine en moyenne</p>
         </div>
         <div class="stat" data-reveal style="--i:3">
           <p class="stat-value"><span data-count-to="4.9" data-decimals="1">4,9</span>/5</p>
@@ -601,8 +599,8 @@
     <section class="section" id="tarifs">
       <div class="container">
         <div class="section-head pricing-head" data-reveal>
-          <h2>Un abonnement qui se rembourse au premier dossier.</h2>
-          <p>Quatorze jours d’essai complet, scan compris, sans carte bancaire.</p>
+          <h2>Gratuit pour commencer, sérieux pour percer.</h2>
+          <p>Pas de carte bancaire, pas de commission sur tes deals. Jamais.</p>
           <div class="billing-toggle" role="group" aria-label="Périodicité de facturation">
             <button id="bill-monthly" aria-pressed="false">Mensuel</button>
             <button id="bill-yearly" aria-pressed="true"><span class="chip">&#8722;20&#8239;%</span>Annuel</button>
@@ -611,62 +609,62 @@
 
         <div class="plans">
           <article class="plan" data-reveal>
-            <h3 class="plan-name">Radar</h3>
-            <p class="plan-for">Indépendants et TPE</p>
+            <h3 class="plan-name">Perce</h3>
+            <p class="plan-for">Pour démarrer</p>
             <div class="plan-price">
-              <span class="plan-amount" data-monthly="39" data-yearly="31">31</span>
-              <span class="plan-period">€&#8239;HT / mois</span>
+              <span class="plan-amount" data-monthly="0" data-yearly="0">0</span>
+              <span class="plan-period">€ / mois</span>
             </div>
-            <p class="plan-note" data-note-yearly="Facturé 372&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 372&#8239;€ par an</p>
+            <p class="plan-note" data-note-yearly="Gratuit, pour toujours" data-note-monthly="Gratuit, pour toujours">Gratuit, pour toujours</p>
             <ul>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Scan complet et score détaillé</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Alertes de guichets</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 1 entité</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Dossiers en autonomie guidée</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 1 plateforme connectée</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Stats sur 30 jours</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 1 devis de deal par mois</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Alertes de paliers</li>
             </ul>
-            <a class="btn btn-ghost" href="app.html">Scanner mon entreprise</a>
+            <a class="btn btn-ghost" href="app.html">Créer mon cockpit</a>
           </article>
 
           <article class="plan plan-hot bezel" data-reveal style="--i:1">
-            <span class="plan-badge">Le plus rentable</span>
-            <h3 class="plan-name">Pilote</h3>
-            <p class="plan-for">PME de 5 à 100 salariés</p>
+            <span class="plan-badge">Le plus choisi</span>
+            <h3 class="plan-name">Créateur</h3>
+            <p class="plan-for">Pour en vivre</p>
             <div class="plan-price">
-              <span class="plan-amount" data-monthly="119" data-yearly="95">95</span>
-              <span class="plan-period">€&#8239;HT / mois</span>
+              <span class="plan-amount" data-monthly="12" data-yearly="9">9</span>
+              <span class="plan-period">€ / mois</span>
             </div>
-            <p class="plan-note" data-note-yearly="Facturé 1&#8239;140&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 1&#8239;140&#8239;€ par an</p>
+            <p class="plan-note" data-note-yearly="Facturé 108&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 108&#8239;€ par an</p>
             <ul>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Dossiers montés par nos experts</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 3 dossiers inclus par an</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 8&#8239;% au succès au-delà</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Relances instructeur</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 3 entités consolidées</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Chargé de dossiers dédié</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Toutes les plateformes</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Simulateur de revenus</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Deals et devis illimités</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Calendrier et meilleurs créneaux</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Historique complet</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 0&#8239;% de commission</li>
             </ul>
-            <a class="btn btn-primary" href="app.html">Scanner mon entreprise</a>
+            <a class="btn btn-primary" href="app.html">Créer mon cockpit</a>
           </article>
 
           <article class="plan" data-reveal style="--i:2">
-            <h3 class="plan-name">Cabinet</h3>
-            <p class="plan-for">Groupes et experts-comptables</p>
+            <h3 class="plan-name">Studio</h3>
+            <p class="plan-for">Pour les équipes et duos</p>
             <div class="plan-price">
-              <span class="plan-amount" data-monthly="290" data-yearly="232">232</span>
-              <span class="plan-period">€&#8239;HT / mois</span>
+              <span class="plan-amount" data-monthly="29" data-yearly="23">23</span>
+              <span class="plan-period">€ / mois</span>
             </div>
-            <p class="plan-note" data-note-yearly="Facturé 2&#8239;784&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 2&#8239;784&#8239;€ par an</p>
+            <p class="plan-note" data-note-yearly="Facturé 276&#8239;€ par an" data-note-monthly="Sans engagement">Facturé 276&#8239;€ par an</p>
             <ul>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Dossiers illimités</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Entités illimitées</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> API et exports</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Marque blanche</li>
-              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Revue trimestrielle dédiée</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> 3 sièges d'équipe</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Multi-comptes et marques invitées</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Exports et API</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Comparaison entre chaînes</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Support prioritaire</li>
             </ul>
             <a class="btn btn-ghost" href="#">Parler à l’équipe</a>
           </article>
         </div>
 
-        <p class="pricing-foot">Sans engagement. Le succès n’est facturé qu’après versement effectif sur votre compte.</p>
+        <p class="pricing-foot">Tes deals restent à toi&nbsp;: Percer ne prend aucune commission, quel que soit le plan.</p>
       </div>
     </section>
 
@@ -679,45 +677,45 @@
         <div class="faq-wrap" data-reveal>
           <details class="faq-item">
             <summary>
-              Comment le score d’éligibilité est-il calculé&nbsp;?
+              Comment mes comptes sont-ils connectés&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Le moteur compare votre profil aux critères officiels de chaque dispositif&nbsp;: secteur, effectif, ancienneté, localisation, nature des projets. Chaque score est expliqué critère par critère, avec ce qui manque pour devenir éligible.</p>
+            <p class="faq-body">Par les connexions officielles de chaque plateforme, en lecture seule. Percer ne peut rien publier sans ton accord et tu peux révoquer chaque accès en un clic, ici ou depuis la plateforme.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Que veut dire «&nbsp;8&#8239;% au succès&nbsp;»&nbsp;?
+              Quelles plateformes sont supportées&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Aucune avance, aucun forfait caché. La commission n’est prélevée qu’après le versement effectif de l’aide sur votre compte. Dossier refusé, rien à payer&nbsp;: nous portons le risque avec vous.</p>
+            <p class="faq-body">TikTok, YouTube, Twitch et Instagram aujourd’hui. Twitter et Snapchat arrivent&nbsp;: la feuille de route est publique et votée par les créateurs.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Les aides sont-elles cumulables&nbsp;?
+              Comment marchent les devis de deals&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Souvent, dans la limite des plafonds européens dits de minimis. Manne suit vos cumuls en temps réel, y compris entre entités d’un même groupe, pour rester dans les clous sans laisser d’argent sur la table.</p>
+            <p class="faq-body">Tu choisis la marque, le format et le prix, Percer génère un devis propre avec tes vraies statistiques. La marque signe en ligne et tu suis le paiement jusqu’à ton compte. Sans commission.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Et si mon dossier est refusé&nbsp;?
+              Le simulateur, ça sort d’où&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Vous ne payez rien. Le chargé de dossiers analyse le motif, corrige ce qui peut l’être et dépose un recours ou représente le dossier à la fenêtre suivante quand c’est pertinent.</p>
+            <p class="faq-body">De tes propres données&nbsp;: ton audience, ton engagement, tes formats. Le simulateur montre ce qui change si tu postes plus, mieux ou ailleurs. C’est une estimation honnête, pas une promesse.</p>
           </details>
           <details class="faq-item">
             <summary>
-              D’où viennent vos données&nbsp;?
+              C’est vraiment gratuit&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Des sources officielles uniquement&nbsp;: journaux officiels, plateformes de l’État, des régions, de la BPI et de l’ADEME. La base est revue quotidiennement par notre équipe de veille.</p>
+            <p class="faq-body">Oui. Le plan Perce est gratuit pour toujours, sans carte bancaire. Tu passes à Créateur quand tu veux toutes tes plateformes et les deals illimités, et tu peux redescendre à tout moment.</p>
           </details>
           <details class="faq-item">
             <summary>
-              Puis-je essayer sans engagement&nbsp;?
+              Je peux tout exporter et partir&nbsp;?
               <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
             </summary>
-            <p class="faq-body">Oui. Quatorze jours d’essai complet, scan et score compris, sans carte bancaire. À la fin, vous gardez le rapport d’éligibilité, même si vous ne continuez pas.</p>
+            <p class="faq-body">Toujours. Tes statistiques, tes devis et ton historique s’exportent en un clic, même après résiliation. Tes données te suivent, elles ne restent pas chez nous.</p>
           </details>
         </div>
       </div>
@@ -728,9 +726,9 @@
       <div class="container">
         <div class="cta-panel" data-reveal>
           <img class="cta-bg" src="assets/img/cta-cascade.jpg" alt="" loading="lazy" width="1600" height="900">
-          <h2>Allez chercher ce qui vous revient.</h2>
-          <p>Le scan prend quatre minutes et affiche votre montant récupérable. Sans carte bancaire, sans engagement.</p>
-          <a class="btn btn-primary btn-lg magnetic" href="app.html">Scanner mon entreprise
+          <h2>Ton audience mérite un cockpit.</h2>
+          <p>Deux minutes pour connecter tes comptes, gratuit pour commencer. Ton contenu, tes chiffres, ton argent.</p>
+          <a class="btn btn-primary btn-lg magnetic" href="app.html">Créer mon cockpit
             <span class="btn-orb" aria-hidden="true"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
           </a>
         </div>
@@ -743,17 +741,17 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a class="brand" href="#" aria-label="Manne, accueil">
+          <a class="brand" href="#" aria-label="Percer, accueil">
             <span class="brand-logo" aria-hidden="true">
               <svg width="30" height="30" viewBox="0 0 64 64">
                 <defs>
-                  <linearGradient id="mg-foot" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#3DDC97"/>
-                    <stop offset="0.5" stop-color="#2BB3C0"/>
-                    <stop offset="1" stop-color="#8B7CFF"/>
+                  <linearGradient id="pg-foot" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#FF5E8A"/>
+                    <stop offset="0.5" stop-color="#8B5CF6"/>
+                    <stop offset="1" stop-color="#22D3EE"/>
                   </linearGradient>
                 </defs>
-                <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#mg-foot)"/>
+                <rect x="2" y="2" width="60" height="60" rx="16.5" fill="url(#pg-foot)"/>
                 <g fill="none" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round">
                   <path d="M15 17 C 24 20, 28 26, 32 34"/>
                   <path d="M32 14 C 32 22, 32 28, 32 34"/>
@@ -762,13 +760,13 @@
                 </g>
               </svg>
             </span>
-            Manne
+            Percer
           </a>
-          <p>L’argent public, enfin réclamé. Scannez, choisissez, encaissez.</p>
+          <p>Le cockpit des créateurs francophones. Connecte, comprends, décolle.</p>
           <form class="newsletter" id="newsletter" novalidate>
-            <label for="nl-email">La lettre des guichets, deux fois par mois</label>
+            <label for="nl-email">La news des créateurs, chaque jeudi</label>
             <div class="newsletter-row">
-              <input type="email" id="nl-email" name="email" placeholder="prenom@entreprise.fr" autocomplete="email" required>
+              <input type="email" id="nl-email" name="email" placeholder="toi@exemple.fr" autocomplete="email" required>
               <button class="btn btn-primary btn-sm" type="submit">S’abonner</button>
             </div>
             <p class="newsletter-msg" id="nl-msg" role="status"></p>
@@ -780,16 +778,16 @@
             <li><a href="#fonctionnalites">Fonctionnalités</a></li>
             <li><a href="#tarifs">Tarifs</a></li>
             <li><a href="#faq">Sécurité</a></li>
-            <li><a href="#faq">Dispositifs suivis</a></li>
+            <li><a href="#faq">Plateformes</a></li>
           </ul>
         </nav>
         <nav class="footer-col" aria-label="Ressources">
           <h4>Ressources</h4>
           <ul>
-            <li><a href="#">Guide des aides 2026</a></li>
-            <li><a href="#">Simulateur de CIR</a></li>
+            <li><a href="#">Guide du premier deal</a></li>
+            <li><a href="#">Modèles de devis</a></li>
             <li><a href="#">Centre d’aide</a></li>
-            <li><a href="#">Statut du service</a></li>
+            <li><a href="#">Feuille de route</a></li>
           </ul>
         </nav>
         <nav class="footer-col" aria-label="Entreprise">
@@ -812,7 +810,7 @@
         </nav>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Manne SAS. Tous droits réservés.</span>
+        <span>© 2026 Percer SAS. Tous droits réservés.</span>
         <span>69002 Lyon, France</span>
       </div>
     </div>
