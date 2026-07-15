@@ -9,6 +9,9 @@
   var $  = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
 
+  /* Source de la mascotte (chemin local en dev, data-URI dans l'artifact) */
+  var FILOU = (document.getElementById("filouAsset") || {}).src || "assets/img/filou-mascot.webp";
+
   /* ---------------- État ---------------- */
   var state = {
     serie: 12, gems: 85, coeurs: 5, maxCoeurs: 5, unlimited: false,
@@ -189,7 +192,7 @@
 
     var head = '<p class="q-kind">' + kindLabel(q.kind) + "</p>";
     var body = q.filou
-      ? '<div class="q-prompt"><svg class="filou" viewBox="0 0 240 240" aria-hidden="true"><use href="#filou"/></svg><div class="bubble">' + q.title + "</div></div>"
+      ? '<div class="q-prompt"><img class="filou" src="' + FILOU + '" alt=""><div class="bubble">' + q.title + "</div></div>"
       : '<h3 class="q-title">' + q.title + "</h3>";
     var opts = '<div class="opts">' + q.opts.map(function (o, i) {
       var lead = o.lead ? '<span class="lead">' + o.lead + "</span>" : "";

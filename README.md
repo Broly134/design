@@ -48,8 +48,16 @@ expressive, polices rondes et charnues.
 5. **Boutique** : recharge tes cœurs, active un booster, ou passe à Pépite Max
    (cœurs illimités).
 
-## Note sur les images
+## Branding généré avec Higgsfield
 
-Higgsfield étant « Out of credits », la mascotte et tous les visuels sont
-dessinés en SVG et CSS (aucune image générée). Recharger les crédits
-permettrait de produire des illustrations et portraits complémentaires.
+Le logo (icône d'app squircle) et la mascotte Filou en 3D ont été générés avec
+**Higgsfield** (GPT Image 2, haute qualité), puis détourés (fond transparent) et
+optimisés en WebP :
+
+- `assets/img/app-icon.png` / `logo.webp` — l'icône d'app, un écureuil roux tenant
+  un gland sur dégradé orange → or.
+- `assets/img/filou-mascot.webp` — Filou en pied, style 3D façon studio d'animation,
+  tenant un gland doré. Réutilisé dans le hero, l'app, les leçons et le profil.
+
+Les icônes d'interface restent des SVG Phosphor. Il reste des crédits pour générer
+d'autres visuels (variantes de pose de Filou, bannières, illustrations de sujets).
