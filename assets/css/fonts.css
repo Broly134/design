@@ -1,80 +1,20 @@
+/* Baloo 2 : display rond et charnu (titres, boutons, chiffres géants) */
 @font-face {
-  font-family: 'Figtree';
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url('../fonts/figtree-400-italic.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Figtree';
+  font-family: 'Baloo 2';
   font-style: normal;
-  font-weight: 300;
+  font-weight: 400 800;
   font-display: swap;
-  src: url('../fonts/figtree-300.woff2') format('woff2');
+  src: url('../fonts/baloo-2-latin-wght-normal.woff2') format('woff2-variations');
 }
+/* Nunito : corps rond et amical (UI, paragraphes) */
 @font-face {
-  font-family: 'Figtree';
+  font-family: 'Nunito';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 300 900;
   font-display: swap;
-  src: url('../fonts/figtree-300.woff2') format('woff2');
+  src: url('../fonts/nunito-latin-wght-normal.woff2') format('woff2-variations');
 }
-@font-face {
-  font-family: 'Figtree';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('../fonts/figtree-300.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Figtree';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('../fonts/figtree-300.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Figtree';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('../fonts/figtree-300.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Gabarito';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('../fonts/gabarito-400.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Gabarito';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('../fonts/gabarito-400.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Gabarito';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('../fonts/gabarito-400.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Gabarito';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('../fonts/gabarito-400.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Gabarito';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url('../fonts/gabarito-400.woff2') format('woff2');
-}
+/* Spline Sans Mono : chiffres alignés (série, XP, scores) */
 @font-face {
   font-family: 'Spline Sans Mono';
   font-style: normal;
@@ -85,14 +25,14 @@
 @font-face {
   font-family: 'Spline Sans Mono';
   font-style: normal;
-  font-weight: 500;
+  font-weight: 600;
   font-display: swap;
   src: url('../fonts/spline-sans-mono-400.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Spline Sans Mono';
   font-style: normal;
-  font-weight: 600;
+  font-weight: 700;
   font-display: swap;
   src: url('../fonts/spline-sans-mono-400.woff2') format('woff2');
 }
