@@ -1,20 +1,20 @@
-/* Baloo 2 : display rond et charnu (titres, boutons, chiffres géants) */
+/* Bricolage Grotesque : display caractériel (titres, wordmark) */
 @font-face {
-  font-family: 'Baloo 2';
+  font-family: 'Bricolage Grotesque';
   font-style: normal;
-  font-weight: 400 800;
+  font-weight: 200 800;
   font-display: swap;
-  src: url('../fonts/baloo-2-latin-wght-normal.woff2') format('woff2-variations');
+  src: url('../fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2-variations');
 }
-/* Nunito : corps rond et amical (UI, paragraphes) */
+/* Hanken Grotesk : corps net et moderne (UI, paragraphes) */
 @font-face {
-  font-family: 'Nunito';
+  font-family: 'Hanken Grotesk';
   font-style: normal;
-  font-weight: 300 900;
+  font-weight: 300 800;
   font-display: swap;
-  src: url('../fonts/nunito-latin-wght-normal.woff2') format('woff2-variations');
+  src: url('../fonts/hanken-grotesk-latin-wght-normal.woff2') format('woff2-variations');
 }
-/* Spline Sans Mono : chiffres alignés (série, XP, scores) */
+/* Spline Sans Mono : timecodes, compteurs, données */
 @font-face {
   font-family: 'Spline Sans Mono';
   font-style: normal;
